@@ -1,0 +1,40 @@
+{
+  "portals": {
+    "customer": {
+      "repo": "https://github.com/BlinkerGit/customer-portal",
+      "branch": "main",
+      "dir": "apps/customer-portal",
+      "sha": "1d34ee2b4fc39b257a114416f90eddeea0a8bd97"
+    },
+    "insurance": {
+      "repo": "https://github.com/BlinkerGit/insurance-portal",
+      "branch": "main",
+      "dir": "apps/insurance-portal",
+      "sha": "5281405d212d9c0365ee5bcc8ceadd27eb108ad5"
+    },
+    "mission": {
+      "repo": "https://github.com/BlinkerGit/mission-control",
+      "branch": "main",
+      "dir": "apps/mission-control",
+      "sha": "db17e6181ef7775dcf7e2403d9fac24e85dd3087"
+    },
+    "protection": {
+      "repo": "https://github.com/BlinkerGit/protection-portal",
+      "branch": "main",
+      "dir": "apps/protection-portal",
+      "sha": "515f699ca858f8b3d5ee43721047251289b8a556"
+    },
+    "refinance": {
+      "repo": "https://github.com/BlinkerGit/refinance-prototype",
+      "branch": "main",
+      "dir": "apps/refinance-prototype",
+      "sha": "d8e3e5e6f9b373948e4371212960d6d03a864311"
+    },
+    "platform": {
+      "repo": "https://github.com/BlinkerGit/blinker-platform",
+      "branch": "main",
+      "dir": "packages/blinker-platform",
+      "sha": "f943efa22f30f4bfe59b466ae4a6bde5c067de46"
+    }
+  }
+}

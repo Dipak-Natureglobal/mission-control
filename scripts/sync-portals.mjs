@@ -30,14 +30,16 @@ const CHECK_ONLY = argv.includes('--check');
 const FORCE = argv.includes('--force');
 const only = argv.filter((a) => !a.startsWith('--'));
 
+const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
+const ansi = (code) => (useColor ? `\u001b[${code}m` : '');
 const c = {
-    reset: '[0m',
-    dim: '[2m',
-    bold: '[1m',
-    green: '[32m',
-    yellow: '[33m',
-    red: '[31m',
-    cyan: '[36m',
+    reset: ansi(0),
+    dim: ansi(2),
+    bold: ansi(1),
+    green: ansi(32),
+    yellow: ansi(33),
+    red: ansi(31),
+    cyan: ansi(36),
 };
 
 function git(args, opts = {}) {
@@ -129,14 +131,14 @@ function main() {
         process.exit(1);
     }
 
-    console.log(`${c.bold}Syncing ${portals.length} upstream source(s)${c.reset}${CHECK_ONLY ? `${c.dim} (check only — no files will change)${c.reset}` : ''}\n`);
+    console.log(`${c.bold}Syncing ${portals.length} upstream source(s)${c.reset}${CHECK_ONLY ? `${c.dim} (check only â€” no files will change)${c.reset}` : ''}\n`);
 
     const report = [];
     let changed = false;
 
     for (const portal of portals) {
         const { remote, branch, dir } = portal;
-        process.stdout.write(`${c.cyan}${remote}${c.reset} ${c.dim}(${dir})${c.reset} … `);
+        process.stdout.write(`${c.cyan}${remote}${c.reset} ${c.dim}(${dir})${c.reset} â€¦ `);
 
         try {
             git(['fetch', remote, branch, '--quiet']);
@@ -148,7 +150,7 @@ function main() {
 
         const newSha = git(['rev-parse', `refs/remotes/${remote}/${branch}`]);
         const oldSha = state.portals?.[remote]?.sha ?? null;
-        const short = (s) => (s ? s.slice(0, 8) : '—');
+        const short = (s) => (s ? s.slice(0, 8) : 'â€”');
 
         if (oldSha === newSha && fs.existsSync(path.join(ROOT, dir)) && !FORCE) {
             console.log(`${c.dim}up to date (${short(newSha)})${c.reset}`);
@@ -163,7 +165,7 @@ function main() {
         if (CHECK_ONLY) {
             console.log(`${c.yellow}${commits.length || '?'} new commit(s)${c.reset} ${c.dim}${short(oldSha)} -> ${short(newSha)}${c.reset}`);
             commits.slice(0, 10).forEach((line) => console.log(`      ${c.dim}${line}${c.reset}`));
-            if (commits.length > 10) console.log(`      ${c.dim}… ${commits.length - 10} more${c.reset}`);
+            if (commits.length > 10) console.log(`      ${c.dim}â€¦ ${commits.length - 10} more${c.reset}`);
             report.push({ remote, dir, status: 'behind', detail: `${commits.length} commit(s)` });
             changed = true;
             continue;
@@ -171,7 +173,7 @@ function main() {
 
         const target = path.join(ROOT, dir);
         if (fs.existsSync(target) && isDirty(dir) && !FORCE) {
-            console.log(`${c.yellow}skipped — local uncommitted changes${c.reset}`);
+            console.log(`${c.yellow}skipped â€” local uncommitted changes${c.reset}`);
             console.log(`      ${c.dim}commit or stash ${dir}, or re-run with --force to overwrite${c.reset}`);
             report.push({ remote, dir, status: 'skipped (dirty)', detail: 'local edits present' });
             continue;
@@ -183,10 +185,10 @@ function main() {
             git(['worktree', 'add', '--detach', '--quiet', wt, newSha]);
             const stats = mirror(wt, target);
             console.log(
-                `${c.green}updated${c.reset} ${c.dim}${short(oldSha)} -> ${short(newSha)} · +${stats.added} ~${stats.updated} -${stats.removed}${c.reset}`,
+                `${c.green}updated${c.reset} ${c.dim}${short(oldSha)} -> ${short(newSha)} Â· +${stats.added} ~${stats.updated} -${stats.removed}${c.reset}`,
             );
             commits.slice(0, 10).forEach((line) => console.log(`      ${c.dim}${line}${c.reset}`));
-            if (commits.length > 10) console.log(`      ${c.dim}… ${commits.length - 10} more${c.reset}`);
+            if (commits.length > 10) console.log(`      ${c.dim}â€¦ ${commits.length - 10} more${c.reset}`);
             report.push({
                 remote,
                 dir,
@@ -215,7 +217,7 @@ function main() {
         console.log(`  ${row.remote.padEnd(12)} ${row.status.padEnd(16)} ${c.dim}${row.detail}${c.reset}`);
     }
 
-    console.log(`\n${c.dim}Nothing was pushed to any BlinkerGit repository — fetch only.${c.reset}`);
+    console.log(`\n${c.dim}Nothing was pushed to any BlinkerGit repository â€” fetch only.${c.reset}`);
 
     if (CHECK_ONLY) {
         console.log(`${c.dim}Check-only run: no files were modified. Run \`pnpm sync\` to apply.${c.reset}`);
