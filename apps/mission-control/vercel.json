@@ -2,6 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "outputDirectory": "dist",
+  "installCommand": "npm i -g pnpm@10.34.4 && pnpm install --frozen-lockfile",
   "rewrites": [
     {
       "source": "/se-rating/:path*",
