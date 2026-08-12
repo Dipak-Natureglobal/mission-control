@@ -23,6 +23,7 @@ import {
   getTrimsForYearMakeModel as _platformGetTrimsForYearMakeModel,
 } from "blinker-platform/utils";
 import { getSequence } from "./lib/refi.js";
+import { DEFAULT_ORG_CONFIG } from "./constants/org-config";
 
 /*
   Blinker Refinance v2 — clickable prototype.
@@ -171,27 +172,11 @@ const DISQUAL_REASONS = {
   },
 };
 
-// Default organization configuration. Each refinance partner can override
-// these at runtime; the dev panel lets us edit them live without a code change.
-const DEFAULT_ORG_CONFIG = {
-  maxVehicleAgeYears: 15,
-  maxMileage: 150000,
-  minPayoff: 10000,
-  minAnnualIncome: 18000,
-  eligibleOwnership: ["financed", "leased"],
-  minCreditBandWithoutCoApp: "580_669",
-  restrictedEmploymentTypes: ["Unemployed", "Self-Employed"],
-  restrictedEmploymentCreditBands: ["300_579", "580_669"],
-  // Max LTV (Loan-to-Value) per credit band.
-  // LTV = payoff / vehicle_market_value.  If LTV >= threshold → disqualified.
-  maxLtv: {
-    "300_579": 1.0,    // Poor — payoff must not exceed vehicle value
-    "580_669": 1.2,    // Fair
-    "670_739": 1.25,   // Good
-    "740_799": 1.4,    // Very Good
-    "800_850": 1.5,    // Exceptional
-  },
-};
+// Default organization configuration now lives in constants/org-config.ts
+// (imported in the block at the top of this file and re-exported below for
+// straggler consumers). It moved out of this monolith because the old
+// re-export direction (org-config re-exporting this const) formed an import
+// cycle with lib/refi.js that threw at module-eval time.
 
 const MOCK_OFFERS = [
   {
