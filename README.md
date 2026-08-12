@@ -9,10 +9,10 @@ The apps stay independent. Nothing is merged, rewritten, or combined.
 blinker-prototype/
 ├── apps/
 │   ├── customer-portal/        ← BlinkerGit/customer-portal      (spec only — see note below)
-│   ├── insurance-portal/       ← BlinkerGit/insurance-portal     package: insurance-portal   :5176
-│   ├── mission-control/        ← BlinkerGit/mission-control      package: mission-control    :5173
-│   ├── protection-portal/      ← BlinkerGit/protection-portal    package: protection-portal  :5175
-│   └── refinance-prototype/    ← BlinkerGit/refinance-prototype  package: refi-portal        :5179
+│   ├── insurance-portal/       ← BlinkerGit/insurance-portal     package: insurance-portal   :30002
+│   ├── mission-control/        ← BlinkerGit/mission-control      package: mission-control    :30003
+│   ├── protection-portal/      ← BlinkerGit/protection-portal    package: protection-portal  :30001
+│   └── refinance-prototype/    ← BlinkerGit/refinance-prototype  package: refi-portal        :30005
 ├── packages/
 │   └── blinker-platform/       ← BlinkerGit/blinker-platform     shared canon + api + components
 ├── scripts/
@@ -104,9 +104,26 @@ workspace form:
 + "refi-portal": "workspace:*"
 ```
 
-`workspace:*` resolves by package name, so the differing folder name is fine. Ports, scripts,
-source files, and dependency versions are left exactly as upstream. The script is idempotent and
-runs automatically at the end of every sync.
+`workspace:*` resolves by package name, so the differing folder name is fine.
+
+The same script also pins each app to the Blinker platform port map, in both its `dev`/`preview`
+scripts and its `vite.config`:
+
+| App                          | Port    | Upstream port |
+| ---------------------------- | ------- | ------------- |
+| `apps/protection-portal`     | `30001` | 5175          |
+| `apps/insurance-portal`      | `30002` | 5176          |
+| `apps/mission-control`       | `30003` | 5177          |
+| `apps/customer-portal`       | `30004` | *(reserved — no app yet)* |
+| `apps/refinance-prototype`   | `30005` | 5179          |
+
+Upstream each repo picks its own `517x` port independently, and they collide once all five run
+side by side. Only the port numbers change — `strictPort`, dev proxies, and the
+`http://localhost:8080` payment target are untouched. Some upstream comments still describe the
+old `517x` map; those are left as written rather than rewriting upstream prose.
+
+Build scripts, source files, and dependency versions are left exactly as upstream. The script is
+idempotent and runs automatically at the end of every sync, so both rewrites survive `pnpm sync`.
 
 ## Vercel
 

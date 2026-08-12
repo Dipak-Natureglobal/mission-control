@@ -7,7 +7,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5177,
+    port: 30003,
     strictPort: true,
     proxy: {
       '/efs-charge': {
