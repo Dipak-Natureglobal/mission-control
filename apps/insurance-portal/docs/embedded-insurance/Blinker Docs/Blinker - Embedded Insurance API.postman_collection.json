@@ -1,0 +1,229 @@
+{
+	"info": {
+		"_postman_id": "dc3ae071-9739-456a-9fcf-1098d45b6412",
+		"name": "Blinker - Embedded Insurance API",
+		"description": "Embedded Insurance (EI) is an innovative platform that  revolutionizes the legacy insurance model into a seamless customer experience and provides the right insurance at the point of need.\n\nThe EI API is organized around [REST](http://en.wikipedia.org/wiki/Representational_State_Transfer). Our API has predictable resource-oriented URLs, accepts [JSON ](http://www.json.org/) request bodies and returns JSON responses The API uses standard HTTP response codes and authentication.\n\nWe have designed with simplicity in mind. Use exactly the same setup in different environments, just pass isTest at the root of the request and we will deal with it appropriately.\n\n**HTTP Responses and Errors**\n\nEI uses conventional HTTP response codes to indicate the success or failure of an API request.\n\nCodes in the `2xx` range indicate success.\n\nCodes in the `4xx` range indicate an error that failed given the information provided (e.g duplicate lead received, missing data). Where possible suitable error messages are returned.\n\nThe base URL for the API is: [https://api.embeddedinsurance.com](https://api.embeddedinsurance.com)\n\nWe are determined to build a first class developer experience so welcome any feedback and are always looking to improve.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26363852",
+		"_collection_link": "https://ei-tech.postman.co/workspace/7ffb73e1-2a59-46d4-8862-eb7dc4a29bcf/collection/26363852-dc3ae071-9739-456a-9fcf-1098d45b6412?action=share&source=collection_link&creator=26363852"
+	},
+	"item": [
+		{
+			"name": "Authenticate",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "{{EI_AUTH_CLIENT_ID}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{EI_AUTH_CLIENT_SECRET}}",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{AUTH_URL}}",
+					"host": [
+						"{{AUTH_URL}}"
+					]
+				},
+				"description": "The Auth URL is: [https://auth.embeddedinsurance.com/oauth2/token](https://auth.embeddedinsurance.com/oauth2/token)\n\nThe EI API uses a client_id, client_secret and grant_type. These will be provided to you through a one time link during the partner onboarding process.\n\nKeep these credentials secure - they provide a number of privileges. Do not share these credentials in accessible areas such as GitHub, client-side code etc."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Customer",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJraWQiOiJSc2RsYkVzRnRESER3K3Vqd0dPd0dRMTdPSlRZWU9McGpYYXlGMmg0RGhjPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI0NmRvdDg3Z3RoY3FxYWNvMjVjbjVyc2J1byIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiZGVmYXVsdC1tMm0tcmVzb3VyY2Utc2VydmVyLXhsenI0bFwvcmVhZCIsImF1dGhfdGltZSI6MTczODE3MzcyMCwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfVm5SdnNuUFVkIiwiZXhwIjoxNzM4MTc3MzIwLCJpYXQiOjE3MzgxNzM3MjAsInZlcnNpb24iOjIsImp0aSI6IjQwOThhMWFmLWIyZmMtNGM2YS04Y2I3LTliOTkzOWRjZDY1NSIsImNsaWVudF9pZCI6IjQ2ZG90ODdndGhjcXFhY28yNWNuNXJzYnVvIn0.SmmD0aVSLNw_PVWzEDMO4l0ttDyJwsinfo7JphS4yU1XehERqGCAAYyXClIMI93GoUu6TT43tKL-sgWBJnTm7hmi_4zebfAgO-gEGaHmkPE9_gF7yAc_0Bv6B5dCFguy8I9j8YDY3dYzanTl3wu3GYZe1itF9qA0vn6QmE2jc0XgEcIz93WsZLkrd8eUbjQTZQ8Djs2RPMIr2iFUvV6LZaYgBACZ0STeo2s3Ir7l6HdMK5wDUYS5uPiMR-0O7-ced23BZA1S3t-NC00Ps2lTUaKGW8TFlLzDqIk7NJIOhoFj_MbaNz6EBmv1EqYeWaf7NMif9QABS14nh11RJt2OTg",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"applicant\": {\n        \"firstName\": \"Joe\",\n        \"lastName\": \"Shmoe\",\n        \"dateOfBirth\": \"1990-01-01\",\n        \"phoneNumber\": \"+11234567890\",\n        \"email\": \"joe.shmoe+jan_29_2025_1102@example.com\",\n        \"address\": {\n            \"address1\": \"123 Main St\",\n            \"address2\": \"Apt 3\",\n            \"city\": \"Anytown\",\n            \"state\": \"CA\",\n            \"zip\": \"12345\"\n        },\n        \"monthsAtAddress\": 12\n    },\n    \"vehicles\": {\n        \"1\": {\n            \"vin\": \"JM1BL1V72C1603316\",\n            \"year\": \"2012\",\n            \"make\": \"Mazda\",\n            \"model\": \"CX-5\",\n            \"trim\": \"Sport\",\n            \"estimatedAnnualMileage\": 11000\n        }\n    },\n    \"coapplicants\": {\n        \"1\": {\n            \"firstName\": \"Jane\",\n            \"lastName\": \"Doe\",\n            \"dateOfBirth\": \"1993-01-01\",\n            \"relationshipToApplicant\": \"Spouse\"\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/auto/v1/leads",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"auto",
+						"v1",
+						"leads"
+					]
+				},
+				"description": "### Send a customer's information to EI to get an auto insurance quote for them in the portal.\n\nAnnotated example payload:\n\n``` json\n{\n  // Required: Main applicant information\n  \"applicant\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"dateOfBirth\": \"1980-01-01\", // Format: YYYY-MM-DD\n    \"address\": {\n      \"address1\": \"123 Main St\",\n      \"address2\": \"Apt 4B\", // Optional\n      \"city\": \"Boston\",\n      \"state\": \"MA\", // 2 letter US state abbreviation\n      \"zip\": \"02108\" // 5 digit US ZIP code\n    },\n    \"phoneNumber\": \"+16175551234\", // leading +1 then 10 digits phone number\n    \"email\": \"john@example.com\",\n    // Optional fields below\n    \"monthsAtAddress\": 24,\n    \"priorAddress\": {\n      \"address1\": \"456 Old St\",\n      \"city\": \"Cambridge\",\n      \"state\": \"MA\",\n      \"zip\": \"02139\"\n    },\n    \"gender\": \"Male\", // Optional: \"Male\" | \"Female\" | \"Non-Binary\"\n    \"licenseNumber\": \"S12345678\", // Optional\n    \"licenseState\": \"MA\", // Optional\n    \"yearsLicensed\": 15, // Optional\n    \"educationLevel\": \"BachelorsDegree\", // Optional: 'LessThanHighSchoolDiploma', 'HighSchool', 'SomeCollegeNoDegree', 'AssociateDegree', 'BachelorsDegree', 'MastersDegree', 'PostGraduate', 'DoctorMedicine', 'LawDegree', 'VocationalTechnical'\n    \"residenceOwnershipType\": \"Own\", // Optional: \"Rent\" | \"Own\" | \"Other\"\n    \"maritalStatus\": \"Married\", // Optional: \"Single\" | \"Married\" | \"Divorced\" | \"Widowed\" | \"Seperated\" | \"Domestic Partner\"\n    // Optional: Array of income sources\n    \"income\": [\n      {\n        \"employmentType\": \"Full-Time\", // Optional: 'Full-Time', 'Part-Time', 'Self-Employed', 'Contractor', 'Active-Military', 'Other'\n        \"employerName\": \"Tech Corp\", // Optional: string\n        \"jobTitle\": \"Engineer\", // Optional: string\n        \"monthsAtEmployer\": 36, // Optional\n        \"annualIncome\": \"120000\" // Optional, in dollars\n      }\n    ],\n    \"creditIndicator\": \"800\" // Optional, a credit indicator\n  },\n  // Optional: Co-applicant(s)\n  \"coapplicants\": {\n  // Keys must be 1-9\n    \"1\": {\n      \"firstName\": \"Jane\",\n      \"lastName\": \"Doe\",\n      \"dateOfBirth\": \"1982-02-02\", // Format: YYYY-MM-DD\n      // Optional fields below\n      \"phoneNumber\": \"+16175559876\", // leading +1 then 10 digits phone number\n      \"email\": \"jane@example.com\",\n      \"relationshipToApplicant\": \"Spouse\", // \"Spouse\" | \"Parent\" | \"Child\" | \"Relative\" | \"Cohabitant\" | \"Other\"\n      \"gender\": \"Female\", // Optional: \"Male\" | \"Female\" | \"Non-Binary\"\n      \"licenseNumber\": \"S87654321\", // Optional\n      \"licenseState\": \"MA\", // Optional\n      \"yearsLicensed\": 12, // Optional\n      \"educationLevel\": \"MastersDegree\", // Optional: 'LessThanHighSchoolDiploma', 'HighSchool', 'SomeCollegeNoDegree', 'AssociateDegree', 'BachelorsDegree', 'MastersDegree', 'PostGraduate', 'DoctorMedicine', 'LawDegree', 'VocationalTechnical'\n      \"maritalStatus\": \"Married\", // Optional: \"Single\" | \"Married\" | \"Divorced\" | \"Widowed\" | \"Seperated\" | \"Domestic Partner\"\n      // Optional: Array of income sources\n      \"income\": [\n        {\n          \"employmentType\": \"Part-Time\", // Optional: 'Full-Time', 'Part-Time', 'Self-Employed', 'Contractor', 'Active-Military', 'Other'\n          \"employerName\": \"Education Corp\", // Optional: string\n          \"jobTitle\": \"Teacher\", // Optional: string\n          \"monthsAtEmployer\": 24, // Optional\n          \"annualIncome\": \"45000\" // Optional, in dollars\n        }\n      ],\n      \"creditIndicator\": \"800\" // Optional, a credit indicator\n    }\n  },\n  // Required: At least one vehicle\n  \"vehicles\": {\n    \"1\": {\n      // First vehicle is required\n      \"make\": \"Toyota\",\n      \"model\": \"Camry\",\n      \"year\": \"2020\",\n      // Optional fields below\n      \"vin\": \"1HGCM82633A123456\", // Optional \n      \"trim\": \"SE\", // Optional\n      \"estimatedAnnualMileage\": 12000, // Optional\n      \"isFinanced\": true, // Optional\n      // Optional\n      \"lien\": {\n        \"lienHolder\": \"Bank of America\", // Optional\n        \"monthlyPayment\": \"350\", // Optional, in dollars\n        \"originalAmount\": \"25000\", // Optional, in dollars\n        \"payoffAmount\": \"15000\", // Optional, in dollars\n        \"remainingTerm\": 36 // Optional, in months\n      }\n    },\n    \"2\": {\n      // Optional additional vehicles (keys 2-9). Optionality rules same as above\n      \"make\": \"Honda\",\n      \"model\": \"CR-V\",\n      \"year\": \"2019\",\n      \"vin\": \"5J6RW2H89KL001234\"\n    }\n  },\n  \"partnerBrand\": \"Blinker\", // Optional. Used to show a brand to customers.\n  // Optional: Used to pass miscellaneous data that doesn't fit into other fields\n  \"partnerData\": {\n    \"sourceSystem\": \"PartnerPortal\",\n    \"campaignId\": \"SPRING2024\"\n  },\n  \"isTest\": false // Optional: Flag for test requests\n}\n\n ```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Quote  Link",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"partnerBrand\": \"iLending\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/auto/v1/leads/:id/get-link",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"auto",
+						"v1",
+						"leads",
+						":id",
+						"get-link"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": ""
+						}
+					]
+				},
+				"description": "Returns a one-time link to the Embedded Insurance microsite."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/auto/v1/health",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"auto",
+						"v1",
+						"health"
+					]
+				},
+				"description": "Returns the health of the API\n\nExample 200 response:\n\n``` json\n{\n  \"status\": \"ok\",\n  \"timestamp\": \"2025-03-05T16:00:08.501Z\",\n  \"requestId\": \"d7fd4c23-b6d6-4ef9-89a4-e4e14134e863\",\n  \"version\": \"1.0.0\"\n}\n\n ```"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "grant_type",
+				"value": "client_credentials",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "{{AUTH_URL}}",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "webhooks_token",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{EI_AUTH_CLIENT_SECRET}}",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{EI_AUTH_CLIENT_ID}}",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "{{AUTH_URL}}",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

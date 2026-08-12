@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/se-rating/:path*",
+      "destination": "https://staging.fiadmin.com/scs.webservice/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

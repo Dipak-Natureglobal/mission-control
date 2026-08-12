@@ -1,0 +1,28 @@
+{
+  "_comment": "Mock summary.insuranceVerification block matching canon `_insurance_verification_shape`. Real shape per EI partner docs (Blinker_Verify_Webhook_Response_v1.md). Source 'id-card' so media[] is populated; for 'third-party' source, media would be []. Only data EI actually returns — no coverage limits / deductibles / current premium / policy expiration (EI doesn't surface those).",
+  "id": "verification_5f2a8c91",
+  "status": "completed",
+  "source": "id-card",
+  "policyInfo": {
+    "carrier": "Progressive",
+    "policyType": "auto",
+    "policyNumber": "GR-887421-04",
+    "vehicles": [
+      { "year": 2021, "make": "Toyota", "model": "RAV4" }
+    ],
+    "namedInsureds": [
+      { "firstName": "Jordan", "lastName": "Sanchez", "isPrimary": true }
+    ]
+  },
+  "media": [
+    {
+      "url": "https://media.embeddedinsurance.test/cards/5f2a8c91-front.jpg",
+      "description": "Insurance card — front",
+      "contentType": "image/jpeg",
+      "size": 412384,
+      "createdAt": "2026-05-03T09:14:22Z",
+      "expiresAt": "2026-05-10T09:14:22Z"
+    }
+  ],
+  "verifiedAt": "2026-05-03T09:14:30Z"
+}

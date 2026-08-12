@@ -1,0 +1,23 @@
+{
+  "name": "blinker-prototype",
+  "description": "Monorepo hosting the five Blinker portal prototypes, vendored read-only from their BlinkerGit source repositories.",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-portals.mjs",
+    "sync:check": "node scripts/sync-portals.mjs --check",
+    "sync:patch": "node scripts/apply-monorepo-patches.mjs",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "preview": "turbo preview"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.8"
+  },
+  "packageManager": "pnpm@10.34.4",
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

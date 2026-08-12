@@ -1,0 +1,320 @@
+{
+  "_comment": "Canonical Org IDs. Mirrors Blinker Agreements API. Confirmed 2026-05-02 via legacy MissionControl + EFS prototype Settings → Organizations cross-reference. As of 2026-05-05 (admin-console init) extended with `parent_org_id` (explicit hierarchy: Blinker → Parent → Child) and `integrations` (per-org enabled providers + credential ref). See canon/integrations.json for the per-provider field schema and architecture/10-admin-console.md for the credential-storage policy. v3.0.10 Task 1 (2026-05-13): adds `cross_org_assignment` per-org block. Wave 30 (2026-05-13): adds `sales_goals` per-org block (ADR 20).",
+  "_version": "2026-06-01-v3016-monthly-membership-vsc",
+  "_demo_user_email": "jimmy@aautoalliance.com",
+  "_source": "blinker.organizations table; mirrored to payment-processing-platform/orchestrator org table",
+
+  "_timezone_principle": "Every org carries a `timezone` field — IANA TZ database string (e.g. 'America/Chicago', 'America/New_York', 'UTC'). Drives time display in agent-facing surfaces (lead-status timeline, activity feeds, audit-log timestamps) so an agent operating from the org's HQ sees local clock-time, not the consumer's or server's UTC clock. Phase 1: seeded inline as 'America/Chicago' for all fixture orgs (a reasonable mid-US default; Texas-headquartered Apex 102 is the demo anchor). Phase 2: real per-org values land via Agreements API. Consumer surface (EI microsite) is unaffected — EI handles consumer-side TZ on its end. Insurance-portal LeadStatusTimeline reads via `orgRegistry.orgs.find(o => o.id === orgId)?.timezone`, falls back to browser-local TZ when the lookup misses.",
+  "_integrations_principle": "Each org carries an `integrations` block: { <provider_id>: { enabled: bool, credentials: { test: {...}, live: {...} | flat {...} for providers without test_mode }, last_verified_at?, status?: 'configured'|'missing'|'errored' } }. Phase 1: credentials are fixture values stored inline (NOT real secrets). Phase 2: server-side encrypted-at-rest storage; admin-console reveals via API endpoint gated on view_integration_credentials. Provider field schema lives in canon/integrations.json. Empty `integrations: {}` means no providers wired; the admin-console Integrations page renders every provider as 'not configured' until populated.",
+  "_hierarchy_principle": "Org hierarchy is explicit via `parent_org_id` (null for root orgs). Replaces the legacy implicit configuration-name suffix pattern (American Auto Alliance + 'AAA-RCO' / 'AAA-BUSA' / 'AAA-PA' / 'AAA-NIC' as separate Configuration rows). In our model: each org has its OWN configuration (locked decision: 1 config per org / copy-down). When a child org is created under a parent, the parent's protection_billing + cross_sell + integrations defaults are copied down at create-time; subsequent edits are independent. Document any re-copy operations in audit_log.",
+
+  "_vehicle_defaults_principle": "Per-org vehicle defaults — seeded on every org so callers can always read `org.vehicle_defaults.annual_mileage_estimate` without a null-check. Drives the mileage slider default in ScreenVehicleDrive: `vehicleAge * annual_mileage_estimate`. 12,000 mi/yr is the standard US benchmark; orgs operating in high-mileage markets (commercial fleets, rideshare-heavy) can override. Phase 1: read from canon copy. Phase 2: replaced by `await blinkerApi.orgs.get(orgId)` per architecture/07-data-layer.md.",
+  "_vehicle_defaults_shape": {
+    "annual_mileage_estimate": "integer — miles per year; used to seed the mileage slider on ScreenVehicleDrive (vehicleAge × this value). Default 12000 (US benchmark). Clamp vehicleAge to [1, 20] before multiplying."
+  },
+
+  "_sales_goals_principle": "Per-org sales targets that drive the Agent Compete screen and the Manager team leaderboard (ADR 20). Reads `orgRegistry.orgs.find(o => o.id === orgId)?.sales_goals`. Phase 1 reads from canon copy. Phase 2 swaps to `await blinkerApi.orgs.get(orgId)` (Phase 2 also adds per-agent overrides on the agents table). Drives goal progress meters, fast-start window, streak milestones, fast-close badge thresholds — see architecture/20-sales-leaderboard.md.",
+  "_sales_goals_shape": {
+    "weekly_wins":              "integer — wins target for the calendar week (Monday-Sunday). Drives the weekly goal card + 'On pace' indicator.",
+    "monthly_wins":             "integer — wins target for the calendar month. Drives the monthly goal card.",
+    "monthly_revenue":          "integer — revenue (sum of opp.value for won opps) target for the calendar month. Drives the monthly revenue card.",
+    "fast_start_threshold_pct": "integer 0-100 — percent of weekly_wins the agent must hit by EOD Tuesday to earn the Fast Start badge. Default 30.",
+    "fast_close_hours":         "integer — opp closes (won_at - created_at) under this threshold earn the Fast Close badge. Default 24.",
+    "streak_milestones":        "integer[] — day-count thresholds at which streak badges unlock. Default [3, 5, 10, 15, 20]."
+  },
+
+  "_cross_org_assignment_principle": "Per-org policy controlling whether a manager (or any reassigner) can move an opportunity to an agent in a DIFFERENT org. Each org carries its own policy; the source org's policy is what gates the action (the org losing the opp/contact). Default for newly-created orgs is `enabled: false` — orgs must explicitly opt in via Admin Console. When `enabled: true`, the policy dictates whether the contact + opportunity are COPIED (the source org retains a read-only mirror) or MOVED (the source org loses the record). Read pattern: `orgRegistry.orgs.find(o => o.id === sourceOrgId)?.cross_org_assignment`. Phase 1.5 reads from canon copy. Phase 2 swaps to `await blinkerApi.orgs.get(orgId)`. Manager UX: when the source org has `enabled: false`, the AgentPicker hides cross-org destinations; when `true`, destinations across the manager's accessible orgs render, and on assign the policy drives copy-vs-move + readonly side-effects.",
+  "_cross_org_assignment_shape": {
+    "enabled": "boolean — gates whether cross-org targets surface in the AgentPicker for this org's opps. Default false.",
+    "contact_mode": "string — 'copy' (default) | 'move'. On copy, source org keeps the contact; destination receives a duplicate. On move, the contact is unlinked from source and reparented to destination.",
+    "opportunity_mode": "string — 'copy' (default) | 'move'. Same semantics on the opportunity record. Copy is the safer default (audit trail preserved).",
+    "mark_opportunity_readonly_on_copy": "boolean — when contact_mode/opportunity_mode is 'copy', the SOURCE org's mirror is flagged readonly so it can't be re-worked. Default true. Ignored on move.",
+    "mark_contact_readonly_on_copy": "boolean — same for the contact mirror. Default true. Ignored on move."
+  },
+
+  "_cross_sell_principle": "Per-org cross-sell config + protection-plan financing parameters. Co-located with the org definition rather than fragmented into a separate canon file. Read pattern: `orgRegistry.orgs.find(o => o.id === orgId)?.cross_sell`. Phase 1.5 reads this from the canon copy in each child app's src/constants/canon/. Phase 2 is replaced by `await blinkerApi.orgs.get(orgId)` returning the same shape (per architecture/07-data-layer.md).",
+  "_cross_sell_shape": {
+    "insurance_enabled": "boolean — gates the 'Find insurance savings' CTA on protection-portal RecommendedCoverage. False until product confirms each org.",
+    "refi_enabled":      "boolean — gates the 'Lower your monthly with refinance' CTA. False until product confirms.",
+    "protection_plan_financing": "object? — only relevant when refi_enabled. Drives the legacy products_payment formula (BlinkerLegacy/blinker/lib/blinker/amortization/fixed_term.rb#products_payment). Schema: { min_apr, max_apr, default_apr } as decimals (0.0899 = 8.99%); { min_term_months, max_term_months, default_term_months } as integers."
+  },
+  "_cross_sell_apex_seed_provenance": "Apex 102 financing values (min_apr 4.99 / max_apr 14.99 / default_apr 8.99 / min_term 36 / max_term 84 / default_term 60) are reasonable mid-tier auto-refi seeds, NOT lifted from a specific legacy Configuration row. Production-actual defaults come from each org's legacy Configuration row (estimated_payment_apr derived from T1_BUYDOWN_MATRIX[estimated_payment_down_pct] in BlinkerLegacy/blinker/app/models/configuration.rb:173-175; estimated_payment_term, min_term, max_term as columns). Confirm with product before any production rollout.",
+
+  "_protection_billing_principle": "Per-org protection-plan billing controls — agent discount cap, down-payment range, first-payment-date strategy, months-to-pay options, dealer markup. Drives the agent's BillingPayment / Confirm UX. Defaults are inherited from legacy Configuration columns (BlinkerLegacy/blinker/app/models/configuration.rb) so the rewrite matches production behavior at the seam. Override per org as product confirms. Phase 2 swaps to `await blinkerApi.orgs.get(orgId)`.",
+  "_protection_billing_shape": {
+    "discount": {
+      "max_percent":         "integer — agent's hard cap on plan discount, applied as %. Mirrors configurations.profit_discount_percent (legacy default 20).",
+      "max_dollars":         "decimal — agent's hard cap on plan discount, applied as $. Mirrors configurations.profit_discount_max (legacy default 540.00). BOTH caps are enforced; whichever is reached first wins (see MissionControl/src/features/refiApp/productsForm.tsx:230-326 for the bidirectional clamp).",
+      "disabled_in_states":  "string[] — two-letter state codes where discount is hard-disabled regardless of caps. Legacy hardcodes ['FL'] in productsForm.tsx:89; canon-driven so future state expansion is a config edit."
+    },
+    "down_payment": {
+      "default_percent":        "integer — default down-pmt % the agent UI seeds when flipping to monthly. Mirrors configurations.down_payment_percent_min (legacy default 10).",
+      "min_percent":            "integer — minimum down-pmt % the agent can drop to. Mirrors configurations.down_payment_percent_min.",
+      "max_percent_of_total":   "integer — maximum down-pmt as % of total_price. Hardcoded 75 in legacy product_option.rb:30-34 + paymentOptions.tsx:156. Canon-driven so future tuning is a config edit."
+    },
+    "first_payment_date": {
+      "default_strategy":     "string — 'first_of_next_month' (prototype UX) | 'min_date' (legacy: today + min_days_from_today). Decision 2026-05-04 picks 'first_of_next_month' clamped to the min/max day window.",
+      "min_days_from_today":  "integer — earliest the customer's first payment can be set to. Mirrors configurations.first_payment_min_days (legacy default 31).",
+      "max_days_from_today":  "integer — latest the first payment can be set to. Mirrors configurations.first_payment_max_days (legacy default 45)."
+    },
+    "payment_term": {
+      "options_months":  "integer[] — list of payment-count options the agent can choose from. Mirrors ProductPackage::PAYMENT_COUNT_OPTIONS = [1, 6, 12, 18, 24] (Ruby constant; not per-org in legacy but exposed here so an org can subset). 1 = pay-in-full.",
+      "default_months":  "integer — agent-facing default (prototype: 12). Note legacy plan_settings.payment_term_public_default = 24 is for partner public quote pages, NOT the agent UI."
+    },
+    "markup": {
+      "default_dollars":  "decimal — markup applied on top of TPA cost outside FL. Mirrors configurations.profit_markup_default (legacy default 2700.00).",
+      "florida_dollars":  "decimal — FL-specific markup. Mirrors configurations.profit_markup_florida (legacy default 2550.00). Applied when the customer's address state is FL."
+    },
+    "coverage_term_defaults": {
+      "min": "integer (months) — initial low-thumb position for the Customize Coverage step's term range slider. Slider bounds come from the GetRates response (filters.coverage_periods_months min/max); these defaults seed the selected range. Mirrors org-level preferred-term policy.",
+      "max": "integer (months) — initial high-thumb position. Both thumbs snap to the nearest discrete option in the GetRates response."
+    },
+    "coverage_miles_defaults": {
+      "min": "integer (miles) — initial low-thumb position for the Customize step's mileage range slider. Bounds from GetRates filters.mileages min/max (excluding 999999, which is reserved for monthly-membership UX).",
+      "max": "integer (miles) — initial high-thumb position."
+    },
+    "max_plan_price": "decimal — hard ceiling on customer-facing plan price (cost + markup). Plans with `base_price > max_plan_price` are filtered out of BOTH the Good/Better/Best default selection (RecommendedCoverage) AND the Customize browser before tier picking. Default $4000 when omitted (read by packages/utils/protection-pricing.js#getOrgMaxPlanPrice). Wave 22-fu5 — surfaced when real OMGA UAT returned 72-month rate-classes north of $6000, distorting BETTER selection. NOTE: monthly-membership plans BYPASS this ceiling (they have their own caps, below).",
+    "monthly_membership": {
+      "_principle": "Per-org pricing + discount controls for monthly-membership VSC products (the 999999-sentinel class — see canon/plan-mappings.json::monthly_membership + architecture/28-monthly-membership-vsc.md). These plans are billed as a recurring monthly charge with NO down-payment and NO finite months-to-pay (the term is unlimited; coverage continues while payments continue). The per-month charge = (SE per-term Cost at the configured term_to_use) + markup, optionally discounted within the caps below. Read by packages/utils/protection-pricing.js#resolveMonthlyMembershipPricing. Edited in mission-control admin (super OrgConfigSections/Protection.jsx). Phase 2 swaps to `await blinkerApi.orgs.get(orgId)`. SEED VALUES BELOW ARE EDUCATED GUESSES (_TODO: confirm with product + a real OMGA monthly capture — per memory feedback_canon_todo_defaults).",
+      "enabled":  "boolean — master gate. When false, monthly-membership products are detected (and kept out of dropdowns) but the wizard does NOT surface the term/monthly switch; monthly plans simply don't appear. Default true once a real capture confirms pricing semantics.",
+      "default":  "object — fallback pricing applied to any monthly plan_code without a by_plan_code entry. { term_to_use: integer, markup_dollars: decimal, florida_markup_dollars: decimal }. IMPORTANT (confirmed 2026-06-01 against real OMGA UAT): StoneEagle returns the monthly plan's <Cost> as TOTAL-AT-TERM (cumulative — term 12 ≈ 12× the per-month rate), NOT per-month. So term_to_use MUST be 1 to use the true per-month cost as the basis. markup_dollars is added to that term-1 cost (non-FL); florida_markup_dollars is the FL split.",
+      "by_plan_code": "object — per-plan-code overrides keyed by the bare PlanCode string (e.g. '41'). Same shape as `default`. An entry here supersedes `default` for that plan code.",
+      "discount": "object — monthly-specific discount caps, SEPARATE from the term-plan `discount` block above. { max_percent: integer, max_dollars: decimal, disabled_in_states: string[] }. Applied to the per-month charge on the Confirm screen."
+    },
+    "vin_validate": {
+      "_principle": "Per-org config driving the post-payment VIN-validate flow's branching when a second SE GetRates call (with VIN attached) returns rates that diverge from the YMMT-only original. See architecture/17-vin-validate-rates-comparison.md. Wave 25 v3.0.7. Defaults are educated guesses (_TODO: confirm with partner ops + finance per memory feedback_canon_todo_defaults.md).",
+      "allow_down_payment_bypass":   "boolean — when a forced plan switch happens (selected plan disappears OR re-prices outside margin tolerance) AND the customer picks a substitute plan, allow the previously-collected down payment to satisfy the new plan's min-down requirement instead of requiring a top-up. true = bypass; false = legacy strict, may need top-up CTA. Default false.",
+      "margin_tolerance_pct":        "number (percent) — when the SAME plan re-prices HIGHER on the VIN call vs the YMMT call, the price delta as a % of original price must be ≤ this tolerance to silently advance (org absorbs the margin). > tolerance triggers RatesChanged step (re-pick or refund). Default 5.",
+      "auto_refund_on_decline":      "boolean — when the customer/agent clicks 'Refund and exit' on RatesChanged, auto-issue a refund via packages/integrations/payment#refundCharge (true) vs flag the opportunity for manual review with NO automatic refund (false, BlinkerLegacy parity). Default true.",
+      "allow_over_tolerance_proceed":"boolean — when kind = plan_price_higher_outside_tolerance, expose a 'Continue with original' CTA that lets the customer proceed at the higher price (org or partner eats the margin). Default false (CTA hidden)."
+    }
+  },
+  "_reports_principle": "Per-org embedded-analytics config. Today only `looker_studio` is supported. Stores REPORT IDS, NEVER URLS — URL construction lives in mission-control/src/lib/external-links.js#buildLookerEmbedUrl at render time so the user's email can be substituted into the params filter dynamically and the iframe src is the only place the URL exists. Never surface as an external link (per architecture/14-looker-embed.md and the Wave 23 v3.0.5 decision); always render in our shell via iframe (`/embed/reporting/{report_id}[/page/{page_id}]?params=...`). The `params_template` is a JSON object whose values support the `{user_email}` token; consumers replace then `encodeURIComponent(JSON.stringify(...))`. `_demo_user_email` at the registry root provides a Phase 1 fallback when no real session user is present (matches the `jimmy@aautoalliance.com` filter shown in the v3.0.5 spec PDF).",
+  "_se_error_handling_principle": "Per-org StoneEagle GetRates known-error config. Drives packages/integrations/product_admin/stoneeagle.js#classifySeError → friendly message + DevPanel raw view. `default_strategy` controls behavior when no `known_errors[]` entry matches: 'show_friendly_message' (generic copy + DevPanel raw), 'fallback_fixture' (use the bundled fixtures as last-resort rates), 'block' (hard fail; agent must call SEFI ops). `known_errors[]` items: { pattern: regex on raw response text, code: short symbolic id, user_message: customer-facing copy, internal_action: 'retry'|'log_only'|'page_oncall' }. See architecture/13-se-error-handling.md.",
+
+  "_protection_billing_seed_provenance": "All non-Apex orgs receive the legacy-default values inline so a swap-in producer ('blinkerApi.orgs.get') does not have to re-resolve absent fields. Apex 102 currently mirrors the same defaults; product-confirmed per-org overrides land here as they're confirmed. The percent-variant markup (configurations.plan_settings.profit_markup_default = 0.15) is intentionally NOT included — that's used by partner public quote pages, not the agent rewrite per decision 2026-05-04.",
+
+  "orgs": [
+    { "id": 1,   "name": "Blinker",                "type": "internal", "status": "paused",  "ghl_location_id": null,                       "configurations": ["Blinker Test"], "timezone": "America/Chicago",
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
+      "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      } },
+    { "id": 2,   "name": "American Auto Alliance", "type": "parent",   "status": "paused",  "ghl_location_id": null,                       "configurations": ["AAA-RCO", "AAA-BUSA", "AAA-PA", "AAA-NIC"], "timezone": "America/Chicago",
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
+      "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      } },
+    { "id": 102, "name": "Apex Auto Solutions",    "type": "child",    "status": "active",  "ghl_location_id": "reWBjJ4bl9eIFdUlpl4w",     "configurations": ["Apex"], "timezone": "America/Chicago",
+      "parent_org_id": null,
+      "users_count": 28,
+      "test_mode": false,
+      "integrations": {
+        "ghl": {
+          "enabled": true,
+          "status": "configured",
+          "credentials": {
+            "location_id": "reWBjJ4bl9eIFdUlpl4w",
+            "api_key": "<ghl-api-key-fixture>",
+            "private_token": "<ghl-pit-fixture>",
+            "webhook_secret": "<ghl-webhook-secret-fixture>"
+          }
+        },
+        "fluidpay":   { "enabled": true,  "status": "configured", "credentials": { "test": { "merchant_id": "apex-test-merchant", "api_key": "<fp-test-fixture>", "public_key": "pk_test_apex" }, "live": { "merchant_id": "apex-live-merchant", "api_key": "<fp-live-fixture>", "public_key": "pk_live_apex" } } },
+        "ensurety":   { "enabled": true,  "status": "configured", "credentials": { "test": { "app_id": "BLINKERTESTAPP", "account_code": "APEX-TEST", "processor": "fluidpay", "efs_token": "<ens-test-token>", "default_term_months": 12, "down_payment_mode": "same_as_monthly", "down_payment_value": 0 }, "live": { "app_id": "APEXAPP", "account_code": "APEX-LIVE", "processor": "fluidpay", "efs_token": "<ens-live-token>", "default_term_months": 12, "down_payment_mode": "same_as_monthly", "down_payment_value": 0 } } },
+        "flopay":     { "enabled": true,  "status": "configured", "credentials": { "test": { "api_url": "https://test.flopay.com", "api_key": "<flopay-test>", "merchant_id": "apex-test" }, "live": { "api_url": "https://api.flopay.com", "api_key": "<flopay-live>", "merchant_id": "apex-live" } } },
+        "stoneeagle": { "enabled": true,  "status": "configured",
+          "_test_environment_note": "Test credentials below exercise the OMGA (Omega Auto Care) UAT — supplied by SEFI 2026-05-09 for end-to-end GetRates verification. Note that OMGA differs from this org's live TPA code (APEX); the divergence is intentional fixture behavior. SOAP service URLs land at /scs.webservice/{scsautoservice,Contractservice}.asmx; canon stores the base URL and code appends paths.",
+          "credentials": {
+            "test": { "web_service_base_url": "https://staging.fiadmin.com/scs.webservice/", "tpa_code": "OMGA",       "user_id": "BLINKER",       "password": "zGg8SRDV2b",   "dealer_no": "AMR2",   "recipient_id": "", "products_filter": [] },
+            "live": { "web_service_base_url": "http://www.natinc.com/SCSAutoService/",      "tpa_code": "APEX",       "user_id": "apex_user",     "password": "<se-live-pw>", "dealer_no": "001",    "recipient_id": "", "products_filter": [] }
+          }
+        },
+        "express_aftermarket": { "enabled": false, "status": "missing" },
+        "embedded_insurance":  { "enabled": true,  "status": "configured", "credentials": { "test": { "api_url": "https://sandbox.embeddedinsurance.io", "api_key": "<ei-test>", "partner_id": "apex-test", "webhook_secret": "<ei-test-ws>" }, "live": { "api_url": "https://api.embeddedinsurance.io", "api_key": "<ei-live>", "partner_id": "apex", "webhook_secret": "<ei-live-ws>" } } },
+        "docuseal":   { "enabled": true,  "status": "configured", "credentials": { "api_url": "https://docuseal.blinker.com", "api_token": "<ds-token>", "webhook_token": "<ds-webhook>", "template_overrides": [], "template_id_by_plan": {} } },
+        "twilio":     { "enabled": true,  "status": "configured", "credentials": { "test": { "account_sid": "ACtest", "auth_token": "<tw-test>", "from_number": "+15555550100", "daily_fail_limit": 50 }, "live": { "account_sid": "ACprod", "auth_token": "<tw-live>", "from_number": "+18005551234", "daily_fail_limit": 200 } } },
+        "mandrill":   { "enabled": true,  "status": "configured", "credentials": { "api_key": "<md-key>", "from_email": "noreply@apexautosolutions.com", "from_name": "Apex Auto Solutions" } },
+        "google_places": { "enabled": true, "status": "configured", "credentials": { "api_key": "<gp-key>" } },
+        "vinaudit":   { "enabled": true,  "status": "configured", "credentials": { "api_key": "<va-key>" } }
+      },
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": {
+        "insurance_enabled": true,
+        "refi_enabled":      true,
+        "protection_plan_financing": {
+          "min_apr":             0.0499,
+          "max_apr":             0.1499,
+          "default_apr":         0.0899,
+          "min_term_months":     36,
+          "max_term_months":     84,
+          "default_term_months": 60
+        }
+      },
+      "cross_org_assignment": { "enabled": true, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "sales_goals": { "weekly_wins": 10, "monthly_wins": 40, "monthly_revenue": 30000, "fast_start_threshold_pct": 30, "fast_close_hours": 24, "streak_milestones": [3, 5, 10, 15, 20] },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      },
+      "reports": {
+        "looker_studio": {
+          "report_id": "7667c112-235e-4f9d-b083-61a02aba5cb9",
+          "params_template": {
+            "ds0.p0": "{user_email}",
+            "ds1.p1": "{user_email}",
+            "ds2.p2": "{user_email}"
+          },
+          "pages": {
+            "opportunities":         { "label": "Opportunities",       "page_id": null },
+            "down_payments":         { "label": "Down Payments",       "page_id": "p_69t5epiuxd" },
+            "payment_tracking":      { "label": "Payment Tracking",    "page_id": "p_ez1w9cecyd" },
+            "contracts_in_transit":  { "label": "Contracts in Transit","page_id": "p_msenvt4i2d" }
+          }
+        }
+      },
+      "se_getrates": {
+        "error_handling": {
+          "default_strategy": "show_friendly_message",
+          "known_errors": []
+        }
+      },
+      "plan_overrides": {
+        "_comment": "Per v3.0.8 PDF Task 1 — per-org overrides for plan presentation. Key: `${tpa}::${ptc}::${plan_code}`. Each entry can override plan_level / plan_title / plan_coverage_html / sample_agreement_url for this org's customers + agents. Supersedes canon/plan-mappings.json::plan_catalog. Edited via mission-control admin → Plan presentations tab. Empty by default."
+      } },
+    { "id": 103, "name": "Kings DR",               "type": "child",    "status": "active",  "ghl_location_id": null,                       "configurations": ["Kings DR"], "timezone": "America/Chicago",
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
+      "cross_org_assignment": { "enabled": true, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "sales_goals": { "weekly_wins": 6, "monthly_wins": 24, "monthly_revenue": 18000, "fast_start_threshold_pct": 30, "fast_close_hours": 24, "streak_milestones": [3, 5, 10, 15, 20] },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      } },
+    { "id": 104, "name": "AAA Prospect A",         "type": "child",    "status": "paused",  "ghl_location_id": null,                       "configurations": ["AAA-PA"], "timezone": "America/Chicago",
+      "parent_org_id": 2,
+      "users_count": 5,
+      "test_mode": true,
+      "integrations": {},
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
+      "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      } },
+    { "id": 106, "name": "Rewardsco",              "type": "child",    "status": "active",  "ghl_location_id": "lEn7Qk5IlnzubgsybvOr", "configurations": ["Rewardsco"], "timezone": "America/Chicago",
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
+      "cross_org_assignment": { "enabled": true, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "sales_goals": { "weekly_wins": 4, "monthly_wins": 16, "monthly_revenue": 12000, "fast_start_threshold_pct": 30, "fast_close_hours": 24, "streak_milestones": [3, 5, 10, 15, 20] },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      },
+      "reports": {
+        "looker_studio": {
+          "report_id": "7667c112-235e-4f9d-b083-61a02aba5cb9",
+          "params_template": {
+            "ds0.p0": "{user_email}",
+            "ds1.p1": "{user_email}",
+            "ds2.p2": "{user_email}"
+          },
+          "pages": {
+            "opportunities":         { "label": "Opportunities",       "page_id": null },
+            "down_payments":         { "label": "Down Payments",       "page_id": "p_69t5epiuxd" },
+            "payment_tracking":      { "label": "Payment Tracking",    "page_id": "p_ez1w9cecyd" },
+            "contracts_in_transit":  { "label": "Contracts in Transit","page_id": "p_msenvt4i2d" }
+          }
+        }
+      } },
+    { "id": 110, "name": "Nicaragua",              "type": "child",    "status": "unknown", "ghl_location_id": null,                       "configurations": ["AAA-NIC"], "timezone": "America/Managua", "notes": "Offshore call center",
+      "parent_org_id": 2,
+      "users_count": 12,
+      "test_mode": false,
+      "integrations": {},
+      "vehicle_defaults": { "annual_mileage_estimate": 12000 },
+      "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
+      "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "protection_billing": {
+        "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 },
+        "payment_term":        { "options_months": [1, 6, 12, 18, 24], "default_months": 12 },
+        "markup":              { "default_dollars": 2700.00, "florida_dollars": 2550.00 },
+        "coverage_term_defaults":  { "min": 48, "max": 60 },
+        "coverage_miles_defaults": { "min": 50000, "max": 75000 },
+        "max_plan_price":          4000.00,
+        "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
+        "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
+      } }
+  ],
+  "_TODO": [
+    "Verify ghl_location_id for orgs other than Apex 102 + Rewardsco 106 (both confirmed 2026-05-09 via v3.0.5 spec PDF)",
+    "Populate org.reports.looker_studio for active orgs beyond Apex 102 + Rewardsco 106 (Kings DR 103 currently empty — confirm with product whether to copy the same shared report id or create per-org dashboards)",
+    "Add UWP, Gigantes, and other production orgs once their IDs are confirmed",
+    "Document parent_org_id relationships explicitly once Blinker → Parent → Child hierarchy is finalized in DB",
+    "Mirror this from a live API call to the Agreements service rather than hard-coding",
+    "Confirm Apex 102 cross_sell.protection_plan_financing values against product / legacy Configuration row before production rollout (current values are reasonable seeds, not extracted from legacy data)",
+    "Replace the canon-copy read with a real `blinkerApi.orgs.get(orgId)` endpoint per architecture/07-data-layer.md Phase 2 swap",
+    "Decide whether cross_sell config inherits from parent → child orgs (no inheritance per the locked '1 config per org / copy-down' decision; document the copy-down mechanism if cross_sell follows the same pattern)",
+    "Confirm Apex 102 protection_billing values against product / legacy Configuration row before production rollout (current values are legacy column defaults, NOT extracted from a specific Configuration row)",
+    "PAYMENT_COUNT_OPTIONS [1, 6, 12, 18, 24] is a Ruby constant in ProductPackage:37 today; canon allows per-org subset but production may want the constant centralized in canon and removed from app code",
+    "first_payment_date.default_strategy = 'first_of_next_month' violates the 31-day floor when chosen on the 25th-31st of a month — the BillingPayment screen must clamp to min_days_from_today when the strategy result falls below it. Document the clamp behavior at the consumer of this canon field.",
+    "Add e-sign + payment-authorization disclaimer copy to canon/org-disclaimers.json once legacy templates are extracted (TCPA scaffolded; e-sign and payment-auth empty)"
+  ]
+}

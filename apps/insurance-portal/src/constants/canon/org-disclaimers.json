@@ -1,0 +1,38 @@
+{
+  "_comment": "Per-org disclaimer copy for TCPA, e-sign, and payment-authorization blocks. Defaults apply to all orgs; by_org overrides specific orgs. Workflow + locale axes carry forward as we localize.",
+  "_version": "2026-05-04-protection-billing-canon",
+  "_source": "BlinkerLegacy/blinker/app/views/partner/quote/contact.html.erb:128-138 (TCPA fallback default — no per-org overrides exist in legacy yet; the per-org TODO at partner/quotes_controller.rb:47-49 is unimplemented). E-sign + payment-auth blocks are NEW canon scaffolding; copy lives in legacy templates that haven't been extracted yet.",
+  "_default_locale": "en",
+  "_workflows": ["protection_quote", "protection_billing", "refi_application", "insurance_quote"],
+
+  "_principle": "Disclaimer copy is per-org configurable but defaults to a single shared block per disclaimer kind. Read pattern: `orgDisclaimers.by_org[orgId]?.<kind>?.<locale> ?? orgDisclaimers.defaults.<kind>.<locale>`. The `{{ORG_NAME}}` and `{{WORKFLOW_NAME}}` placeholders are interpolated at render time by the consumer. Phase 2 swaps to `await blinkerApi.orgs.get(orgId).disclaimers` returning the same shape.",
+
+  "_shape": {
+    "tcpa_consent":         "string — Required. SMS/call/email autodialer consent. Rendered above any contact-info-collecting CTA (typically billing or first-touch capture).",
+    "e_sign_consent":       "string — Required for any agreement-signing flow. Rendered above the DocuSeal embed or any signature capture.",
+    "payment_authorization": "string — Required for billing screens. Rendered alongside the card-entry form. Authorizes recurring debit per the months-to-pay schedule."
+  },
+
+  "defaults": {
+    "tcpa_consent": {
+      "en": "By providing my contact information and clicking Continue, I consent to receive autodialed and prerecorded marketing calls, texts, and emails from {{ORG_NAME}}, its partners, and third-party service providers at the phone number and email I have provided above, even if on a state or federal Do Not Call registry. Consent is not a condition of purchase or credit approval. Message and data rates may apply. I can opt out at any time."
+    },
+    "e_sign_consent": {
+      "en": "_TODO — extract from legacy DocuSeal template wrapper. By signing electronically, I agree that my electronic signature has the same legal effect as a handwritten signature."
+    },
+    "payment_authorization": {
+      "en": "_TODO — extract from legacy packages/payment template. I authorize {{ORG_NAME}} to charge the payment method above for the down payment due today and for the recurring monthly payments per the schedule shown."
+    }
+  },
+
+  "by_org": {},
+
+  "_TODO": [
+    "Extract real e-sign consent copy from legacy DocuSeal template wrapper (BlinkerLegacy/blinker/app/views/.../docuseal_*.erb). Today's default is a placeholder.",
+    "Extract real payment-authorization copy from legacy billing template. Today's default is a placeholder.",
+    "Audit Apex 102 product-confirmed copy and seed by_org['102'] before production rollout.",
+    "Add Spanish ('es') translations for all defaults — Nicaragua org (110) likely needs them.",
+    "Decide whether per-workflow copy variants are needed (e.g., refi_application TCPA vs protection_billing TCPA may diverge in scope language). Today's shape is per-disclaimer-kind, NOT per-workflow.",
+    "Define a 'consent_record' shape for the audit trail when a consumer agrees — likely lives in canon/blinker-domain.json under a new 'consent' entity rather than here."
+  ]
+}

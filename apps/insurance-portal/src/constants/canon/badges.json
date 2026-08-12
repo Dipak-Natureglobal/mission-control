@@ -1,0 +1,162 @@
+{
+  "_comment": "Badge taxonomy + persona presets. Replaces the legacy 60-string flat array (BlinkerLegacy/MissionControl/src/features/admin/badges.ts) with a structured catalog. Drops LEGACY_ROLES (admin / fraud / funding / posting / support / send_funds_to_lienholder — all flagged TODO-remove in legacy badges.rb). Lowercase canonical (legacy mixed lowercase storage with uppercase frontend literals; that drift caused real bugs per legacy 18-user-profile-edit-and-permissions.md).",
+  "_version": "2026-05-05-init-admin-console",
+  "_principle": "Badges are the granular permissions; personas are the bundles. A user has a persona (agent | manager | admin | super_admin | consumer) which seeds a set of badges; per-user overrides add or remove individual badges. The admin-console UserEdit drawer surfaces this as 'pick a persona, then optionally toggle 1-2 badges' rather than the legacy 60-checkbox dump. Effective permission resolution = union(persona.badges, user.added_badges) − user.removed_badges. See architecture/10-admin-console.md for the resolution algorithm.",
+  "_consumed_by": [
+    "mission-control/src/personas/admin/UserEdit.jsx (badge picker + preset dropdown)",
+    "mission-control/src/personas/admin/UsersIndex.jsx (badge-count chip)",
+    "mission-control/src/lib/permissions.js (badge-gate resolver — Phase 2 replacement for the legacy <BadgeGate> component pattern)",
+    "All child portals: persona prop drives UI gating downstream of the embedder"
+  ],
+  "_case_principle": "All badge ids are lowercase snake_case. The legacy mix of lowercase storage with uppercase frontend literals (per legacy 18-user-profile-edit-and-permissions.md 'Note on case') is fixed here. Frontend display uses the `label` field; comparisons use `id`.",
+
+  "_categories": {
+    "page": "Unlocks visibility of a top-level surface (inbox, contacts, admin console, etc.)",
+    "action": "Unlocks a specific action (impersonate, suspend, view credentials)",
+    "task": "Routes a task type to this user (legacy TASK_BADGES — kept but slimmed to live task types)",
+    "product": "Marks a user as product-team only (no agent surfaces)",
+    "platform": "Blinker-internal only (super-admin scope)"
+  },
+
+  "badges": {
+    "view_inbox":         { "label": "View inbox",            "category": "page",   "scope": "org",      "description": "See the agent opportunity inbox." },
+    "view_contacts":      { "label": "View contacts",         "category": "page",   "scope": "org",      "description": "See the contact directory + ContactProfile." },
+    "view_vehicles":      { "label": "View vehicles",         "category": "page",   "scope": "org",      "description": "See the vehicles index." },
+    "view_calendar":      { "label": "View calendar",         "category": "page",   "scope": "org",      "description": "See the agent calendar (Phase 2)." },
+    "view_admin_console": { "label": "View admin console",    "category": "page",   "scope": "org",      "description": "See the org admin console (org tree, users, integrations, configuration, audit)." },
+    "view_super_console": { "label": "View super-admin console", "category": "page","scope": "platform", "description": "See cross-org views, canon drift, audit trail." },
+    "view_metrics":       { "label": "View metrics",          "category": "page",   "scope": "org",      "description": "Manager analytics + team performance." },
+    "view_audit_log":     { "label": "View audit log",        "category": "page",   "scope": "org",      "description": "See per-org audit log of admin actions." },
+
+    "edit_opportunity":   { "label": "Edit opportunity",      "category": "action", "scope": "assigned", "description": "Modify opportunity fields, advance status." },
+    "send_consumer_links":{ "label": "Send consumer links",   "category": "action", "scope": "assigned", "description": "Generate + send capture links to consumers." },
+    "co_pilot":           { "label": "Co-pilot a session",    "category": "action", "scope": "assigned", "description": "Mirror the consumer's screen + advance forms in real time." },
+    "add_notes":          { "label": "Add notes",             "category": "action", "scope": "assigned", "description": "Append notes to opportunities + contacts." },
+    "add_tags":           { "label": "Apply tags",            "category": "action", "scope": "assigned", "description": "Tag a contact with an existing tag (search-only — does not mint new tags)." },
+    "create_tags":        { "label": "Create tags",           "category": "action", "scope": "org",      "description": "Mint new tags. Restricted to manager+ to keep the GHL tag namespace from sprawling (per personas.json _tag_permission_principle)." },
+
+    "impersonate_user":   { "label": "Impersonate user",      "category": "action", "scope": "platform", "description": "Continue-as-customer flow. Audit-logged." },
+    "suspend_user":       { "label": "Suspend user",          "category": "action", "scope": "org",      "description": "Mark a user as fraudulent / suspended." },
+    "view_api_responses": { "label": "View API responses",    "category": "action", "scope": "org",      "description": "See raw integration payloads inside the agent surface." },
+    "view_integration_credentials": { "label": "View integration credentials", "category": "action", "scope": "platform", "description": "Reveal masked secret fields in the Integrations drawer. Audit-logged on every reveal." },
+    "edit_integrations":  { "label": "Edit integrations",     "category": "action", "scope": "org",      "description": "Modify per-org integration credentials + enable/disable providers." },
+    "edit_org_config":    { "label": "Edit org config",       "category": "action", "scope": "org",      "description": "Modify org-level configuration (markup, discount caps, packages defaults, states)." },
+    "manage_org_users":   { "label": "Manage org users",      "category": "action", "scope": "org",      "description": "Invite / edit / disable users in this org and its child orgs." },
+    "manage_sub_orgs":    { "label": "Manage sub-orgs",       "category": "action", "scope": "org",      "description": "Create / edit / archive child organizations under a parent." },
+    "toggle_test_mode":   { "label": "Toggle test mode",      "category": "action", "scope": "org",      "description": "Flip the org-level test_mode broad-switch. Confirm-modal required." },
+    "edit_canon":         { "label": "Edit canon",            "category": "action", "scope": "platform", "description": "Edit the platform-level canon files (status mappings, integration registry). Super-admin only." },
+    "view_system_health": { "label": "View system health",    "category": "action", "scope": "platform", "description": "Cross-org integration health + canon drift dashboard." },
+
+    "task_underwriting":   { "label": "Task: underwriting",   "category": "task", "scope": "org", "description": "Routed underwriting-review tasks." },
+    "task_fraud_review":   { "label": "Task: fraud review",   "category": "task", "scope": "org", "description": "Routed fraud-review tasks (CarFax, OFAC, PlaidDataMismatch, UserDataMismatch)." },
+    "task_doc_upload":     { "label": "Task: document upload","category": "task", "scope": "org", "description": "Upload + validate consumer documents (DL, insurance, residence, employment)." },
+    "task_title":          { "label": "Task: title",          "category": "task", "scope": "org", "description": "App-for-title + title transfer tasks." },
+    "task_funding":        { "label": "Task: funding",        "category": "task", "scope": "org", "description": "Funding + verify-funds + handle-insufficient-funds tasks." },
+    "task_lienholder":     { "label": "Task: lienholder",     "category": "task", "scope": "org", "description": "Send-funds-to-lienholder + update-lienholder-info + contact-lienholder tasks." },
+    "task_signing":        { "label": "Task: signing",        "category": "task", "scope": "org", "description": "Sign-loan-agreement + send-buyer-packet + receive-LPOA / SPOA tasks." },
+
+    "product_rep":         { "label": "Product rep",          "category": "product", "scope": "platform", "description": "Product-team-only access; no agent surfaces. Mirrors legacy product_rep + product_only? predicate." }
+  },
+
+  "presets": {
+    "_principle": "Personas seed badge bundles. The admin-console UserEdit drawer renders 'apply preset' next to the badge picker so onboarding a new user is one click + override 0-2 badges. Mirrors legacy adminProfilePresetsConfig.js intent but with our cleaner persona-based grouping.",
+
+    "agent": {
+      "label": "Agent",
+      "description": "Daily-driver call-center agent. Works the opportunity inbox + co-pilots consumers.",
+      "badges": [
+        "view_inbox", "view_contacts", "view_vehicles",
+        "edit_opportunity", "send_consumer_links", "co_pilot", "add_notes", "add_tags"
+      ]
+    },
+
+    "agent_senior": {
+      "label": "Senior agent",
+      "description": "Agent with extended privileges — impersonate, view API responses, create tags.",
+      "badges": [
+        "view_inbox", "view_contacts", "view_vehicles", "view_calendar",
+        "edit_opportunity", "send_consumer_links", "co_pilot", "add_notes", "add_tags", "create_tags",
+        "impersonate_user", "view_api_responses"
+      ]
+    },
+
+    "manager": {
+      "label": "Manager",
+      "description": "Team lead. Sees metrics + assignments; cannot edit org config.",
+      "badges": [
+        "view_inbox", "view_contacts", "view_vehicles", "view_metrics", "view_audit_log",
+        "edit_opportunity", "add_notes", "add_tags", "create_tags",
+        "view_api_responses"
+      ]
+    },
+
+    "admin": {
+      "label": "Org Admin",
+      "description": "Configures the org, manages users + integrations + sub-orgs, edits org config.",
+      "badges": [
+        "view_inbox", "view_contacts", "view_vehicles", "view_admin_console", "view_audit_log", "view_metrics",
+        "edit_opportunity", "add_notes", "add_tags", "create_tags",
+        "view_api_responses",
+        "edit_integrations", "edit_org_config", "manage_org_users", "manage_sub_orgs", "toggle_test_mode",
+        "suspend_user"
+      ]
+    },
+
+    "super_admin": {
+      "label": "Super Admin",
+      "description": "Blinker-internal. Cross-org visibility, canon edits, credential reveals, audit trail.",
+      "badges": [
+        "view_inbox", "view_contacts", "view_vehicles", "view_admin_console", "view_super_console",
+        "view_audit_log", "view_metrics",
+        "edit_opportunity", "add_notes", "add_tags", "create_tags",
+        "view_api_responses", "view_integration_credentials",
+        "edit_integrations", "edit_org_config", "manage_org_users", "manage_sub_orgs", "toggle_test_mode",
+        "impersonate_user", "suspend_user",
+        "edit_canon", "view_system_health"
+      ]
+    },
+
+    "fraud_reviewer": {
+      "label": "Fraud reviewer",
+      "description": "Routed fraud + underwriting + doc-review tasks; no opportunity edit.",
+      "badges": [
+        "view_inbox", "view_contacts", "view_audit_log",
+        "task_fraud_review", "task_underwriting", "task_doc_upload",
+        "add_notes", "view_api_responses"
+      ]
+    },
+
+    "product_rep_only": {
+      "label": "Product rep (no UI)",
+      "description": "Product-team service account. No agent surfaces. Mirrors legacy product_only? predicate.",
+      "badges": [
+        "product_rep"
+      ]
+    }
+  },
+
+  "_dropped_from_legacy": {
+    "_reason": "These legacy badges were either flagged TODO-remove in legacy code (LEGACY_ROLES), have no remaining usage in the rewrite (legacy listings/promotions/messaging surfaces are out of rewrite scope), or were renamed for clarity.",
+    "legacy_roles_dropped":   ["admin", "fraud", "funding", "posting", "support", "send_funds_to_lienholder"],
+    "out_of_scope_dropped":   ["listings", "promotions", "messaging", "analytics", "tradeins", "transactions", "create_zendesk_ticket", "text", "image", "registration", "title", "carfax_fraud_review"],
+    "renamed": {
+      "users":                "view_contacts",
+      "edit_user":            "manage_org_users",
+      "vehicles":             "view_vehicles",
+      "refis":                "view_inbox (refi opps surface in unified inbox)",
+      "refi_phone":           "view_inbox (subsumed)",
+      "tasks":                "view_inbox (tasks surface in unified inbox)",
+      "underwriting":         "task_underwriting",
+      "superuser":            "view_super_console + view_integration_credentials + edit_canon",
+      "continue_as_customer": "impersonate_user",
+      "view_docs":            "(implicit — every page badge unlocks document view at the corresponding surface)",
+      "upload_docs":          "task_doc_upload"
+    }
+  },
+
+  "_TODO": [
+    "Once the rewrite's task surface ships, revisit task_* badges — the legacy TASK_BADGES set was dynamic (AdminTask.all_task_types); we may want the same generation rather than an enumerated list here.",
+    "Decide whether `view_metrics` should be split per scope (own / team / org / cross-org) — currently flat; manager + admin + super each get it but see different data.",
+    "Document the persona → preset relationship in personas.json (today personas.json carries permissions inline; with this canon block, persona permissions should be derived rather than duplicated)."
+  ]
+}

@@ -1,0 +1,8 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "packages/blinker-platform/packages/*"
+
+# @swc/core ships a native binary and needs its postinstall to run.
+onlyBuiltDependencies:
+  - "@swc/core"

@@ -1,0 +1,134 @@
+{
+  "_comment": "Phase 1 audit-event fixtures for the admin-console AuditLog timeline. Shape per architecture/10-admin-console.md § Audit log: { id, org_id, user_id, type, payload, occurred_at }. Covers every event type listed in the architecture doc, spread across Apex 102 / AAA 2 / AAA Prospect A 104 to demo per-org filtering. user_id resolves to src/fixtures/users.json. Phase 2 swap: server-side append-only log with cross-org pivot for super-admin.",
+  "_version": "2026-05-05-wave14-admin-console-init",
+  "events": [
+    {
+      "id": "ev_001",
+      "org_id": 102,
+      "user_id": "u_001",
+      "type": "org.created",
+      "payload": { "name": "Apex Auto Solutions" },
+      "occurred_at": "2024-01-20T09:30:00Z"
+    },
+    {
+      "id": "ev_002",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "user.invited",
+      "payload": { "email": "marcus.chen@apexautosolutions.com", "persona": "manager" },
+      "occurred_at": "2025-03-18T11:20:00Z"
+    },
+    {
+      "id": "ev_003",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "integration.enabled",
+      "payload": { "provider": "fluidpay" },
+      "occurred_at": "2025-04-05T14:00:00Z"
+    },
+    {
+      "id": "ev_004",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "integration.credentials_updated",
+      "payload": { "provider": "fluidpay", "env": "live", "fields_changed": ["api_key", "merchant_id"] },
+      "occurred_at": "2026-04-22T10:15:00Z"
+    },
+    {
+      "id": "ev_005",
+      "org_id": 102,
+      "user_id": "u_001",
+      "type": "credential.revealed",
+      "payload": { "provider": "fluidpay", "field": "api_key", "env": "live" },
+      "occurred_at": "2026-04-22T10:14:30Z"
+    },
+    {
+      "id": "ev_006",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "config.updated",
+      "payload": { "section": "discount", "diff": { "max_percent": { "from": 15, "to": 20 } } },
+      "occurred_at": "2026-04-30T09:00:00Z"
+    },
+    {
+      "id": "ev_007",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "user.persona_changed",
+      "payload": { "user_id": "u_004", "from": "agent", "to": "manager" },
+      "occurred_at": "2025-12-10T15:30:00Z"
+    },
+    {
+      "id": "ev_008",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "user.badges_changed",
+      "payload": { "user_id": "u_007", "added": ["view_api_responses"], "removed": [] },
+      "occurred_at": "2026-02-14T11:00:00Z"
+    },
+    {
+      "id": "ev_009",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "user.suspended",
+      "payload": { "user_id": "u_008", "reason": "policy violation" },
+      "occurred_at": "2026-04-25T16:00:00Z"
+    },
+    {
+      "id": "ev_010",
+      "org_id": 104,
+      "user_id": "u_009",
+      "type": "org.created",
+      "payload": { "name": "AAA Prospect A", "parent_org_id": 2 },
+      "occurred_at": "2025-10-15T10:00:00Z"
+    },
+    {
+      "id": "ev_011",
+      "org_id": 104,
+      "user_id": "u_009",
+      "type": "test_mode.toggled",
+      "payload": { "from": false, "to": true },
+      "occurred_at": "2026-05-01T08:30:00Z"
+    },
+    {
+      "id": "ev_012",
+      "org_id": 104,
+      "user_id": "u_009",
+      "type": "user.invited",
+      "payload": { "email": "ana.garcia@aaa-pa-prospect.com", "persona": "agent" },
+      "occurred_at": "2025-11-01T09:55:00Z"
+    },
+    {
+      "id": "ev_013",
+      "org_id": 2,
+      "user_id": "u_009",
+      "type": "config.updated",
+      "payload": { "section": "cross_sell", "diff": { "insurance_enabled": { "from": false, "to": true } } },
+      "occurred_at": "2026-03-12T13:45:00Z"
+    },
+    {
+      "id": "ev_014",
+      "org_id": 2,
+      "user_id": "u_009",
+      "type": "integration.enabled",
+      "payload": { "provider": "twilio" },
+      "occurred_at": "2026-03-18T14:00:00Z"
+    },
+    {
+      "id": "ev_015",
+      "org_id": 102,
+      "user_id": "u_003",
+      "type": "org.updated",
+      "payload": { "field": "ghl_location_id", "from": null, "to": "reWBjJ4bl9eIFdUlpl4w" },
+      "occurred_at": "2024-09-08T12:30:00Z"
+    },
+    {
+      "id": "ev_016",
+      "org_id": 102,
+      "user_id": "u_002",
+      "type": "test_mode.toggled",
+      "payload": { "from": true, "to": false },
+      "occurred_at": "2026-05-05T09:15:00Z"
+    }
+  ]
+}

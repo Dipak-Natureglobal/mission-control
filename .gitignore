@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+*.local
+
+# Turborepo
+.turbo/
+
+# Sync scratch space (git worktrees created by scripts/sync-portals.mjs)
+.sync-tmp/
+
+# Environment files — only *.env.example is tracked
+.env
+.env.*
+!.env.example
+!*/.env.example
+!**/.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / IDE
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Windows metadata (alternate data stream files created by WSL)
+*:Zone.Identifier

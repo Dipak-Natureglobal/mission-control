@@ -1,0 +1,9 @@
+{
+  "_comment": "Mock summary.quote block matching canon `_insurance_quote_shape`. Cents-based (totalPremiumCents 120000 = $1,200.00). savingsAmountCents present for Capture+Quote path; Quote Only path overrides this to null at delivery time inside the mock. No `period` field — assume 6mo per architecture/06-embedded-insurance-contract.md.",
+  "id": "quote_a0c14e7b",
+  "status": "completed",
+  "carrier": "Geico",
+  "totalPremiumCents": 120000,
+  "savingsAmountCents": 30000,
+  "createdAt": "2026-05-03T09:15:42Z"
+}

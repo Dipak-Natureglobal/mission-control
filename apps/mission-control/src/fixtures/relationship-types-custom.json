@@ -1,0 +1,11 @@
+{
+  "_comment": "Per-org custom relationship types — forward-compat placeholder for the Wave 19 Task 6 super-admin shell. Today this file is empty; once the super-admin 'Relationship Types' management UI lands (Agent D's territory), this fixture will collect manager-added entries keyed by org_id. mc ContactProfile already merges this with canon/relationships.json `system_types` when populating RelationshipPicker so the wiring is hot the moment the admin UI starts writing here. See canon/relationships.json `_TODO` for the parallel plan.",
+  "_shape_when_populated": {
+    "custom_types_by_org": {
+      "<org_id>": [
+        { "id": "<slug>", "label": "<display>", "category": "<household|extended|cohabitant|other>", "created_by": "<user_id>", "created_at": "<iso>" }
+      ]
+    }
+  },
+  "custom_types_by_org": {}
+}

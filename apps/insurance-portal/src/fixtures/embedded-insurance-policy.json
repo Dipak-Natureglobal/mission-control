@@ -1,0 +1,6 @@
+{
+  "_comment": "Mock summary.policy block matching canon `_insurance_policy_shape`. Thinner than expected — no policyNumber, no binderUrl, no documents. Real EI flow may need a follow-up call to a policy detail endpoint to surface those for downstream agent/CRM workflows. Open question in architecture/06-embedded-insurance-contract.md (#4).",
+  "id": "policy_de8a9b03",
+  "carrier": "Geico",
+  "boundAt": "2026-05-03T09:18:55Z"
+}

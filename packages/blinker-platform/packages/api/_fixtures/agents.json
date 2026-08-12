@@ -1,0 +1,118 @@
+{
+  "_comment": "Phase 1 agents fixture for the blinker-platform domain SDK. Drives the Manager persona's Team page (roster + Agent drill-in), the Inbox group-by-agent rendering, and the Assignment dropdown's suggested-agent ranking. Owner names mirror the values seeded across opportunities.json so workload counts can be derived by id-resolving opportunity.owner against agents.json[*].name. Workload / conversion / stale counts are NOT stored here — they are computed at read time by packages/api/agents.js from opportunities.json + activities.json.",
+  "_principle": "Each agent carries org_ids[] (canon org ids — integers). Manager visibility into an agent requires the manager's accessible-orgs set to intersect that array. last_active_at is a static seed for Phase 1; replaced by real PostHog presence in Phase 2.",
+  "_version": "2026-05-12-wave-28-init",
+  "agents": [
+    {
+      "id": "agent_jordan_reese",
+      "name": "Jordan Reese",
+      "email": "jordan.reese@apex.example",
+      "persona": "agent",
+      "preset_id": "agent_lead",
+      "org_ids": [102],
+      "tags": ["west-coast", "vsc-specialist"],
+      "last_active_at": "2026-05-12T18:42:00Z",
+      "created_at": "2025-11-01T00:00:00Z"
+    },
+    {
+      "id": "agent_sam_patel",
+      "name": "Sam Patel",
+      "email": "sam.patel@apex.example",
+      "persona": "agent",
+      "preset_id": "agent_standard",
+      "org_ids": [102],
+      "tags": ["west-coast"],
+      "last_active_at": "2026-05-12T16:08:00Z",
+      "created_at": "2025-12-04T00:00:00Z"
+    },
+    {
+      "id": "agent_avery_patel",
+      "name": "Avery Patel",
+      "email": "avery.patel@apex.example",
+      "persona": "agent",
+      "preset_id": "agent_standard",
+      "org_ids": [102],
+      "tags": ["refi-specialist"],
+      "last_active_at": "2026-05-12T17:55:00Z",
+      "created_at": "2026-01-12T00:00:00Z"
+    },
+    {
+      "id": "agent_casey_morgan",
+      "name": "Casey Morgan",
+      "email": "casey.morgan@apex.example",
+      "persona": "agent",
+      "preset_id": "agent_admin_assistant",
+      "org_ids": [102],
+      "tags": ["onboarding"],
+      "last_active_at": "2026-05-11T22:14:00Z",
+      "created_at": "2026-02-18T00:00:00Z"
+    },
+    {
+      "id": "agent_devon_lee",
+      "name": "Devon Lee",
+      "email": "devon.lee@kingsdr.example",
+      "persona": "agent",
+      "preset_id": "agent_standard",
+      "org_ids": [103],
+      "tags": ["insurance-specialist"],
+      "last_active_at": "2026-05-12T15:30:00Z",
+      "created_at": "2026-01-22T00:00:00Z"
+    },
+    {
+      "id": "agent_drew_nakamura",
+      "name": "Drew Nakamura",
+      "email": "drew.nakamura@kingsdr.example",
+      "persona": "agent",
+      "preset_id": "agent_lead",
+      "org_ids": [103],
+      "tags": ["vsc-specialist", "escalations"],
+      "last_active_at": "2026-05-12T18:01:00Z",
+      "created_at": "2025-10-08T00:00:00Z"
+    },
+    {
+      "id": "agent_quinn_rivera",
+      "name": "Quinn Rivera",
+      "email": "quinn.rivera@rewardsco.example",
+      "persona": "agent",
+      "preset_id": "agent_standard",
+      "org_ids": [106],
+      "tags": ["partner-onboarding"],
+      "last_active_at": "2026-05-12T14:22:00Z",
+      "created_at": "2026-03-01T00:00:00Z"
+    },
+    {
+      "id": "agent_riley_chen",
+      "name": "Riley Chen",
+      "email": "riley.chen@rewardsco.example",
+      "persona": "agent",
+      "preset_id": "agent_standard",
+      "org_ids": [106],
+      "tags": ["refi-specialist"],
+      "last_active_at": "2026-05-11T19:48:00Z",
+      "created_at": "2025-12-15T00:00:00Z"
+    },
+    {
+      "id": "mgr_taylor_brooks",
+      "name": "Taylor Brooks",
+      "email": "taylor.brooks@apex.example",
+      "persona": "manager",
+      "preset_id": "manager_standard",
+      "org_ids": [102],
+      "tags": [],
+      "last_active_at": "2026-05-12T19:10:00Z",
+      "created_at": "2025-09-12T00:00:00Z"
+    },
+    {
+      "id": "mgr_morgan_diaz",
+      "name": "Morgan Diaz",
+      "email": "morgan.diaz@aautoalliance.example",
+      "persona": "manager",
+      "preset_id": "manager_lead",
+      "org_ids": [2, 102, 103, 104, 106, 110],
+      "tags": [],
+      "last_active_at": "2026-05-12T18:54:00Z",
+      "created_at": "2025-08-05T00:00:00Z",
+      "_notes": "Parent-partner manager — accessible-orgs intersects with American Auto Alliance (id 2) tree (Apex 102, Kings DR 103, AAA Prospect A 104, Rewardsco 106, Nicaragua 110). Demonstrates 'All my orgs' rollup + cross-org assignment."
+    }
+  ]
+}

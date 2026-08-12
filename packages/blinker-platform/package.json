@@ -1,0 +1,26 @@
+{
+  "name": "blinker-platform",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Blinker platform meta-repo: canon contracts, architecture ADRs, and the shared application-layer packages consumed by every child app.",
+  "exports": {
+    "./components": "./packages/components/index.js",
+    "./api": "./packages/api/index.js",
+    "./api/agents": "./packages/api/agents.js",
+    "./api/leaderboard": "./packages/api/leaderboard.js",
+    "./api/tags": "./packages/api/tags.js",
+    "./integrations": "./packages/integrations/index.js",
+    "./integrations/*": "./packages/integrations/*/index.js",
+    "./utils": "./packages/utils/index.js",
+    "./utils/assignment-scoring": "./packages/utils/assignment-scoring.js",
+    "./personas": "./packages/personas/index.js",
+    "./telemetry": "./packages/telemetry/index.js",
+    "./canon/*": "./canon/*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "*"
+  }
+}

@@ -1,0 +1,1431 @@
+{
+  "_comment": "Phase-1 contacts fixture for the blinker-platform domain SDK. Conforms to canon/blinker-domain.json `contact` shape (validated by scripts/validate-fixtures.js). Migrated from mission-control/src/fixtures/contacts.json (Wave 18) and expanded with 9 new contacts that exercise: opp-less, vehicle-less, no-VIN, no-mileage, household, and per-workflow status resume points.",
+  "_canon_version_authored_against": "2026-05-03-init-blinker-domain",
+  "_household_clustering": "hh_alvarez_brooks: Maria Alvarez + Tasha Brooks (mother + adult daughter). hh_morgan_family: Casey + Jordan Morgan (spouses, same address). hh_patel_family: Avery + Deepa Patel (spouses, same address; both in org 103). hh_vasquez_family: Elena + Marco Vasquez (spouses, same address; both in org 102). hh_oduya_family: Grace Oduya (org 103) + Felix Oduya (org 102) — cross-org household (mother in different dealer relationship than adult son). Wave 26a fu4 expansion added 5 household clusters.",
+  "_vehicle_arrays": "Maria Alvarez has 2 vehicles to exercise the array; rest have 0 or 1. Each vehicle.id is referenced by the corresponding opportunity in opportunities.json (vehicle_id linkage will be added there in a later canon expansion).",
+  "_test_case_principle": "Each contact carries an optional `_test_case: <slug>` annotation describing what scenario it exercises (vehicle-without-vin, no-opps, household-do-not-call, …). Underscore prefix means validate-fixtures.js treats it as meta. AgentInbox + AgentContacts render `_test_case` as a tooltip on the Type/Name pill ONLY when the active org has `test_mode: true`. A future `org.demo_mode` flag will replace the gate when prototype → dev → prod branches diverge.",
+  "_TODO": "When canon org-disclaimers block lands, swap the placeholder text_id values ('tcpa_v1', 'sms_consent_v1') for real refs.",
+  "contacts": {
+    "ct_alvarez": {
+      "id": "ct_alvarez",
+      "_test_case": "household-multi-vehicle",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_8e3f2a91",
+        "posthog_distinct_id": "ct_alvarez",
+        "external_lead_id": "leadgenius_LG-44021"
+      },
+      "household_id": "hh_alvarez_brooks",
+      "name": { "first": "Maria", "last": "Alvarez", "preferred": "Maria" },
+      "date_of_birth": "1968-07-14",
+      "phones": [
+        { "id": "ph_alv_1", "type": "mobile", "number": "+15552041188", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-29T15:11:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-29T15:12:30Z" },
+        { "id": "ph_alv_2", "type": "home", "number": "+15125550199", "is_primary": false, "sms_consent": false, "do_not_contact": false }
+      ],
+      "emails": [
+        { "id": "em_alv_1", "type": "personal", "address": "maria.alvarez@example.com", "is_primary": true, "opted_out": false, "verified_at": "2026-04-29T15:13:00Z" }
+      ],
+      "addresses": [
+        { "id": "ad_alv_1", "type": "primary", "line_1": "412 Cypress Ln", "city": "Austin", "state": "TX", "postal_code": "78702", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_alv_rav4", "year": 2022, "make": "Toyota", "model": "RAV4", "trim": "XLE", "vin": "JTMP1RFV9ND123456", "mileage": 38420, "ownership": "own", "value": 28500, "payoff": 14200, "source": "vin_decode", "source_recorded_at": "2026-04-29T15:14:00Z" },
+        { "id": "veh_alv_camry", "year": 2015, "make": "Toyota", "model": "Camry", "trim": "LE", "vin": "4T1BF1FK0FU987654", "mileage": 112800, "ownership": "own", "value": 11200, "payoff": 0, "source": "manual", "source_recorded_at": "2026-04-30T09:02:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_001", "opp_refi_001"],
+      "household_member_ids": ["ct_brooks"],
+      "tags": [
+        { "id": "tag_vip", "name": "vip", "source": "blinker", "applied_at": "2026-04-29T16:00:00Z", "applied_by": "agent_jordan" },
+        { "id": "tag_household_clustered", "name": "household-clustered", "source": "system", "applied_at": "2026-04-29T15:13:30Z" }
+      ],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_alvarez" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_alvarez" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "cpc",
+        "first_utm_campaign": "vsc_q2_2026",
+        "first_landing_page": "https://blinker.com/vsc/quote",
+        "first_touch_at": "2026-04-29T15:08:00Z",
+        "external_contact_id": "leadgenius_LG-44021"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_alv_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-29T15:11:00Z", "ip": "73.120.45.12", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-29T15:13:00Z" },
+        "tos_accepted_at": "2026-04-29T15:11:00Z"
+      },
+      "created_at": "2026-04-29T15:11:00Z",
+      "updated_at": "2026-05-02T18:42:00Z"
+    },
+    "ct_chen": {
+      "id": "ct_chen",
+      "_test_case": "multi-workflow-active",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_4b1d77cc",
+        "posthog_distinct_id": "ct_chen",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Wei", "last": "Chen" },
+      "date_of_birth": "1981-02-22",
+      "phones": [
+        { "id": "ph_chen_1", "type": "mobile", "number": "+15553117740", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-01T16:09:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-01T16:10:00Z" }
+      ],
+      "emails": [
+        { "id": "em_chen_1", "type": "personal", "address": "wei.chen@example.com", "is_primary": true, "opted_out": false },
+        { "id": "em_chen_2", "type": "work", "address": "wchen@acme-corp.com", "is_primary": false, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_chen_1", "type": "primary", "line_1": "88 Larkspur Way", "city": "San Jose", "state": "CA", "postal_code": "95129", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_chen_pilot", "year": 2019, "make": "Honda", "model": "Pilot", "trim": "EX-L", "vin": "5FNYF6H56KB098123", "mileage": 64210, "ownership": "finance", "value": 24800, "payoff": 9650, "source": "vin_decode", "source_recorded_at": "2026-05-01T16:11:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_002", "opp_ins_001"],
+      "household_member_ids": [],
+      "tags": [
+        { "id": "tag_spanish_speaker", "name": "spanish-speaker", "source": "blinker", "applied_at": "2026-05-01T16:18:00Z", "applied_by": "agent_jordan", "color": "#8b5cf6" }
+      ],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_chen" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_chen" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "facebook",
+        "first_utm_medium": "social",
+        "first_utm_campaign": "insurance_q2",
+        "first_landing_page": "https://blinker.com/insurance",
+        "first_touch_at": "2026-05-01T16:00:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_chen_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-01T16:09:00Z", "ip": "98.45.201.7", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": false, "opted_out_at": "2026-05-01T16:18:00Z" },
+        "tos_accepted_at": "2026-05-01T16:09:00Z"
+      },
+      "created_at": "2026-05-01T16:09:00Z",
+      "updated_at": "2026-05-02T09:08:00Z"
+    },
+    "ct_okafor": {
+      "id": "ct_okafor",
+      "_test_case": "fleet-customer-payment-failed",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_2f9c0e44",
+        "posthog_distinct_id": "ct_okafor",
+        "external_lead_id": "fleet_intake_F-2210"
+      },
+      "household_id": null,
+      "name": { "first": "Adebayo", "last": "Okafor", "preferred": "Ade" },
+      "date_of_birth": "1975-11-03",
+      "phones": [
+        { "id": "ph_oka_1", "type": "mobile", "number": "+15556120093", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-21T14:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-21T14:01:00Z" },
+        { "id": "ph_oka_2", "type": "work", "number": "+18185550021", "is_primary": false, "sms_consent": false, "do_not_contact": false }
+      ],
+      "emails": [
+        { "id": "em_oka_1", "type": "personal", "address": "ade.okafor@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_oka_1", "type": "primary", "line_1": "2210 W Magnolia Blvd", "city": "Burbank", "state": "CA", "postal_code": "91506", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_oka_f150", "year": 2024, "make": "Ford", "model": "F-150", "trim": "Lariat", "vin": "1FTFW1E58RFA12345", "mileage": 8210, "ownership": "finance", "value": 62400, "payoff": 51800, "source": "vin_decode", "source_recorded_at": "2026-04-21T14:02:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_003", "opp_pay_001"],
+      "household_member_ids": [],
+      "tags": [
+        { "id": "tag_fleet_customer", "name": "fleet-customer", "source": "ghl", "applied_at": "2026-04-21T14:05:00Z", "color": "#0ea5e9" }
+      ],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_okafor" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_okafor" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "fleet_intake",
+        "first_utm_medium": "referral",
+        "first_landing_page": "https://blinker.com/fleet",
+        "first_touch_at": "2026-04-21T13:55:00Z",
+        "external_contact_id": "fleet_intake_F-2210"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_oka_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-21T14:00:00Z", "ip": "204.9.183.55", "user_agent": "Mozilla/5.0", "channel": "phone" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-21T14:01:00Z" },
+        "tos_accepted_at": "2026-04-21T14:00:00Z"
+      },
+      "created_at": "2026-04-21T14:00:00Z",
+      "updated_at": "2026-05-02T07:00:00Z"
+    },
+    "ct_nguyen": {
+      "id": "ct_nguyen",
+      "_test_case": "post-sale-protection-pending-remit",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_551acdef",
+        "posthog_distinct_id": "ct_nguyen",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Linh", "last": "Nguyen" },
+      "date_of_birth": "1990-05-19",
+      "phones": [
+        { "id": "ph_ngu_1", "type": "mobile", "number": "+15554802257", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-18T10:46:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-18T10:47:00Z" }
+      ],
+      "emails": [
+        { "id": "em_ngu_1", "type": "personal", "address": "linh.nguyen@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_ngu_1", "type": "primary", "line_1": "55 Bay Ridge Ave", "city": "Brooklyn", "state": "NY", "postal_code": "11220", "country": "US", "ownership": "Rent", "timezone": "America/New_York", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_ngu_outback", "year": 2021, "make": "Subaru", "model": "Outback", "trim": "Premium", "vin": "4S4BTACC0M3210987", "mileage": 47100, "ownership": "own", "value": 26100, "payoff": 0, "source": "manual", "source_recorded_at": "2026-04-18T10:48:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_004"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_nguyen" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_nguyen" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "organic",
+        "first_landing_page": "https://blinker.com/vsc",
+        "first_touch_at": "2026-04-18T10:42:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_ngu_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-18T10:46:00Z", "ip": "67.81.220.41", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-18T10:47:00Z" },
+        "tos_accepted_at": "2026-04-18T10:46:00Z"
+      },
+      "created_at": "2026-04-18T10:45:00Z",
+      "updated_at": "2026-05-01T16:02:00Z"
+    },
+    "ct_brooks": {
+      "id": "ct_brooks",
+      "_test_case": "household-do-not-call",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_9912ab44",
+        "posthog_distinct_id": "ct_brooks",
+        "external_lead_id": null
+      },
+      "household_id": "hh_alvarez_brooks",
+      "name": { "first": "Tasha", "last": "Brooks" },
+      "date_of_birth": "1992-09-08",
+      "phones": [
+        { "id": "ph_bro_1", "type": "mobile", "number": "+15558294413", "is_primary": true, "sms_consent": false, "do_not_contact": true }
+      ],
+      "emails": [
+        { "id": "em_bro_1", "type": "personal", "address": "tasha.brooks@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_bro_1", "type": "primary", "line_1": "412 Cypress Ln", "city": "Austin", "state": "TX", "postal_code": "78702", "country": "US", "ownership": "Live with Others", "timezone": "America/Chicago", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_bro_equinox", "year": 2020, "make": "Chevrolet", "model": "Equinox", "trim": "LT", "vin": "2GNAXKEV3L6109876", "mileage": 71400, "ownership": "finance", "value": 17200, "payoff": 9100, "source": "manual", "source_recorded_at": "2026-04-12T09:31:00Z" }
+      ],
+      "opportunity_ids": ["opp_refi_002"],
+      "household_member_ids": ["ct_alvarez"],
+      "tags": [
+        { "id": "tag_do_not_call", "name": "do-not-call", "source": "blinker", "applied_at": "2026-04-12T09:35:00Z", "applied_by": "agent_sam", "color": "#dc2626" },
+        { "id": "tag_household_clustered", "name": "household-clustered", "source": "system", "applied_at": "2026-04-29T15:13:30Z" }
+      ],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_brooks" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_brooks" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "referral",
+        "first_utm_medium": "household",
+        "first_landing_page": "https://blinker.com/refi",
+        "first_touch_at": "2026-04-12T09:25:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_bro_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-12T09:30:00Z", "ip": "73.120.45.12", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": false, "opted_out_at": "2026-04-12T09:36:00Z" },
+        "tos_accepted_at": "2026-04-12T09:30:00Z"
+      },
+      "created_at": "2026-04-12T09:30:00Z",
+      "updated_at": "2026-04-28T17:15:00Z"
+    },
+    "ct_pham": {
+      "id": "ct_pham",
+      "_test_case": "post-sale-refi-funded",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_a44b2266",
+        "posthog_distinct_id": "ct_pham",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Kevin", "last": "Pham" },
+      "date_of_birth": "1987-12-30",
+      "phones": [
+        { "id": "ph_pha_1", "type": "mobile", "number": "+15551175582", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-22T11:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-22T11:01:00Z" }
+      ],
+      "emails": [
+        { "id": "em_pha_1", "type": "personal", "address": "kevin.pham@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_pha_1", "type": "primary", "line_1": "640 Alma St", "city": "Palo Alto", "state": "CA", "postal_code": "94301", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_pha_modely", "year": 2023, "make": "Tesla", "model": "Model Y", "trim": "Long Range", "vin": "7SAYGDEE0PA112233", "mileage": 18200, "ownership": "finance", "value": 47800, "payoff": 22400, "source": "vin_decode", "source_recorded_at": "2026-03-22T11:02:00Z" }
+      ],
+      "opportunity_ids": ["opp_refi_003"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_pham" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_pham" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "cpc",
+        "first_utm_campaign": "refi_ev",
+        "first_landing_page": "https://blinker.com/refi",
+        "first_touch_at": "2026-03-22T10:55:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_pha_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-22T11:00:00Z", "ip": "172.58.10.91", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-22T11:01:00Z" },
+        "tos_accepted_at": "2026-03-22T11:00:00Z"
+      },
+      "created_at": "2026-03-22T11:00:00Z",
+      "updated_at": "2026-04-15T14:50:00Z"
+    },
+    "ct_marquez": {
+      "id": "ct_marquez",
+      "_test_case": "spanish-speaker-insurance-quoted",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_dd33eef0",
+        "posthog_distinct_id": "ct_marquez",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Rosa", "last": "Marquez" },
+      "date_of_birth": "1973-04-25",
+      "phones": [
+        { "id": "ph_mar_1", "type": "mobile", "number": "+15552339018", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-25T12:21:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-25T12:22:00Z" }
+      ],
+      "emails": [
+        { "id": "em_mar_1", "type": "personal", "address": "rosa.marquez@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_mar_1", "type": "primary", "line_1": "318 Olive Ave", "city": "Phoenix", "state": "AZ", "postal_code": "85003", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Phoenix", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_mar_cx5", "year": 2018, "make": "Mazda", "model": "CX-5", "trim": "Touring", "vin": "JM3KFBCM8J0345210", "mileage": 89400, "ownership": "own", "value": 14800, "payoff": 0, "source": "manual", "source_recorded_at": "2026-04-25T12:23:00Z" }
+      ],
+      "opportunity_ids": ["opp_ins_002"],
+      "household_member_ids": [],
+      "tags": [
+        { "id": "tag_spanish_speaker", "name": "spanish-speaker", "source": "blinker", "applied_at": "2026-04-25T12:30:00Z", "applied_by": "agent_devon", "color": "#8b5cf6" }
+      ],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_marquez" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_marquez" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "facebook",
+        "first_utm_medium": "social",
+        "first_utm_campaign": "insurance_es",
+        "first_landing_page": "https://blinker.com/es/seguro",
+        "first_touch_at": "2026-04-25T12:18:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_mar_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-25T12:21:00Z", "ip": "108.219.55.10", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-25T12:22:00Z" },
+        "tos_accepted_at": "2026-04-25T12:21:00Z"
+      },
+      "created_at": "2026-04-25T12:20:00Z",
+      "updated_at": "2026-04-30T10:05:00Z"
+    },
+
+    "ct_solo_no_vehicle": {
+      "id": "ct_solo_no_vehicle",
+      "_test_case": "no-vehicle-no-opps",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_solo_a1",
+        "posthog_distinct_id": "ct_solo_no_vehicle",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Priya", "last": "Shah" },
+      "date_of_birth": "1995-06-12",
+      "phones": [
+        { "id": "ph_sha_1", "type": "mobile", "number": "+15557211003", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-06T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-06T09:01:00Z" }
+      ],
+      "emails": [
+        { "id": "em_sha_1", "type": "personal", "address": "priya.shah@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_sha_1", "type": "primary", "line_1": "77 Beacon St", "city": "Boston", "state": "MA", "postal_code": "02108", "country": "US", "ownership": "Rent", "timezone": "America/New_York", "is_primary": true }
+      ],
+      "vehicles": [],
+      "opportunity_ids": [],
+      "household_member_ids": [],
+      "tags": [
+        { "id": "tag_newsletter_lead", "name": "newsletter-lead", "source": "blinker", "applied_at": "2026-05-06T09:02:00Z", "color": "#64748b" }
+      ],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_solo_no_vehicle" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_solo_no_vehicle" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "newsletter",
+        "first_utm_medium": "email",
+        "first_landing_page": "https://blinker.com/learn",
+        "first_touch_at": "2026-05-06T08:55:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_sha_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-06T09:00:00Z", "ip": "24.55.118.20", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-06T09:01:00Z" },
+        "tos_accepted_at": "2026-05-06T09:00:00Z"
+      },
+      "created_at": "2026-05-06T09:00:00Z",
+      "updated_at": "2026-05-06T09:02:00Z"
+    },
+    "ct_no_opps_with_vehicle": {
+      "id": "ct_no_opps_with_vehicle",
+      "_test_case": "no-opps-with-vehicle",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_noopp_b2",
+        "posthog_distinct_id": "ct_no_opps_with_vehicle",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "James", "last": "Whitaker" },
+      "date_of_birth": "1979-08-30",
+      "phones": [
+        { "id": "ph_whi_1", "type": "mobile", "number": "+15558012337", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-04T11:30:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-04T11:31:00Z" }
+      ],
+      "emails": [
+        { "id": "em_whi_1", "type": "personal", "address": "james.whitaker@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_whi_1", "type": "primary", "line_1": "904 Pine View Dr", "city": "Charlotte", "state": "NC", "postal_code": "28202", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/New_York", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_whi_silverado", "year": 2017, "make": "Chevrolet", "model": "Silverado 1500", "trim": "LT", "vin": "1GCVKREC8HZ334455", "mileage": 96400, "ownership": "own", "value": 19800, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-05-04T11:33:00Z" }
+      ],
+      "opportunity_ids": [],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_no_opps_with_vehicle" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_no_opps_with_vehicle" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "direct",
+        "first_utm_medium": "none",
+        "first_landing_page": "https://blinker.com/",
+        "first_touch_at": "2026-05-04T11:25:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_whi_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-04T11:30:00Z", "ip": "76.12.55.99", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-04T11:31:00Z" },
+        "tos_accepted_at": "2026-05-04T11:30:00Z"
+      },
+      "created_at": "2026-05-04T11:30:00Z",
+      "updated_at": "2026-05-04T11:33:00Z"
+    },
+    "ct_manual_ymmt": {
+      "id": "ct_manual_ymmt",
+      "_test_case": "vehicle-without-vin",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_ymmt_c3",
+        "posthog_distinct_id": "ct_manual_ymmt",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Beatriz", "last": "Santos" },
+      "date_of_birth": "1984-01-17",
+      "phones": [
+        { "id": "ph_san_1", "type": "mobile", "number": "+15554598821", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-07T14:10:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-07T14:11:00Z" }
+      ],
+      "emails": [
+        { "id": "em_san_1", "type": "personal", "address": "beatriz.santos@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_san_1", "type": "primary", "line_1": "1320 Old Mill Rd", "city": "Tampa", "state": "FL", "postal_code": "33602", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/New_York", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_san_explorer", "year": 2016, "make": "Ford", "model": "Explorer", "trim": "XLT", "vin": null, "mileage": 124500, "ownership": "own", "value": 9800, "payoff": 0, "source": "manual_ymmt", "source_recorded_at": "2026-05-07T14:12:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_005"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_manual_ymmt" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_manual_ymmt" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "organic",
+        "first_landing_page": "https://blinker.com/vsc/quote",
+        "first_touch_at": "2026-05-07T14:05:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_san_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-07T14:10:00Z", "ip": "65.190.12.81", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-07T14:11:00Z" },
+        "tos_accepted_at": "2026-05-07T14:10:00Z"
+      },
+      "created_at": "2026-05-07T14:10:00Z",
+      "updated_at": "2026-05-07T14:12:00Z"
+    },
+    "ct_no_mileage": {
+      "id": "ct_no_mileage",
+      "_test_case": "vehicle-without-mileage",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_nomil_d4",
+        "posthog_distinct_id": "ct_no_mileage",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Marcus", "last": "Holloway" },
+      "date_of_birth": "1992-11-24",
+      "phones": [
+        { "id": "ph_hol_1", "type": "mobile", "number": "+15553376701", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-06T16:40:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-06T16:41:00Z" }
+      ],
+      "emails": [
+        { "id": "em_hol_1", "type": "personal", "address": "marcus.holloway@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_hol_1", "type": "primary", "line_1": "228 N Halsted", "city": "Chicago", "state": "IL", "postal_code": "60607", "country": "US", "ownership": "Rent", "timezone": "America/Chicago", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_hol_mustang", "year": 2020, "make": "Ford", "model": "Mustang", "trim": "EcoBoost", "vin": "1FA6P8TH6L5223344", "mileage": null, "ownership": "finance", "value": 22600, "payoff": 11400, "source": "vin_decode", "source_recorded_at": "2026-05-06T16:42:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_006"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_no_mileage" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_no_mileage" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "cpc",
+        "first_utm_campaign": "vsc_q2_2026",
+        "first_landing_page": "https://blinker.com/vsc/quote",
+        "first_touch_at": "2026-05-06T16:35:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_hol_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-06T16:40:00Z", "ip": "73.55.41.18", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-06T16:41:00Z" },
+        "tos_accepted_at": "2026-05-06T16:40:00Z"
+      },
+      "created_at": "2026-05-06T16:40:00Z",
+      "updated_at": "2026-05-06T16:42:00Z"
+    },
+    "ct_protection_booked": {
+      "id": "ct_protection_booked",
+      "_test_case": "resume-at-billing",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_book_e5",
+        "posthog_distinct_id": "ct_protection_booked",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Yuki", "last": "Tanaka" },
+      "date_of_birth": "1988-03-09",
+      "phones": [
+        { "id": "ph_tan_1", "type": "mobile", "number": "+15557716240", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-03T13:20:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-03T13:21:00Z" }
+      ],
+      "emails": [
+        { "id": "em_tan_1", "type": "personal", "address": "yuki.tanaka@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_tan_1", "type": "primary", "line_1": "501 Bellevue Ave", "city": "Seattle", "state": "WA", "postal_code": "98122", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_tan_highlander", "year": 2021, "make": "Toyota", "model": "Highlander", "trim": "Hybrid XLE", "vin": "5TDGBRCH5MS667788", "mileage": 33200, "ownership": "finance", "value": 36400, "payoff": 18200, "source": "vin_decode", "source_recorded_at": "2026-05-03T13:22:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_007"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_protection_booked" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_protection_booked" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "cpc",
+        "first_utm_campaign": "vsc_q2_2026",
+        "first_landing_page": "https://blinker.com/vsc/quote",
+        "first_touch_at": "2026-05-03T13:15:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_tan_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-03T13:20:00Z", "ip": "73.140.220.12", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-03T13:21:00Z" },
+        "tos_accepted_at": "2026-05-03T13:20:00Z"
+      },
+      "created_at": "2026-05-03T13:20:00Z",
+      "updated_at": "2026-05-07T11:00:00Z"
+    },
+    "ct_refi_started": {
+      "id": "ct_refi_started",
+      "_test_case": "resume-at-refi-intake",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_refist_f6",
+        "posthog_distinct_id": "ct_refi_started",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Hannah", "last": "Becker" },
+      "date_of_birth": "1986-10-02",
+      "phones": [
+        { "id": "ph_bec_1", "type": "mobile", "number": "+15558823344", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-08T08:15:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-08T08:16:00Z" }
+      ],
+      "emails": [
+        { "id": "em_bec_1", "type": "personal", "address": "hannah.becker@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_bec_1", "type": "primary", "line_1": "162 Oak Lawn Ave", "city": "Dallas", "state": "TX", "postal_code": "75219", "country": "US", "ownership": "Rent", "timezone": "America/Chicago", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_bec_civic", "year": 2022, "make": "Honda", "model": "Civic", "trim": "EX", "vin": "2HGFE2F50NH445566", "mileage": 27800, "ownership": "finance", "value": 23400, "payoff": 17200, "source": "vin_decode", "source_recorded_at": "2026-05-08T08:17:00Z" }
+      ],
+      "opportunity_ids": ["opp_refi_004"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_refi_started" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_refi_started" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "cpc",
+        "first_utm_campaign": "refi_q2_2026",
+        "first_landing_page": "https://blinker.com/refi",
+        "first_touch_at": "2026-05-08T08:10:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_bec_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-08T08:15:00Z", "ip": "208.66.130.4", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-08T08:16:00Z" },
+        "tos_accepted_at": "2026-05-08T08:15:00Z"
+      },
+      "created_at": "2026-05-08T08:15:00Z",
+      "updated_at": "2026-05-08T08:17:00Z"
+    },
+    "ct_refi_credit": {
+      "id": "ct_refi_credit",
+      "_test_case": "resume-at-credit-step",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_refcr_g7",
+        "posthog_distinct_id": "ct_refi_credit",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Daniel", "last": "Kowalski" },
+      "date_of_birth": "1991-07-19",
+      "phones": [
+        { "id": "ph_kow_1", "type": "mobile", "number": "+15555581112", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-05T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-05T10:01:00Z" }
+      ],
+      "emails": [
+        { "id": "em_kow_1", "type": "personal", "address": "daniel.kowalski@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_kow_1", "type": "primary", "line_1": "44 Lincoln Park", "city": "Chicago", "state": "IL", "postal_code": "60614", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_kow_q5", "year": 2020, "make": "Audi", "model": "Q5", "trim": "Premium Plus", "vin": "WA1BNAFY1L2778899", "mileage": 51200, "ownership": "finance", "value": 31800, "payoff": 22100, "source": "vin_decode", "source_recorded_at": "2026-05-05T10:02:00Z" }
+      ],
+      "opportunity_ids": ["opp_refi_005"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_refi_credit" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_refi_credit" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "cpc",
+        "first_utm_campaign": "refi_q2_2026",
+        "first_landing_page": "https://blinker.com/refi",
+        "first_touch_at": "2026-05-05T09:55:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_kow_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-05T10:00:00Z", "ip": "98.220.45.71", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-05T10:01:00Z" },
+        "tos_accepted_at": "2026-05-05T10:00:00Z"
+      },
+      "created_at": "2026-05-05T10:00:00Z",
+      "updated_at": "2026-05-07T15:30:00Z"
+    },
+    "ct_ins_quote_viewed": {
+      "id": "ct_ins_quote_viewed",
+      "_test_case": "resume-at-quote-followup",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_insqv_h8",
+        "posthog_distinct_id": "ct_ins_quote_viewed",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Olivia", "last": "Carrington" },
+      "date_of_birth": "1995-02-14",
+      "phones": [
+        { "id": "ph_car_1", "type": "mobile", "number": "+15559900221", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-06T12:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-06T12:01:00Z" }
+      ],
+      "emails": [
+        { "id": "em_car_1", "type": "personal", "address": "olivia.carrington@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_car_1", "type": "primary", "line_1": "9 W 12th St", "city": "New York", "state": "NY", "postal_code": "10011", "country": "US", "ownership": "Rent", "timezone": "America/New_York", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_car_xc60", "year": 2022, "make": "Volvo", "model": "XC60", "trim": "Momentum", "vin": "YV4BR0DK1N1990022", "mileage": 19400, "ownership": "finance", "value": 41200, "payoff": 28900, "source": "vin_decode", "source_recorded_at": "2026-05-06T12:02:00Z" }
+      ],
+      "opportunity_ids": ["opp_ins_003"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_ins_quote_viewed" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_ins_quote_viewed" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "facebook",
+        "first_utm_medium": "social",
+        "first_utm_campaign": "insurance_q2",
+        "first_landing_page": "https://blinker.com/insurance",
+        "first_touch_at": "2026-05-06T11:55:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_car_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-06T12:00:00Z", "ip": "146.70.183.45", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-06T12:01:00Z" },
+        "tos_accepted_at": "2026-05-06T12:00:00Z"
+      },
+      "created_at": "2026-05-06T12:00:00Z",
+      "updated_at": "2026-05-08T07:45:00Z"
+    },
+    "ct_morgan_1": {
+      "id": "ct_morgan_1",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_mor_001", "posthog_distinct_id": "ct_morgan_1", "external_lead_id": null },
+      "household_id": "hh_morgan_family",
+      "name": { "first": "Casey", "last": "Morgan" },
+      "date_of_birth": "1983-06-14",
+      "phones": [{ "id": "ph_mor1_1", "type": "mobile", "number": "+15551230001", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-10T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-10T09:01:00Z" }],
+      "emails": [{ "id": "em_mor1_1", "type": "personal", "address": "casey.morgan@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_mor1_1", "type": "primary", "line_1": "84 Ridgewood Ct", "city": "Denver", "state": "CO", "postal_code": "80203", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Denver", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_mor1_explorer", "year": 2020, "make": "Ford", "model": "Explorer", "trim": "XLT", "vin": "1FM5K8D87LGA11001", "mileage": 58200, "ownership": "finance", "value": 29400, "payoff": 18100, "source": "vin_decode", "source_recorded_at": "2026-03-10T09:02:00Z" },
+        { "id": "veh_mor1_tacoma", "year": 2017, "make": "Toyota", "model": "Tacoma", "trim": "SR5", "vin": "3TMCZ5AN3HM073412", "mileage": 94800, "ownership": "own", "value": 21200, "payoff": 0, "source": "manual", "source_recorded_at": "2026-03-10T09:03:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_101", "opp_refi_101"],
+      "household_member_ids": ["ct_morgan_2"],
+      "tags": [{ "id": "tag_mor1_vip", "name": "vip", "source": "blinker", "applied_at": "2026-03-10T09:10:00Z", "applied_by": "agent_casey" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_morgan_1" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_morgan_1" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "vsc_q1_2026", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-03-10T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_mor1_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-10T09:00:00Z", "ip": "68.45.12.100", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-10T09:01:00Z" }, "tos_accepted_at": "2026-03-10T09:00:00Z" },
+      "created_at": "2026-03-10T09:00:00Z",
+      "updated_at": "2026-05-02T14:30:00Z"
+    },
+    "ct_morgan_2": {
+      "id": "ct_morgan_2",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_mor_002", "posthog_distinct_id": "ct_morgan_2", "external_lead_id": null },
+      "household_id": "hh_morgan_family",
+      "name": { "first": "Jordan", "last": "Morgan" },
+      "date_of_birth": "1984-11-02",
+      "phones": [{ "id": "ph_mor2_1", "type": "mobile", "number": "+15551230002", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-11T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-11T10:01:00Z" }],
+      "emails": [{ "id": "em_mor2_1", "type": "personal", "address": "jordan.morgan@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_mor2_1", "type": "primary", "line_1": "84 Ridgewood Ct", "city": "Denver", "state": "CO", "postal_code": "80203", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Denver", "is_primary": true }],
+      "vehicles": [{ "id": "veh_mor2_crv", "year": 2021, "make": "Honda", "model": "CR-V", "trim": "EX", "vin": "7FARW2H54ME003214", "mileage": 41600, "ownership": "finance", "value": 27800, "payoff": 14200, "source": "vin_decode", "source_recorded_at": "2026-03-11T10:02:00Z" }],
+      "opportunity_ids": ["opp_ins_101"],
+      "household_member_ids": ["ct_morgan_1"],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_morgan_2" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_morgan_2" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "facebook", "first_utm_medium": "social", "first_utm_campaign": "insurance_q1", "first_landing_page": "https://blinker.com/insurance", "first_touch_at": "2026-03-11T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_mor2_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-11T10:00:00Z", "ip": "68.45.12.101", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-11T10:01:00Z" }, "tos_accepted_at": "2026-03-11T10:00:00Z" },
+      "created_at": "2026-03-11T10:00:00Z",
+      "updated_at": "2026-04-20T09:15:00Z"
+    },
+    "ct_riley_chen": {
+      "id": "ct_riley_chen",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_rc_003", "posthog_distinct_id": "ct_riley_chen", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Riley", "last": "Chen" },
+      "date_of_birth": "1990-03-28",
+      "phones": [{ "id": "ph_rc_1", "type": "mobile", "number": "+15551230003", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-05T11:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-05T11:01:00Z" }],
+      "emails": [{ "id": "em_rc_1", "type": "personal", "address": "riley.chen@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_rc_1", "type": "primary", "line_1": "2201 Mission St", "city": "San Francisco", "state": "CA", "postal_code": "94110", "country": "US", "ownership": "Rent", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_rc_modelx", "year": 2022, "make": "Tesla", "model": "Model 3", "trim": "Standard Range", "vin": "5YJ3E1EA9NF200301", "mileage": 22400, "ownership": "finance", "value": 38200, "payoff": 24100, "source": "vin_decode", "source_recorded_at": "2026-04-05T11:02:00Z" }],
+      "opportunity_ids": ["opp_refi_102", "opp_vsc_102"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_riley_chen" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_riley_chen" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "refi_q2_2026", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-04-05T10:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_rc_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-05T11:00:00Z", "ip": "71.202.33.11", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-05T11:01:00Z" }, "tos_accepted_at": "2026-04-05T11:00:00Z" },
+      "created_at": "2026-04-05T11:00:00Z",
+      "updated_at": "2026-05-06T16:00:00Z"
+    },
+    "ct_avery_patel": {
+      "id": "ct_avery_patel",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_ap_004", "posthog_distinct_id": "ct_avery_patel", "external_lead_id": null },
+      "household_id": "hh_patel_family",
+      "name": { "first": "Avery", "last": "Patel" },
+      "date_of_birth": "1978-09-15",
+      "phones": [{ "id": "ph_ap_1", "type": "mobile", "number": "+15551230004", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-02-14T08:30:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-02-14T08:31:00Z" }],
+      "emails": [{ "id": "em_ap_1", "type": "personal", "address": "avery.patel@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_ap_1", "type": "primary", "line_1": "551 Windsor Blvd", "city": "Nashville", "state": "TN", "postal_code": "37203", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_ap_odyssey", "year": 2019, "make": "Honda", "model": "Odyssey", "trim": "EX-L", "vin": "5FNRL6H7XKB021344", "mileage": 72100, "ownership": "own", "value": 22400, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-02-14T08:32:00Z" },
+        { "id": "veh_ap_accord", "year": 2023, "make": "Honda", "model": "Accord", "trim": "Sport", "vin": "1HGCY1F38PA001122", "mileage": 11800, "ownership": "finance", "value": 31200, "payoff": 22400, "source": "vin_decode", "source_recorded_at": "2026-02-14T08:33:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_103", "opp_ins_102"],
+      "household_member_ids": ["ct_deepa_patel"],
+      "tags": [{ "id": "tag_ap_fleet", "name": "multi-vehicle", "source": "blinker", "applied_at": "2026-02-14T08:40:00Z", "applied_by": "agent_riley", "color": "#0ea5e9" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_avery_patel" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_avery_patel" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "referral", "first_utm_medium": "partner", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2026-02-14T08:25:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_ap_1", "text_id": "tcpa_v1", "agreed_at": "2026-02-14T08:30:00Z", "ip": "99.12.44.81", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-02-14T08:31:00Z" }, "tos_accepted_at": "2026-02-14T08:30:00Z" },
+      "created_at": "2026-02-14T08:30:00Z",
+      "updated_at": "2026-05-01T11:20:00Z"
+    },
+    "ct_deepa_patel": {
+      "id": "ct_deepa_patel",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_dp_005", "posthog_distinct_id": "ct_deepa_patel", "external_lead_id": null },
+      "household_id": "hh_patel_family",
+      "name": { "first": "Deepa", "last": "Patel" },
+      "date_of_birth": "1980-04-22",
+      "phones": [{ "id": "ph_dp_1", "type": "mobile", "number": "+15551230005", "is_primary": true, "sms_consent": false, "do_not_contact": false }],
+      "emails": [{ "id": "em_dp_1", "type": "personal", "address": "deepa.patel@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_dp_1", "type": "primary", "line_1": "551 Windsor Blvd", "city": "Nashville", "state": "TN", "postal_code": "37203", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [{ "id": "veh_dp_crv2", "year": 2018, "make": "Honda", "model": "CR-V", "trim": "LX", "vin": "2HKRW2H55JH606133", "mileage": 83400, "ownership": "own", "value": 16800, "payoff": 0, "source": "manual", "source_recorded_at": "2026-02-15T09:00:00Z" }],
+      "opportunity_ids": ["opp_refi_103"],
+      "household_member_ids": ["ct_avery_patel"],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_deepa_patel" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_deepa_patel" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "referral", "first_utm_medium": "household", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-02-15T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_dp_1", "text_id": "tcpa_v1", "agreed_at": "2026-02-15T09:00:00Z", "ip": "99.12.44.82", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-02-15T09:01:00Z" }, "tos_accepted_at": "2026-02-15T09:00:00Z" },
+      "created_at": "2026-02-15T09:00:00Z",
+      "updated_at": "2026-04-28T16:00:00Z"
+    },
+    "ct_drew_nakamura": {
+      "id": "ct_drew_nakamura",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_dn_006", "posthog_distinct_id": "ct_drew_nakamura", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Drew", "last": "Nakamura" },
+      "date_of_birth": "1985-07-04",
+      "phones": [{ "id": "ph_dn_1", "type": "mobile", "number": "+15551230006", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-15T13:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-15T13:01:00Z" }],
+      "emails": [{ "id": "em_dn_1", "type": "personal", "address": "drew.nakamura@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_dn_1", "type": "primary", "line_1": "330 Kapahulu Ave", "city": "Honolulu", "state": "HI", "postal_code": "96815", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "Pacific/Honolulu", "is_primary": true }],
+      "vehicles": [{ "id": "veh_dn_ridgeline", "year": 2021, "make": "Honda", "model": "Ridgeline", "trim": "RTL-E", "vin": "5FPYK3F70MB014411", "mileage": 39700, "ownership": "finance", "value": 36400, "payoff": 21800, "source": "vin_decode", "source_recorded_at": "2026-04-15T13:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_104"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_drew_nakamura" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_drew_nakamura" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "organic", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2026-04-15T12:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_dn_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-15T13:00:00Z", "ip": "74.88.12.44", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": false, "opted_out_at": "2026-04-15T13:05:00Z" }, "tos_accepted_at": "2026-04-15T13:00:00Z" },
+      "created_at": "2026-04-15T13:00:00Z",
+      "updated_at": "2026-05-05T09:30:00Z"
+    },
+    "ct_quinn_rivera": {
+      "id": "ct_quinn_rivera",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_qr_007", "posthog_distinct_id": "ct_quinn_rivera", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Quinn", "last": "Rivera" },
+      "date_of_birth": "1993-12-19",
+      "phones": [{ "id": "ph_qr_1", "type": "mobile", "number": "+15551230007", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-28T15:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-28T15:01:00Z" }],
+      "emails": [{ "id": "em_qr_1", "type": "personal", "address": "quinn.rivera@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_qr_1", "type": "primary", "line_1": "720 W Cesar Chavez", "city": "Austin", "state": "TX", "postal_code": "78701", "country": "US", "ownership": "Rent", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [{ "id": "veh_qr_jetta", "year": 2019, "make": "Volkswagen", "model": "Jetta", "trim": "SE", "vin": "3VWC57BU5KM034512", "mileage": 61400, "ownership": "finance", "value": 16800, "payoff": 8200, "source": "vin_decode", "source_recorded_at": "2026-03-28T15:02:00Z" }],
+      "opportunity_ids": ["opp_ins_103", "opp_refi_104"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_quinn_rivera" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_quinn_rivera" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "facebook", "first_utm_medium": "social", "first_utm_campaign": "insurance_q1", "first_landing_page": "https://blinker.com/insurance", "first_touch_at": "2026-03-28T14:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_qr_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-28T15:00:00Z", "ip": "107.12.55.8", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-28T15:01:00Z" }, "tos_accepted_at": "2026-03-28T15:00:00Z" },
+      "created_at": "2026-03-28T15:00:00Z",
+      "updated_at": "2026-05-04T14:20:00Z"
+    },
+    "ct_elena_vasquez": {
+      "id": "ct_elena_vasquez",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_ev_008", "posthog_distinct_id": "ct_elena_vasquez", "external_lead_id": null },
+      "household_id": "hh_vasquez_family",
+      "name": { "first": "Elena", "last": "Vasquez" },
+      "date_of_birth": "1971-08-30",
+      "phones": [{ "id": "ph_ev_1", "type": "mobile", "number": "+15551230008", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-01-22T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-01-22T10:01:00Z" }],
+      "emails": [{ "id": "em_ev_1", "type": "personal", "address": "elena.vasquez@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_ev_1", "type": "primary", "line_1": "1101 N Congress Ave", "city": "Austin", "state": "TX", "postal_code": "78701", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_ev_suburban", "year": 2018, "make": "Chevrolet", "model": "Suburban", "trim": "LT", "vin": "1GNSKJKC1JR278833", "mileage": 91200, "ownership": "own", "value": 31400, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-01-22T10:02:00Z" },
+        { "id": "veh_ev_malibu", "year": 2015, "make": "Chevrolet", "model": "Malibu", "trim": "LT", "vin": "1G11C5SL4FF120089", "mileage": 118700, "ownership": "own", "value": 7400, "payoff": 0, "source": "manual", "source_recorded_at": "2026-01-22T10:03:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_105", "opp_pay_101"],
+      "household_member_ids": ["ct_marco_vasquez"],
+      "tags": [{ "id": "tag_ev_sp", "name": "spanish-speaker", "source": "blinker", "applied_at": "2026-01-22T10:15:00Z", "applied_by": "agent_casey", "color": "#8b5cf6" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_elena_vasquez" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_elena_vasquez" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "vsc_q1_2026", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-01-22T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_ev_1", "text_id": "tcpa_v1", "agreed_at": "2026-01-22T10:00:00Z", "ip": "97.80.44.12", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-01-22T10:01:00Z" }, "tos_accepted_at": "2026-01-22T10:00:00Z" },
+      "created_at": "2026-01-22T10:00:00Z",
+      "updated_at": "2026-05-07T08:00:00Z"
+    },
+    "ct_marco_vasquez": {
+      "id": "ct_marco_vasquez",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_mv_009", "posthog_distinct_id": "ct_marco_vasquez", "external_lead_id": null },
+      "household_id": "hh_vasquez_family",
+      "name": { "first": "Marco", "last": "Vasquez" },
+      "date_of_birth": "1969-05-11",
+      "phones": [{ "id": "ph_mv_1", "type": "mobile", "number": "+15551230009", "is_primary": true, "sms_consent": false, "do_not_contact": false }],
+      "emails": [{ "id": "em_mv_1", "type": "personal", "address": "marco.vasquez@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_mv_1", "type": "primary", "line_1": "1101 N Congress Ave", "city": "Austin", "state": "TX", "postal_code": "78701", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [{ "id": "veh_mv_silverado2", "year": 2016, "make": "Chevrolet", "model": "Silverado 1500", "trim": "LTZ", "vin": "3GCUKSEC6GG182201", "mileage": 107400, "ownership": "own", "value": 17200, "payoff": 0, "source": "manual", "source_recorded_at": "2026-01-23T09:00:00Z" }],
+      "opportunity_ids": ["opp_vsc_106"],
+      "household_member_ids": ["ct_elena_vasquez"],
+      "tags": [{ "id": "tag_mv_sp", "name": "spanish-speaker", "source": "blinker", "applied_at": "2026-01-23T09:05:00Z", "applied_by": "agent_casey", "color": "#8b5cf6" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_marco_vasquez" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_marco_vasquez" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "referral", "first_utm_medium": "household", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2026-01-23T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_mv_1", "text_id": "tcpa_v1", "agreed_at": "2026-01-23T09:00:00Z", "ip": "97.80.44.13", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": false, "opted_out_at": "2026-01-23T09:10:00Z" }, "tos_accepted_at": "2026-01-23T09:00:00Z" },
+      "created_at": "2026-01-23T09:00:00Z",
+      "updated_at": "2026-04-10T12:00:00Z"
+    },
+    "ct_tyrell_washington": {
+      "id": "ct_tyrell_washington",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_tw_010", "posthog_distinct_id": "ct_tyrell_washington", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Tyrell", "last": "Washington" },
+      "date_of_birth": "1988-02-14",
+      "phones": [{ "id": "ph_tw_1", "type": "mobile", "number": "+15551230010", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-20T14:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-20T14:01:00Z" }],
+      "emails": [{ "id": "em_tw_1", "type": "personal", "address": "tyrell.washington@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_tw_1", "type": "primary", "line_1": "4420 Georgia Ave NW", "city": "Washington", "state": "DC", "postal_code": "20011", "country": "US", "ownership": "Rent", "timezone": "America/New_York", "is_primary": true }],
+      "vehicles": [{ "id": "veh_tw_altima", "year": 2020, "make": "Nissan", "model": "Altima", "trim": "SV", "vin": "1N4BL4BW0LN310044", "mileage": 48200, "ownership": "finance", "value": 18600, "payoff": 9400, "source": "vin_decode", "source_recorded_at": "2026-04-20T14:02:00Z" }],
+      "opportunity_ids": ["opp_refi_105", "opp_vsc_107"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_tyrell_washington" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_tyrell_washington" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "organic", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-04-20T13:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_tw_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-20T14:00:00Z", "ip": "173.55.20.88", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-20T14:01:00Z" }, "tos_accepted_at": "2026-04-20T14:00:00Z" },
+      "created_at": "2026-04-20T14:00:00Z",
+      "updated_at": "2026-05-08T11:00:00Z"
+    },
+    "ct_fatima_al_rashid": {
+      "id": "ct_fatima_al_rashid",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_far_011", "posthog_distinct_id": "ct_fatima_al_rashid", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Fatima", "last": "Al-Rashid" },
+      "date_of_birth": "1986-11-30",
+      "phones": [{ "id": "ph_far_1", "type": "mobile", "number": "+15551230011", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-01T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-01T09:01:00Z" }],
+      "emails": [{ "id": "em_far_1", "type": "personal", "address": "fatima.alrashid@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_far_1", "type": "primary", "line_1": "6120 S Stony Island Ave", "city": "Chicago", "state": "IL", "postal_code": "60637", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [{ "id": "veh_far_passport", "year": 2022, "make": "Honda", "model": "Passport", "trim": "Sport", "vin": "5FNYF8H57NB007733", "mileage": 28100, "ownership": "finance", "value": 33800, "payoff": 20400, "source": "vin_decode", "source_recorded_at": "2026-04-01T09:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_108"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_fatima_al_rashid" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_fatima_al_rashid" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "direct", "first_utm_medium": "none", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2026-04-01T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_far_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-01T09:00:00Z", "ip": "75.111.22.33", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-01T09:01:00Z" }, "tos_accepted_at": "2026-04-01T09:00:00Z" },
+      "created_at": "2026-04-01T09:00:00Z",
+      "updated_at": "2026-05-03T15:00:00Z"
+    },
+    "ct_brenda_kowalczyk": {
+      "id": "ct_brenda_kowalczyk",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_bk_012", "posthog_distinct_id": "ct_brenda_kowalczyk", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Brenda", "last": "Kowalczyk" },
+      "date_of_birth": "1977-03-19",
+      "phones": [{ "id": "ph_bk_1", "type": "mobile", "number": "+15551230012", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-05T12:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-05T12:01:00Z" }],
+      "emails": [{ "id": "em_bk_1", "type": "personal", "address": "brenda.kowalczyk@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_bk_1", "type": "primary", "line_1": "214 E Grand Blvd", "city": "Detroit", "state": "MI", "postal_code": "48207", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Detroit", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_bk_durango", "year": 2020, "make": "Dodge", "model": "Durango", "trim": "GT", "vin": "1C4RDHDG4LC414881", "mileage": 55100, "ownership": "own", "value": 26400, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-03-05T12:02:00Z" },
+        { "id": "veh_bk_charger", "year": 2017, "make": "Dodge", "model": "Charger", "trim": "SXT", "vin": "2C3CDXJG2HH507734", "mileage": 88300, "ownership": "own", "value": 14200, "payoff": 0, "source": "manual", "source_recorded_at": "2026-03-05T12:03:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_109", "opp_refi_106"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_brenda_kowalczyk" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_brenda_kowalczyk" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "vsc_q1_2026", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-03-05T11:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_bk_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-05T12:00:00Z", "ip": "71.220.44.19", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-05T12:01:00Z" }, "tos_accepted_at": "2026-03-05T12:00:00Z" },
+      "created_at": "2026-03-05T12:00:00Z",
+      "updated_at": "2026-04-30T13:00:00Z"
+    },
+    "ct_jerome_butler": {
+      "id": "ct_jerome_butler",
+      "org_id": 106,
+      "external_ids": { "ghl_contact_id": "ghl_c_jb_013", "posthog_distinct_id": "ct_jerome_butler", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Jerome", "last": "Butler" },
+      "date_of_birth": "1982-06-07",
+      "phones": [{ "id": "ph_jb_1", "type": "mobile", "number": "+15551230013", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-08T10:30:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-08T10:31:00Z" }],
+      "emails": [{ "id": "em_jb_1", "type": "personal", "address": "jerome.butler@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_jb_1", "type": "primary", "line_1": "802 Peachtree St NE", "city": "Atlanta", "state": "GA", "postal_code": "30308", "country": "US", "ownership": "Rent", "timezone": "America/New_York", "is_primary": true }],
+      "vehicles": [{ "id": "veh_jb_mdx", "year": 2021, "make": "Acura", "model": "MDX", "trim": "Technology", "vin": "5J8YD4H56ML012288", "mileage": 33600, "ownership": "finance", "value": 42200, "payoff": 28100, "source": "vin_decode", "source_recorded_at": "2026-04-08T10:32:00Z" }],
+      "opportunity_ids": ["opp_refi_107", "opp_ins_104"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_jerome_butler" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_jerome_butler" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "refi_q2_2026", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-04-08T10:25:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_jb_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-08T10:30:00Z", "ip": "74.112.88.22", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-08T10:31:00Z" }, "tos_accepted_at": "2026-04-08T10:30:00Z" },
+      "created_at": "2026-04-08T10:30:00Z",
+      "updated_at": "2026-05-09T08:00:00Z"
+    },
+    "ct_patricia_malone": {
+      "id": "ct_patricia_malone",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_pm_014", "posthog_distinct_id": "ct_patricia_malone", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Patricia", "last": "Malone" },
+      "date_of_birth": "1963-09-12",
+      "phones": [{ "id": "ph_pm_1", "type": "mobile", "number": "+15551230014", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-02-28T11:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-02-28T11:01:00Z" }],
+      "emails": [{ "id": "em_pm_1", "type": "personal", "address": "patricia.malone@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_pm_1", "type": "primary", "line_1": "1822 Magnolia Ln", "city": "Houston", "state": "TX", "postal_code": "77004", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [],
+      "opportunity_ids": [],
+      "household_member_ids": [],
+      "tags": [{ "id": "tag_pm_newsletter", "name": "newsletter-lead", "source": "blinker", "applied_at": "2026-02-28T11:05:00Z", "color": "#64748b" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_patricia_malone" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_patricia_malone" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "newsletter", "first_utm_medium": "email", "first_landing_page": "https://blinker.com/learn", "first_touch_at": "2026-02-28T10:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_pm_1", "text_id": "tcpa_v1", "agreed_at": "2026-02-28T11:00:00Z", "ip": "12.44.88.100", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-02-28T11:01:00Z" }, "tos_accepted_at": "2026-02-28T11:00:00Z" },
+      "created_at": "2026-02-28T11:00:00Z",
+      "updated_at": "2026-02-28T11:05:00Z"
+    },
+    "ct_ethan_price": {
+      "id": "ct_ethan_price",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_ep_015", "posthog_distinct_id": "ct_ethan_price", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Ethan", "last": "Price" },
+      "date_of_birth": "1994-01-08",
+      "phones": [{ "id": "ph_ep_1", "type": "mobile", "number": "+15551230015", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-09T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-09T09:01:00Z" }],
+      "emails": [{ "id": "em_ep_1", "type": "personal", "address": "ethan.price@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_ep_1", "type": "primary", "line_1": "3300 N Meridian St", "city": "Indianapolis", "state": "IN", "postal_code": "46208", "country": "US", "ownership": "Rent", "timezone": "America/Indiana/Indianapolis", "is_primary": true }],
+      "vehicles": [{ "id": "veh_ep_camry", "year": 2023, "make": "Toyota", "model": "Camry", "trim": "XSE", "vin": "4T1G11AK8PU041188", "mileage": 9200, "ownership": "finance", "value": 30400, "payoff": 24100, "source": "vin_decode", "source_recorded_at": "2026-05-09T09:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_110"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_ethan_price" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_ethan_price" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "direct", "first_utm_medium": "none", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-05-09T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_ep_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-09T09:00:00Z", "ip": "98.101.55.9", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-09T09:01:00Z" }, "tos_accepted_at": "2026-05-09T09:00:00Z" },
+      "created_at": "2026-05-09T09:00:00Z",
+      "updated_at": "2026-05-09T09:02:00Z"
+    },
+    "ct_vanessa_osei": {
+      "id": "ct_vanessa_osei",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_vo_016", "posthog_distinct_id": "ct_vanessa_osei", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Vanessa", "last": "Osei" },
+      "date_of_birth": "1989-05-25",
+      "phones": [{ "id": "ph_vo_1", "type": "mobile", "number": "+15551230016", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-18T14:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-18T14:01:00Z" }],
+      "emails": [{ "id": "em_vo_1", "type": "personal", "address": "vanessa.osei@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_vo_1", "type": "primary", "line_1": "500 N Lake Shore Dr", "city": "Chicago", "state": "IL", "postal_code": "60611", "country": "US", "ownership": "Rent", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_vo_q3", "year": 2022, "make": "Audi", "model": "Q3", "trim": "Premium", "vin": "WA1DECF38N1088712", "mileage": 18900, "ownership": "finance", "value": 36800, "payoff": 26200, "source": "vin_decode", "source_recorded_at": "2026-03-18T14:02:00Z" },
+        { "id": "veh_vo_tiguan", "year": 2019, "make": "Volkswagen", "model": "Tiguan", "trim": "SE", "vin": "3VV2B7AX6KM050041", "mileage": 58700, "ownership": "own", "value": 19400, "payoff": 0, "source": "manual", "source_recorded_at": "2026-03-18T14:03:00Z" }
+      ],
+      "opportunity_ids": ["opp_ins_105", "opp_vsc_111"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_vanessa_osei" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_vanessa_osei" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "facebook", "first_utm_medium": "social", "first_utm_campaign": "insurance_q1", "first_landing_page": "https://blinker.com/insurance", "first_touch_at": "2026-03-18T13:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_vo_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-18T14:00:00Z", "ip": "208.44.99.11", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-18T14:01:00Z" }, "tos_accepted_at": "2026-03-18T14:00:00Z" },
+      "created_at": "2026-03-18T14:00:00Z",
+      "updated_at": "2026-05-05T16:00:00Z"
+    },
+    "ct_samuel_pierre": {
+      "id": "ct_samuel_pierre",
+      "org_id": 106,
+      "external_ids": { "ghl_contact_id": "ghl_c_sp_017", "posthog_distinct_id": "ct_samuel_pierre", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Samuel", "last": "Pierre" },
+      "date_of_birth": "1980-10-03",
+      "phones": [{ "id": "ph_sp_1", "type": "mobile", "number": "+15551230017", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-12T09:30:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-12T09:31:00Z" }],
+      "emails": [{ "id": "em_sp_1", "type": "personal", "address": "samuel.pierre@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_sp_1", "type": "primary", "line_1": "1901 NW 7th Ave", "city": "Miami", "state": "FL", "postal_code": "33136", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/New_York", "is_primary": true }],
+      "vehicles": [{ "id": "veh_spi_expedition", "year": 2021, "make": "Ford", "model": "Expedition", "trim": "XLT", "vin": "1FMJU1HT0MEA13388", "mileage": 44800, "ownership": "finance", "value": 48200, "payoff": 31100, "source": "vin_decode", "source_recorded_at": "2026-04-12T09:32:00Z" }],
+      "opportunity_ids": ["opp_vsc_112", "opp_refi_108"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_samuel_pierre" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_samuel_pierre" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "vsc_q2_2026", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-04-12T09:25:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_spi_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-12T09:30:00Z", "ip": "98.200.11.44", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-12T09:31:00Z" }, "tos_accepted_at": "2026-04-12T09:30:00Z" },
+      "created_at": "2026-04-12T09:30:00Z",
+      "updated_at": "2026-05-07T10:00:00Z"
+    },
+    "ct_lila_fernandez": {
+      "id": "ct_lila_fernandez",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_lf_018", "posthog_distinct_id": "ct_lila_fernandez", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Lila", "last": "Fernandez" },
+      "date_of_birth": "1997-04-01",
+      "phones": [{ "id": "ph_lf_1", "type": "mobile", "number": "+15551230018", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-10T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-10T10:01:00Z" }],
+      "emails": [{ "id": "em_lf_1", "type": "personal", "address": "lila.fernandez@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_lf_1", "type": "primary", "line_1": "442 W 47th St", "city": "Los Angeles", "state": "CA", "postal_code": "90037", "country": "US", "ownership": "Rent", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_lf_sentra", "year": 2021, "make": "Nissan", "model": "Sentra", "trim": "SV", "vin": "3N1AB8CV1MY218844", "mileage": 24700, "ownership": "finance", "value": 17400, "payoff": 10200, "source": "vin_decode", "source_recorded_at": "2026-05-10T10:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_113"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_lila_fernandez" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_lila_fernandez" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "vsc_q2_2026", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-05-10T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_lf_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-10T10:00:00Z", "ip": "47.33.22.55", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-10T10:01:00Z" }, "tos_accepted_at": "2026-05-10T10:00:00Z" },
+      "created_at": "2026-05-10T10:00:00Z",
+      "updated_at": "2026-05-10T10:02:00Z"
+    },
+    "ct_darren_hobbs": {
+      "id": "ct_darren_hobbs",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_dh_019", "posthog_distinct_id": "ct_darren_hobbs", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Darren", "last": "Hobbs" },
+      "date_of_birth": "1976-12-22",
+      "phones": [{ "id": "ph_dh_1", "type": "mobile", "number": "+15551230019", "is_primary": true, "sms_consent": true, "sms_consent_at": "2025-12-10T11:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2025-12-10T11:01:00Z" }],
+      "emails": [{ "id": "em_dh_1", "type": "personal", "address": "darren.hobbs@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_dh_1", "type": "primary", "line_1": "700 Main St", "city": "Louisville", "state": "KY", "postal_code": "40202", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Kentucky/Louisville", "is_primary": true }],
+      "vehicles": [{ "id": "veh_dh_tundra", "year": 2018, "make": "Toyota", "model": "Tundra", "trim": "SR5", "vin": "5TFDY5F18JX745512", "mileage": 102100, "ownership": "own", "value": 28400, "payoff": 0, "source": "manual", "source_recorded_at": "2025-12-10T11:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_114"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_darren_hobbs" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_darren_hobbs" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "direct", "first_utm_medium": "none", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2025-12-10T10:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_dh_1", "text_id": "tcpa_v1", "agreed_at": "2025-12-10T11:00:00Z", "ip": "72.44.181.11", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": false, "opted_out_at": "2025-12-10T11:10:00Z" }, "tos_accepted_at": "2025-12-10T11:00:00Z" },
+      "created_at": "2025-12-10T11:00:00Z",
+      "updated_at": "2026-03-22T09:00:00Z"
+    },
+    "ct_sarah_kim": {
+      "id": "ct_sarah_kim",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_sk_020", "posthog_distinct_id": "ct_sarah_kim", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Sarah", "last": "Kim" },
+      "date_of_birth": "1992-08-18",
+      "phones": [{ "id": "ph_sk_1", "type": "mobile", "number": "+15551230020", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-28T16:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-28T16:01:00Z" }],
+      "emails": [{ "id": "em_sk_1", "type": "personal", "address": "sarah.kim@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_sk_1", "type": "primary", "line_1": "215 N Michigan Ave", "city": "Chicago", "state": "IL", "postal_code": "60601", "country": "US", "ownership": "Rent", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_sk_tucson", "year": 2022, "make": "Hyundai", "model": "Tucson", "trim": "Limited", "vin": "5NMJE3AE2NH052011", "mileage": 22100, "ownership": "finance", "value": 28800, "payoff": 17200, "source": "vin_decode", "source_recorded_at": "2026-04-28T16:02:00Z" },
+        { "id": "veh_sk_ioniq", "year": 2023, "make": "Hyundai", "model": "IONIQ 6", "trim": "SE Standard Range", "vin": "KMHM34DC4PA010044", "mileage": 8200, "ownership": "finance", "value": 36400, "payoff": 29100, "source": "vin_decode", "source_recorded_at": "2026-04-28T16:03:00Z" }
+      ],
+      "opportunity_ids": ["opp_refi_109", "opp_vsc_115"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_sarah_kim" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_sarah_kim" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "refi_q2_2026", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-04-28T15:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_sk_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-28T16:00:00Z", "ip": "67.188.44.99", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-28T16:01:00Z" }, "tos_accepted_at": "2026-04-28T16:00:00Z" },
+      "created_at": "2026-04-28T16:00:00Z",
+      "updated_at": "2026-05-08T15:00:00Z"
+    },
+    "ct_raymond_liu": {
+      "id": "ct_raymond_liu",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_rl_021", "posthog_distinct_id": "ct_raymond_liu", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Raymond", "last": "Liu" },
+      "date_of_birth": "1975-03-07",
+      "phones": [{ "id": "ph_rl_1", "type": "mobile", "number": "+15551230021", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-30T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-30T10:01:00Z" }],
+      "emails": [{ "id": "em_rl_1", "type": "personal", "address": "raymond.liu@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_rl_1", "type": "primary", "line_1": "3111 Fillmore St", "city": "San Francisco", "state": "CA", "postal_code": "94123", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_rl_gx460", "year": 2020, "make": "Lexus", "model": "GX 460", "trim": "Premium", "vin": "JTJBM7FX7L5207710", "mileage": 44200, "ownership": "own", "value": 42800, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-03-30T10:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_116", "opp_ins_106"],
+      "household_member_ids": [],
+      "tags": [{ "id": "tag_rl_vip", "name": "vip", "source": "blinker", "applied_at": "2026-03-30T10:10:00Z", "applied_by": "agent_drew" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_raymond_liu" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_raymond_liu" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "referral", "first_utm_medium": "partner", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2026-03-30T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_rl_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-30T10:00:00Z", "ip": "71.200.44.8", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-30T10:01:00Z" }, "tos_accepted_at": "2026-03-30T10:00:00Z" },
+      "created_at": "2026-03-30T10:00:00Z",
+      "updated_at": "2026-05-06T10:00:00Z"
+    },
+    "ct_tanya_okonkwo": {
+      "id": "ct_tanya_okonkwo",
+      "org_id": 106,
+      "external_ids": { "ghl_contact_id": "ghl_c_to_022", "posthog_distinct_id": "ct_tanya_okonkwo", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Tanya", "last": "Okonkwo" },
+      "date_of_birth": "1984-02-16",
+      "phones": [{ "id": "ph_to_1", "type": "mobile", "number": "+15551230022", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-17T13:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-17T13:01:00Z" }],
+      "emails": [{ "id": "em_to_1", "type": "personal", "address": "tanya.okonkwo@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_to_1", "type": "primary", "line_1": "10 Fremont St", "city": "San Francisco", "state": "CA", "postal_code": "94105", "country": "US", "ownership": "Rent", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_to_rx350", "year": 2019, "make": "Lexus", "model": "RX 350", "trim": "F Sport", "vin": "2T2BZMCA1KC140038", "mileage": 67400, "ownership": "own", "value": 34200, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-04-17T13:02:00Z" }],
+      "opportunity_ids": ["opp_refi_110", "opp_ins_107"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_tanya_okonkwo" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_tanya_okonkwo" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "organic", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-04-17T12:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_to_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-17T13:00:00Z", "ip": "149.22.88.77", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-17T13:01:00Z" }, "tos_accepted_at": "2026-04-17T13:00:00Z" },
+      "created_at": "2026-04-17T13:00:00Z",
+      "updated_at": "2026-05-10T11:30:00Z"
+    },
+    "ct_marcus_grant": {
+      "id": "ct_marcus_grant",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_mg_023", "posthog_distinct_id": "ct_marcus_grant", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Marcus", "last": "Grant" },
+      "date_of_birth": "1970-07-28",
+      "phones": [{ "id": "ph_mg_1", "type": "mobile", "number": "+15551230023", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-02-03T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-02-03T09:01:00Z" }],
+      "emails": [{ "id": "em_mg_1", "type": "personal", "address": "marcus.grant@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_mg_1", "type": "primary", "line_1": "400 S Tryon St", "city": "Charlotte", "state": "NC", "postal_code": "28202", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/New_York", "is_primary": true }],
+      "vehicles": [
+        { "id": "veh_mg_f250", "year": 2019, "make": "Ford", "model": "F-250", "trim": "Lariat", "vin": "1FT7W2BT3KEC31044", "mileage": 87200, "ownership": "own", "value": 38400, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-02-03T09:02:00Z" },
+        { "id": "veh_mg_mustang2", "year": 2021, "make": "Ford", "model": "Mustang", "trim": "GT Premium", "vin": "1FA6P8CF5M5109923", "mileage": 31200, "ownership": "finance", "value": 38800, "payoff": 14200, "source": "vin_decode", "source_recorded_at": "2026-02-03T09:03:00Z" },
+        { "id": "veh_mg_navigator", "year": 2016, "make": "Lincoln", "model": "Navigator", "trim": "Reserve", "vin": "5LMJJ2HT0GEL29811", "mileage": 131400, "ownership": "own", "value": 18800, "payoff": 0, "source": "manual", "source_recorded_at": "2026-02-03T09:04:00Z" }
+      ],
+      "opportunity_ids": ["opp_vsc_117", "opp_pay_102"],
+      "household_member_ids": [],
+      "tags": [{ "id": "tag_mg_fleet", "name": "multi-vehicle", "source": "blinker", "applied_at": "2026-02-03T09:15:00Z", "applied_by": "agent_sam", "color": "#0ea5e9" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_marcus_grant" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_marcus_grant" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "direct", "first_utm_medium": "none", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2026-02-03T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_mg_1", "text_id": "tcpa_v1", "agreed_at": "2026-02-03T09:00:00Z", "ip": "76.221.10.44", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-02-03T09:01:00Z" }, "tos_accepted_at": "2026-02-03T09:00:00Z" },
+      "created_at": "2026-02-03T09:00:00Z",
+      "updated_at": "2026-05-01T08:00:00Z"
+    },
+    "ct_ingrid_sorensen": {
+      "id": "ct_ingrid_sorensen",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_is_024", "posthog_distinct_id": "ct_ingrid_sorensen", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Ingrid", "last": "Sorensen" },
+      "date_of_birth": "1968-11-14",
+      "phones": [{ "id": "ph_isor_1", "type": "mobile", "number": "+15551230024", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-14T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-14T10:01:00Z" }],
+      "emails": [{ "id": "em_isor_1", "type": "personal", "address": "ingrid.sorensen@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_isor_1", "type": "primary", "line_1": "8900 Beverly Blvd", "city": "Los Angeles", "state": "CA", "postal_code": "90048", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_isor_xc90", "year": 2021, "make": "Volvo", "model": "XC90", "trim": "T6 Inscription", "vin": "YV4A22PL5M1737441", "mileage": 38800, "ownership": "finance", "value": 52400, "payoff": 31200, "source": "vin_decode", "source_recorded_at": "2026-03-14T10:02:00Z" }],
+      "opportunity_ids": ["opp_refi_111"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_ingrid_sorensen" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_ingrid_sorensen" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "direct", "first_utm_medium": "none", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-03-14T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_isor_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-14T10:00:00Z", "ip": "73.80.12.55", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-14T10:01:00Z" }, "tos_accepted_at": "2026-03-14T10:00:00Z" },
+      "created_at": "2026-03-14T10:00:00Z",
+      "updated_at": "2026-04-22T14:00:00Z"
+    },
+    "ct_damon_cross": {
+      "id": "ct_damon_cross",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_dc_025", "posthog_distinct_id": "ct_damon_cross", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Damon", "last": "Cross" },
+      "date_of_birth": "1991-06-05",
+      "phones": [{ "id": "ph_dcr_1", "type": "mobile", "number": "+15551230025", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-26T08:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-26T08:01:00Z" }],
+      "emails": [{ "id": "em_dcr_1", "type": "personal", "address": "damon.cross@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_dcr_1", "type": "primary", "line_1": "5280 Broadway", "city": "Denver", "state": "CO", "postal_code": "80216", "country": "US", "ownership": "Rent", "timezone": "America/Denver", "is_primary": true }],
+      "vehicles": [{ "id": "veh_dcr_wrangler", "year": 2020, "make": "Jeep", "model": "Wrangler", "trim": "Rubicon", "vin": "1C4HJXFG4LW200044", "mileage": 52800, "ownership": "finance", "value": 38200, "payoff": 24400, "source": "vin_decode", "source_recorded_at": "2026-04-26T08:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_118", "opp_refi_112"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_damon_cross" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_damon_cross" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "cpc", "first_utm_campaign": "vsc_q2_2026", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-04-26T07:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_dcr_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-26T08:00:00Z", "ip": "47.44.200.12", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-26T08:01:00Z" }, "tos_accepted_at": "2026-04-26T08:00:00Z" },
+      "created_at": "2026-04-26T08:00:00Z",
+      "updated_at": "2026-05-09T14:00:00Z"
+    },
+    "ct_nalini_iyer": {
+      "id": "ct_nalini_iyer",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_ni_026", "posthog_distinct_id": "ct_nalini_iyer", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Nalini", "last": "Iyer" },
+      "date_of_birth": "1987-09-22",
+      "phones": [{ "id": "ph_ni_1", "type": "mobile", "number": "+15551230026", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-10T11:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-10T11:01:00Z" }],
+      "emails": [{ "id": "em_ni_1", "type": "personal", "address": "nalini.iyer@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_ni_1", "type": "primary", "line_1": "1200 Westlake Ave N", "city": "Seattle", "state": "WA", "postal_code": "98109", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_ni_prius", "year": 2022, "make": "Toyota", "model": "Prius Prime", "trim": "XSE", "vin": "JTDKARFP9N3027711", "mileage": 19800, "ownership": "finance", "value": 32400, "payoff": 21400, "source": "vin_decode", "source_recorded_at": "2026-04-10T11:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_119"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_nalini_iyer" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_nalini_iyer" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "organic", "first_landing_page": "https://blinker.com/vsc/quote", "first_touch_at": "2026-04-10T10:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_ni_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-10T11:00:00Z", "ip": "73.140.228.44", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-10T11:01:00Z" }, "tos_accepted_at": "2026-04-10T11:00:00Z" },
+      "created_at": "2026-04-10T11:00:00Z",
+      "updated_at": "2026-05-02T09:00:00Z"
+    },
+    "ct_jacob_thornton": {
+      "id": "ct_jacob_thornton",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_jt_027", "posthog_distinct_id": "ct_jacob_thornton", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Jacob", "last": "Thornton" },
+      "date_of_birth": "1996-10-10",
+      "phones": [{ "id": "ph_jt_1", "type": "mobile", "number": "+15551230027", "is_primary": true, "sms_consent": false, "do_not_contact": false }],
+      "emails": [{ "id": "em_jt_1", "type": "personal", "address": "jacob.thornton@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_jt_1", "type": "primary", "line_1": "6200 Sunset Blvd", "city": "Los Angeles", "state": "CA", "postal_code": "90028", "country": "US", "ownership": "Rent", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_jt_civic2", "year": 2020, "make": "Honda", "model": "Civic", "trim": "Sport", "vin": "2HGFC2F64LH523001", "mileage": 43800, "ownership": "finance", "value": 19400, "payoff": 8200, "source": "vin_decode", "source_recorded_at": "2026-05-01T10:00:00Z" }],
+      "opportunity_ids": ["opp_refi_113"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_jacob_thornton" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_jacob_thornton" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "facebook", "first_utm_medium": "social", "first_utm_campaign": "refi_q2_2026", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2026-05-01T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_jt_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-01T10:00:00Z", "ip": "47.44.200.55", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-01T10:01:00Z" }, "tos_accepted_at": "2026-05-01T10:00:00Z" },
+      "created_at": "2026-05-01T10:00:00Z",
+      "updated_at": "2026-05-07T11:30:00Z"
+    },
+    "ct_grace_oduya": {
+      "id": "ct_grace_oduya",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_go_028", "posthog_distinct_id": "ct_grace_oduya", "external_lead_id": null },
+      "household_id": "hh_oduya_family",
+      "name": { "first": "Grace", "last": "Oduya" },
+      "date_of_birth": "1966-01-29",
+      "phones": [{ "id": "ph_go_1", "type": "mobile", "number": "+15551230028", "is_primary": true, "sms_consent": true, "sms_consent_at": "2025-11-15T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2025-11-15T09:01:00Z" }],
+      "emails": [{ "id": "em_go_1", "type": "personal", "address": "grace.oduya@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_go_1", "type": "primary", "line_1": "3320 Lamar Blvd", "city": "Austin", "state": "TX", "postal_code": "78705", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [{ "id": "veh_go_traverse", "year": 2020, "make": "Chevrolet", "model": "Traverse", "trim": "LT Cloth", "vin": "1GNERGKW0LJ247791", "mileage": 61800, "ownership": "own", "value": 26200, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2025-11-15T09:02:00Z" }],
+      "opportunity_ids": ["opp_vsc_120", "opp_ins_108"],
+      "household_member_ids": ["ct_felix_oduya"],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_grace_oduya" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_grace_oduya" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "google", "first_utm_medium": "organic", "first_landing_page": "https://blinker.com/vsc", "first_touch_at": "2025-11-15T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_go_1", "text_id": "tcpa_v1", "agreed_at": "2025-11-15T09:00:00Z", "ip": "73.105.22.14", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2025-11-15T09:01:00Z" }, "tos_accepted_at": "2025-11-15T09:00:00Z" },
+      "created_at": "2025-11-15T09:00:00Z",
+      "updated_at": "2026-04-28T12:00:00Z"
+    },
+    "ct_felix_oduya": {
+      "id": "ct_felix_oduya",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_fo_029", "posthog_distinct_id": "ct_felix_oduya", "external_lead_id": null },
+      "household_id": "hh_oduya_family",
+      "name": { "first": "Felix", "last": "Oduya" },
+      "date_of_birth": "1991-04-11",
+      "phones": [{ "id": "ph_fo_1", "type": "mobile", "number": "+15551230029", "is_primary": true, "sms_consent": true, "sms_consent_at": "2025-12-01T10:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2025-12-01T10:01:00Z" }],
+      "emails": [{ "id": "em_fo_1", "type": "personal", "address": "felix.oduya@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_fo_1", "type": "primary", "line_1": "801 E 6th St", "city": "Austin", "state": "TX", "postal_code": "78702", "country": "US", "ownership": "Rent", "timezone": "America/Chicago", "is_primary": true }],
+      "vehicles": [{ "id": "veh_fo_elantra", "year": 2021, "make": "Hyundai", "model": "Elantra", "trim": "SEL", "vin": "KMHLN4AJ9MU044488", "mileage": 38200, "ownership": "finance", "value": 18800, "payoff": 9600, "source": "vin_decode", "source_recorded_at": "2025-12-01T10:02:00Z" }],
+      "opportunity_ids": ["opp_refi_114"],
+      "household_member_ids": ["ct_grace_oduya"],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_felix_oduya" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_felix_oduya" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "referral", "first_utm_medium": "household", "first_landing_page": "https://blinker.com/refi", "first_touch_at": "2025-12-01T09:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_fo_1", "text_id": "tcpa_v1", "agreed_at": "2025-12-01T10:00:00Z", "ip": "73.105.22.15", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2025-12-01T10:01:00Z" }, "tos_accepted_at": "2025-12-01T10:00:00Z" },
+      "created_at": "2025-12-01T10:00:00Z",
+      "updated_at": "2026-03-18T09:00:00Z"
+    },
+    "ct_no_vehicle_2": {
+      "id": "ct_no_vehicle_2",
+      "org_id": 102,
+      "external_ids": { "ghl_contact_id": "ghl_c_nv2_030", "posthog_distinct_id": "ct_no_vehicle_2", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Thomas", "last": "Eriksen" },
+      "date_of_birth": "1999-07-04",
+      "phones": [{ "id": "ph_te_1", "type": "mobile", "number": "+15551230030", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-05-11T08:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-05-11T08:01:00Z" }],
+      "emails": [{ "id": "em_te_1", "type": "personal", "address": "thomas.eriksen@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_te_1", "type": "primary", "line_1": "400 E 72nd St", "city": "New York", "state": "NY", "postal_code": "10021", "country": "US", "ownership": "Rent", "timezone": "America/New_York", "is_primary": true }],
+      "vehicles": [],
+      "opportunity_ids": [],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_no_vehicle_2" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_no_vehicle_2" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "direct", "first_utm_medium": "none", "first_landing_page": "https://blinker.com/", "first_touch_at": "2026-05-11T07:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_te_1", "text_id": "tcpa_v1", "agreed_at": "2026-05-11T08:00:00Z", "ip": "146.70.100.22", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-05-11T08:01:00Z" }, "tos_accepted_at": "2026-05-11T08:00:00Z" },
+      "created_at": "2026-05-11T08:00:00Z",
+      "updated_at": "2026-05-11T08:01:00Z"
+    },
+    "ct_alicia_ramos": {
+      "id": "ct_alicia_ramos",
+      "org_id": 103,
+      "external_ids": { "ghl_contact_id": "ghl_c_ar_031", "posthog_distinct_id": "ct_alicia_ramos", "external_lead_id": null },
+      "household_id": null,
+      "name": { "first": "Alicia", "last": "Ramos" },
+      "date_of_birth": "1985-12-03",
+      "phones": [{ "id": "ph_aramos_1", "type": "mobile", "number": "+15551230031", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-03-22T09:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-03-22T09:01:00Z" }],
+      "emails": [{ "id": "em_aramos_1", "type": "personal", "address": "alicia.ramos@example.com", "is_primary": true, "opted_out": false }],
+      "addresses": [{ "id": "ad_aramos_1", "type": "primary", "line_1": "2701 W Cesar Chavez Ave", "city": "Los Angeles", "state": "CA", "postal_code": "90026", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }],
+      "vehicles": [{ "id": "veh_aramos_pathfinder", "year": 2021, "make": "Nissan", "model": "Pathfinder", "trim": "SL", "vin": "5N1DR3CA7MC616001", "mileage": 33400, "ownership": "finance", "value": 34200, "payoff": 21800, "source": "vin_decode", "source_recorded_at": "2026-03-22T09:02:00Z" }],
+      "opportunity_ids": ["opp_ins_109", "opp_vsc_121"],
+      "household_member_ids": [],
+      "tags": [{ "id": "tag_aramos_sp", "name": "spanish-speaker", "source": "blinker", "applied_at": "2026-03-22T09:10:00Z", "applied_by": "agent_quinn", "color": "#8b5cf6" }],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_alicia_ramos" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_alicia_ramos" }, "sort": "occurred_at desc" },
+      "attribution_data": { "first_utm_source": "facebook", "first_utm_medium": "social", "first_utm_campaign": "insurance_es", "first_landing_page": "https://blinker.com/es/seguro", "first_touch_at": "2026-03-22T08:55:00Z" },
+      "consent": { "tcpa_consents": [{ "id": "tcpa_aramos_1", "text_id": "tcpa_v1", "agreed_at": "2026-03-22T09:00:00Z", "ip": "108.66.55.91", "user_agent": "Mozilla/5.0", "channel": "web" }], "marketing_email": { "opted_in": true, "opted_in_at": "2026-03-22T09:01:00Z" }, "tos_accepted_at": "2026-03-22T09:00:00Z" },
+      "created_at": "2026-03-22T09:00:00Z",
+      "updated_at": "2026-05-04T15:00:00Z"
+    },
+    "ct_ins_policy_written": {
+      "id": "ct_ins_policy_written",
+      "_test_case": "post-sale-insurance",
+      "org_id": 102,
+      "external_ids": {
+        "ghl_contact_id": "ghl_c_inspw_i9",
+        "posthog_distinct_id": "ct_ins_policy_written",
+        "external_lead_id": null
+      },
+      "household_id": null,
+      "name": { "first": "Greg", "last": "Watson" },
+      "date_of_birth": "1976-12-05",
+      "phones": [
+        { "id": "ph_wat_1", "type": "mobile", "number": "+15554466009", "is_primary": true, "sms_consent": true, "sms_consent_at": "2026-04-22T15:00:00Z", "sms_consent_text_id": "sms_consent_v1", "do_not_contact": false, "verified_at": "2026-04-22T15:01:00Z" }
+      ],
+      "emails": [
+        { "id": "em_wat_1", "type": "personal", "address": "greg.watson@example.com", "is_primary": true, "opted_out": false }
+      ],
+      "addresses": [
+        { "id": "ad_wat_1", "type": "primary", "line_1": "11 Maplewood Dr", "city": "Atlanta", "state": "GA", "postal_code": "30307", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/New_York", "is_primary": true }
+      ],
+      "vehicles": [
+        { "id": "veh_wat_4runner", "year": 2019, "make": "Toyota", "model": "4Runner", "trim": "TRD Off-Road", "vin": "JTEBU5JR5K5118800", "mileage": 78600, "ownership": "own", "value": 32400, "payoff": 0, "source": "vin_decode", "source_recorded_at": "2026-04-22T15:02:00Z" }
+      ],
+      "opportunity_ids": ["opp_ins_004"],
+      "household_member_ids": [],
+      "tags": [],
+      "notes_ref": { "collection": "note", "filter": { "contact_id": "ct_ins_policy_written" }, "sort": "created_at desc" },
+      "activities_ref": { "collection": "activity", "filter": { "contact_id": "ct_ins_policy_written" }, "sort": "occurred_at desc" },
+      "attribution_data": {
+        "first_utm_source": "google",
+        "first_utm_medium": "organic",
+        "first_landing_page": "https://blinker.com/insurance",
+        "first_touch_at": "2026-04-22T14:50:00Z"
+      },
+      "consent": {
+        "tcpa_consents": [
+          { "id": "tcpa_wat_1", "text_id": "tcpa_v1", "agreed_at": "2026-04-22T15:00:00Z", "ip": "75.211.30.16", "user_agent": "Mozilla/5.0", "channel": "web" }
+        ],
+        "marketing_email": { "opted_in": true, "opted_in_at": "2026-04-22T15:01:00Z" },
+        "tos_accepted_at": "2026-04-22T15:00:00Z"
+      },
+      "created_at": "2026-04-22T15:00:00Z",
+      "updated_at": "2026-05-04T09:10:00Z"
+    }
+  }
+}

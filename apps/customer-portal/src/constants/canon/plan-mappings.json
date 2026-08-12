@@ -1,0 +1,166 @@
+{
+  "_comment": "(TpaCode, ProductTypeCode, PlanCode) → PlanLevel (Good/Better/Best) + public copy + URL. Ports the legacy PlanSelectorService PLAN_QUALITY_MAPPING + the consumer self-serve PDF mockup notes about per-plan public overrides.",
+  "_version": "2026-06-01-v3016-monthly-membership-vsc",
+  "_legacy_source": "blinker/app/services/plan_selector_service.rb#PLAN_QUALITY_MAPPING (Wave 21 — extended with StoneEagle v1.31 spec product_type_codes + regulated_rule_behavior + discountable_flag_behavior blocks; Wave 22 — extended with add_on_passthrough block driven by v3.0.4 PDF tasks 1/2/4; Wave 27 v3.0.8 — promoted plan_overrides → plan_catalog + populated plan_level_defaults HTML/tagline from v3.0.8 PDF + added docuseal_template_id field per plan).",
+
+  "_principle": "A unique plan is identified by (TpaCode, ProductTypeCode, PlanCode). The mapping below promotes that triple into a Good/Better/Best level + customer-facing copy. Defaults from this file; org config can override.",
+
+  "product_type_codes": {
+    "_comment": "Canonical Product Type Codes from SEFI SCS eRating Integration Guide v1.31 §ProductCollection / §Plan Object. Returned by GetRates and recognized by GenerateContract. Providers may extend with custom codes; canon enumerates the 12 standard codes used to render product-type filter chips in the customer-facing wizard and the admin Integrations products_filter multiselect.",
+    "VSC":  { "label": "Vehicle Service Contract" },
+    "GAP":  { "label": "Guaranteed Asset Protection" },
+    "MNT":  { "label": "Prepaid Maintenance" },
+    "AP":   { "label": "Appearance Protection" },
+    "PDR":  { "label": "Paintless Dent Repair" },
+    "LTW":  { "label": "Limited Warranty" },
+    "RHT":  { "label": "Tire & Wheel" },
+    "THP":  { "label": "Theft Protection" },
+    "EWT":  { "label": "Extended Wear & Tear" },
+    "ETCH": { "label": "Etch (anti-theft VIN etching)" },
+    "KEY":  { "label": "Key Replacement" },
+    "OTH":  { "label": "Other Aftermarket Product" }
+  },
+
+  "regulated_rule_behavior": {
+    "_comment": "Per StoneEagle GetRates spec v1.31 §Rate Object / §Rating Rules. Returned per Rate as `regulated_rule_id` (integer 0/3/5/6). Powers retail-vs-markup editability in the customer-facing wizard. See architecture/13-stoneeagle-integration.md::RegulatedRuleId behavior for the full UX matrix.",
+    "0": { "name": "free_markup",     "retail_editable": true,         "markup_visible": true,  "description": "Non-regulated. Seller may add any markup. Retail = NetRate + Markup + (admin markup if present)." },
+    "3": { "name": "fixed_retail",    "retail_editable": false,        "markup_visible": false, "description": "Filed-rate plan (e.g., FL VSC, TX GAP). Retail locked at the response RetailRate. Markup field MUST be hidden; rate MUST NOT be editable. Surcharges may still apply." },
+    "5": { "name": "capped_markup",   "retail_editable": "in_range",   "markup_visible": true,  "description": "Markup capped between MarkupMin and MarkupMax (inclusive). UI clamps the markup field and warns when outside range." },
+    "6": { "name": "finance_capped",  "retail_editable": "below_cap",  "markup_visible": true,  "description": "Retail must not exceed FinancedAmount minus a configured %MSRP (new) or %NADA (pre-owned). UI computes the cap from the rate's MaxRetailRate and clamps." }
+  },
+
+  "discountable_flag_behavior": {
+    "_comment": "Per StoneEagle GetRates spec v1.31 §Plan Object. Returned per Plan as `discountable` (1=allowed, 0=forbidden). Independent of `regulated_rule_id` — both gates compose. The org-level `protection_billing.discount.disabled_in_states` (canon/org-registry.json, see ADR 09) is a third gate that layers on top.",
+    "1": { "discount_allowed": true,  "description": "Retail may be discounted below the response RetailRate, down to (but not below) the NetRate. Subject to org-level discount caps." },
+    "0": { "discount_allowed": false, "description": "Retail must equal the response RetailRate. No discount permitted regardless of regulated_rule_id." }
+  },
+
+  "add_on_passthrough": {
+    "_comment": "Canonical add-on names matched (case-insensitive substring) against StoneEagle GetRates response option names. When matched, the add-on cost is added to the plan price WITHOUT markup, and the coverage card surfaces a badge. Read by packages/utils/protection-addons.js + protection-portal RecommendedCoverage/PlanCard. Triggered either ALWAYS (when the plan's add_ons_included[] contains a match — e.g. extended_maintenance) or CONDITIONALLY based on user wizard input (e.g. business_use only triggers when form.use is rideshare/commercial).",
+    "_principle": "match_names is matched case-insensitive-substring against rates.add_ons[].name AND the strings in product.add_ons_included[]. cost_passthrough=true means the add-on's price_delta is added to plan price without markup; cost_passthrough=false means informational badge only (no price change). trigger is documented as a string for human readers; the consuming code in protection-portal hardcodes the trigger predicates because they reference form fields that don't belong in canon.",
+    "business_use": {
+      "match_names": ["BUSINESS USE option", "Business Use Vehicles"],
+      "trigger": "form.use === 'rideshare' || form.use === 'commercial'",
+      "badge": "Business Use",
+      "cost_passthrough": true
+    },
+    "enhanced_electronics": {
+      "match_names": ["EEP-Enhanced Electronics Package"],
+      "trigger": "form.modifications.includes('enhanced_electronics')",
+      "badge": "Enhanced Electronics",
+      "cost_passthrough": true
+    },
+    "navigation": {
+      "match_names": ["NAV - EXL option", "NAV -Used option"],
+      "trigger": "form.modifications.includes('navigation')",
+      "badge": "Navigation",
+      "cost_passthrough": true
+    },
+    "extended_maintenance": {
+      "match_names": ["Extended Maintenance - Annual", "Extended Maintenance - monthly"],
+      "trigger": "always (when product.add_ons_included contains)",
+      "badge": "Maintenance Feature included",
+      "cost_passthrough": false
+    }
+  },
+
+  "vehicle_class_rule": {
+    "_comment": "Drives the New-vs-Used rate-class branch in StoneEagle GetRates orchestration. A vehicle qualifies as 'new' when BOTH gates pass (INCLUSIVE bounds: age ≤ max_age_years AND miles ≤ max_miles — e.g. a 3-model-year-old vehicle with exactly 36,000 mi IS 'new'); otherwise 'used'. Read by packages/utils/vehicle-class.js#classifyVehicle. When a vehicle qualifies as 'new', the orchestrator fires TWO parallel SE GetRates calls (condition='N' AND condition='U') and merges with each plan tagged rate_class:'new'|'used'; protection-portal then surfaces a 'New' badge + filter chips and prefers new-rate candidates over used within each Good/Better/Best tier. PDF v3.0.5 Task 5 spec'd 60,000 mi but canon's existing TODO threshold (36,000 mi) wins per Wave 23 decision 2026-05-09.",
+    "max_age_years": 3,
+    "max_miles": 36000
+  },
+
+  "term_semantics": {
+    "_comment": "Per-RegulatedRuleId default for how Term Months / Term Miles values returned by SE GetRates should be interpreted in customer-facing display + Coverage Details filter math. 'additive' = the value extends current odometer/age (display: '+24 mo / +50,000 mi'; filter math: compare against currentTerm + plan.term). 'absolute' = the value is the cap from purchase / contract start (display: 'Up to 36 mo / Up to 100,000 mi'; filter math: compare against raw plan.term). Read by packages/integrations/product_admin/stoneeagle.js#normalizeToFixtureShape (surfaces as plan.term_basis) and consumed by protection-portal PlanCard + CoverageDetails. See architecture/12-term-semantics.md for the full UX matrix and why basis is RegulatedRuleId-keyed (filed-rate plans tend to absolute; non-regulated tend to additive).",
+    "_default_basis": "additive",
+    "by_regulated_rule_id": {
+      "0": { "basis": "additive", "_TODO": "confirm with SE doc — non-regulated free-markup plans observed additive in OMGA UAT fixtures" },
+      "3": { "basis": "absolute", "_TODO": "confirm with SE doc — filed-rate plans (FL VSC, TX GAP) typically absolute coverage windows" },
+      "5": { "basis": "additive", "_TODO": "confirm with SE doc — capped-markup plans observed mixed; default additive" },
+      "6": { "basis": "absolute", "_TODO": "confirm with SE doc — finance-capped plans typically absolute (cap tied to financed amount)" }
+    },
+    "by_product_type_code": {
+      "_comment": "Optional override layer: when set, ProductTypeCode trumps the by_regulated_rule_id default for that plan. Empty by default; populate as fixtures + SE GetRates UAT confirm specific product behaviors.",
+      "_example_EWT": { "basis": "additive", "_note": "EWT (Extended Wear & Tear) typically extends factory warranty additively" }
+    }
+  },
+
+  "monthly_membership": {
+    "_comment": "Identifies monthly-membership VSC products (M2M / Residual / RAP) in the StoneEagle GetRates response so they get a distinct purchase UX (recurring monthly charge, no down-payment/months-to-pay). See architecture/28-monthly-membership-vsc.md. Read by packages/integrations/product_admin/stoneeagle.js#normalizeToFixtureShape.",
+    "_principle": "AUTHORITATIVE SIGNAL = the 999999 mileage sentinel. OMEGA returns these products with RateClassMoney.TermMile.Mileage == sentinel_mileage (effectively unlimited miles) and terms enumerated month-by-month (1, 2, 3, …) each carrying a per-month rate. A product is flagged billing_model:'monthly_subscription' when ANY of its rate rows hits the sentinel — nothing else gates it. The secondary_signals below are TELEMETRY/SANITY ONLY: the normalizer records whether the plan code is in the allowlist and whether the description contains the residual substring, and emits a mismatch event when the sentinel and the secondary signals disagree, but they NEVER gate detection.",
+    "sentinel_mileage": 999999,
+    "secondary_signals": {
+      "_TODO": "plan_code_allowlist is an EDUCATED GUESS pending a real OMGA monthly GetRates capture (no 999999 fixture exists yet — see project_monthly_pay_vsc_products.md). Confirm against a live capture; OMGA may add codes. The sentinel gates; this list only annotates telemetry. R6 is already in plan_catalog as 'better' (RAP Repair + Maintenance Assist).",
+      "plan_code_allowlist": ["40", "41", "42", "C1", "R6"],
+      "residual_description_substring": "Residual"
+    }
+  },
+
+  "default_quality_mapping": {
+    "_comment": "From PlanSelectorService. Matched by partial match on plan name returned from SE GetRates.",
+    "EXCL":                "best",
+    "EXCLUSIONARY":        "best",
+    "POWERTRAIN PLUS":     "better",
+    "POWERTRAIN ENHANCED": "better",
+    "POWERTRAIN":          "good",
+    "USED STATED":         "good",
+    "ADD-ON":              "good"
+  },
+
+  "plan_level_defaults": {
+    "_comment": "Default presentation per PlanLevel — used when a plan has no plan_catalog entry AND no per-org override. Per v3.0.8 PDF Task 1. `tagline_default` populates the inline card subtitle; `plan_coverage_default_html` populates the 'See what's covered' modal body. v3.0.12 (2026-05-14) added `covered_components_default` — structured array used by the redesigned RecommendedCoverage tier-selector UI to render a checkmarked components grid inline. Order matches the HTML. HTML stays the source of truth for the modal; the array is the structured projection (without the 'And more!' tail row). Admin tab 'Plan presentations → Defaults' edits both.",
+    "good": {
+      "default_selected": false,
+      "tagline_default": "Core powertrain coverage for budget-minded peace of mind.",
+      "covered_components_default": ["Engine", "Transmission", "A/C"],
+      "plan_coverage_default_html": "<div style=\"max-width: 90%; font-family: Arial, sans-serif; padding: 40px 30px; color: #333;\">\n  <h2 style=\"color: #0077a8; font-size: 42px; line-height: 1.2; font-weight: 500; margin: 0 0 30px 0;\">\n    Affordable coverage designed\n    for older vehicles\n  </h2>\n  <div style=\"width: 100%; height: 4px; background-color: #f58220; margin-bottom: 40px;\"></div>\n  <h3 style=\"font-size: 28px; font-weight: 700; line-height: 1.4; margin-bottom: 35px;\">\n    Protects the most vital components of your vehicle:\n  </h3>\n  <ul style=\"list-style: none; padding: 0; margin: 0;\">\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Engine\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Transmission\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      A/C\n    </li>\n    <li style=\"display: flex; align-items: center; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      And more!\n    </li>\n    <li style=\"display: flex; align-items: center; font-size: 26px;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      <a href=\"{{SAMPLE_AGREEMENT_URL}}\" style=\"color: #2ec5f4; text-decoration: underline;\">See what's covered</a>\n    </li>\n  </ul>\n</div>"
+    },
+    "better": {
+      "default_selected": false,
+      "tagline_default": "Powertrain Plus — broader component coverage at a balanced price.",
+      "covered_components_default": ["Engine", "Transmission", "A/C", "Fuel system", "Electrical", "High-tech options"],
+      "plan_coverage_default_html": "<div style=\"max-width: 90%; font-family: Arial, sans-serif; padding: 40px 30px; color: #333;\">\n  <h2 style=\"color: #0077a8; font-size: 42px; line-height: 1.3; font-weight: 500; margin: 0 0 30px 0;\">\n    Extensive coverage that<br>\n    protects a wide range of<br>\n    components\n  </h2>\n  <div style=\"width: 100%; height: 4px; background-color: #f58220; margin-bottom: 40px;\"></div>\n  <h3 style=\"font-size: 28px; font-weight: 700; line-height: 1.5; margin-bottom: 35px;\">\n    Protection for the most common parts<br>\n    that break down over time:\n  </h3>\n  <ul style=\"list-style: none; padding: 0; margin: 0;\">\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Engine\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Transmission\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      A/C\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Fuel system\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Electrical\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      High-tech options\n    </li>\n    <li style=\"display: flex; align-items: center; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      And more!\n    </li>\n    <li style=\"display: flex; align-items: center; font-size: 26px;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      <a href=\"{{SAMPLE_AGREEMENT_URL}}\" style=\"color: #2ec5f4; text-decoration: underline;\">See what's covered</a>\n    </li>\n  </ul>\n</div>"
+    },
+    "best": {
+      "default_selected": true,
+      "tagline_default": "Most comprehensive coverage available — exclusionary, fewest gaps.",
+      "covered_components_default": ["Engine", "Transmission", "A/C", "Fuel system", "Electrical", "High-tech options", "Seals & Gaskets", "Cooling system", "Transfer case", "Drive axle"],
+      "plan_coverage_default_html": "<div style=\"max-width: 90%; font-family: Arial, sans-serif; padding: 40px 30px; color: #333;\">\n  <h2 style=\"color: #0077a8; font-size: 42px; line-height: 1.3; font-weight: 500; margin: 0 0 30px 0;\">\n    Most comprehensive coverage<br>\n    available\n  </h2>\n  <div style=\"width: 100%; height: 4px; background-color: #f58220; margin-bottom: 40px;\"></div>\n  <h3 style=\"font-size: 28px; font-weight: 700; line-height: 1.5; margin-bottom: 35px;\">\n    Protection most similar to the<br>\n    manufacturer warranty that<br>\n    accompanies a new car:\n  </h3>\n  <ul style=\"list-style: none; padding: 0; margin: 0;\">\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Engine\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Transmission\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      A/C\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Fuel system\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Electrical\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      High-tech options\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Seals &amp; Gaskets\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Cooling system\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Transfer case\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 28px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      Drive axle\n    </li>\n    <li style=\"display: flex; align-items: center; margin-bottom: 36px; font-size: 26px; color: #555;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      And more!\n    </li>\n    <li style=\"display: flex; align-items: center; font-size: 26px;\">\n      <span style=\"color: #2ec5f4; font-size: 34px; margin-right: 24px;\">✓</span>\n      <a href=\"{{SAMPLE_AGREEMENT_URL}}\" style=\"color: #2ec5f4; text-decoration: underline;\">See what's covered</a>\n    </li>\n  </ul>\n</div>"
+    }
+  },
+
+  "plan_catalog": {
+    "_comment": "Per v3.0.8 PDF Task 1 — global classification per (TpaCode, ProductTypeCode, PlanCode). Key format: `${tpa}::${ptc}::${plan_code}`. Each entry can override plan_level (else inferred via default_quality_mapping), plan_title (else falls back to PlanDescription from rater), plan_coverage_html (else falls back to plan_level_defaults[level].plan_coverage_default_html), covered_components (v3.0.12 — structured array overriding plan_level_defaults[level].covered_components_default; null defers to the tier default), sample_agreement_url (interpolated into {{SAMPLE_AGREEMENT_URL}} in coverage HTML), and docuseal_template_id (per v3.0.8 PDF Task 2 — falls back to org-level docuseal.template_id_by_plan, then docuseal.api defaults). Per-org overrides live in canon/org-registry.json::orgs[].plan_overrides and supersede this catalog. New PlanCodes returned by raters that lack a catalog entry render as Good with PlanDescription as title (per PDF default rule).",
+    "_seed_source": "v3.0.8 PDF + user-provided Google Sheet 2026-05-11 (https://docs.google.com/spreadsheets/d/1-5TMtDlNPeeoD9dtrCNUK-OCZqqtCbaOoynreeiBfyw/). 14 OMGA VSC entries seeded; remaining rows + non-OMGA TPAs populate via the admin tool.",
+    "_basic_level_note": "PlanLevel 'basic' (4 entries: OMGA 68/69/80/81) is a 4th tier below Good not yet rendered in the consumer surface. plan_level_defaults has no 'basic' block; the resolver currently normalizes unknown levels to 'good' so a Basic plan that somehow reaches the wizard falls back to Good's HTML. Future enhancement: surface Basic plans in Customize (browse-all) with their own default HTML.",
+
+    "OMGA::VSC::51": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "51", "plan_level": "good",   "plan_title": "Powertrain Plus",            "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "10" },
+    "OMGA::VSC::66": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "66", "plan_level": "best",   "plan_title": "Exclusionary",               "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "4"  },
+    "OMGA::VSC::67": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "67", "plan_level": "best",   "plan_title": "Exclusionary",               "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "9"  },
+    "OMGA::VSC::68": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "68", "plan_level": "basic",  "plan_title": "Named Parts",                "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "6"  },
+    "OMGA::VSC::69": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "69", "plan_level": "basic",  "plan_title": "Powertrain",                 "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "7"  },
+    "OMGA::VSC::70": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "70", "plan_level": "good",   "plan_title": "Powertrain Plus",            "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "8"  },
+    "OMGA::VSC::71": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "71", "plan_level": "better", "plan_title": "Powertrain Plus High Tech",  "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "5"  },
+    "OMGA::VSC::78": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "78", "plan_level": "best",   "plan_title": "Exclusionary",               "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "13" },
+    "OMGA::VSC::79": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "79", "plan_level": "best",   "plan_title": "Exclusionary",               "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "11" },
+    "OMGA::VSC::80": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "80", "plan_level": "basic",  "plan_title": "Named Parts",                "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "15" },
+    "OMGA::VSC::81": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "81", "plan_level": "basic",  "plan_title": "Powertrain",                 "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "16" },
+    "OMGA::VSC::82": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "82", "plan_level": "good",   "plan_title": "Powertrain Plus",            "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "14" },
+    "OMGA::VSC::83": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "83", "plan_level": "better", "plan_title": "Powertrain Plus High Tech",  "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "12" },
+
+    "_monthly_membership_note": "ADR 28 — the entries below are monthly-membership VSC plans (Omega-J M2M Residual + RAP). Billing model is detected at runtime via the 999999 mileage sentinel (not from this catalog); these rows only carry presentation (tier/title/coverage/DocuSeal). Tiers per user 2026-06-01: 41 + R6 = good, 42 = better. _TODO: docuseal_template_id for 41/42 unknown — set in the admin Plans tab when provided (R6 = '3').",
+    "OMGA::VSC::40": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "40", "plan_level": "good",   "plan_title": "Powertrain Monthly",          "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": null },
+    "OMGA::VSC::41": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "41", "plan_level": "good",   "plan_title": "Used Stated Monthly",        "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": null },
+    "OMGA::VSC::42": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "42", "plan_level": "better", "plan_title": "PT Enhanced Monthly",        "plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": null },
+    "OMGA::VSC::R6": { "tpa_code": "OMGA", "product_type_code": "VSC", "plan_code": "R6", "plan_level": "good",   "plan_title": "Repair + Maintenance Assist","plan_coverage_html": null, "covered_components": null, "sample_agreement_url": null, "docuseal_template_id": "3"  }
+  },
+
+  "_TODO": [
+    "DONE 2026-05-11 (Wave 27 v3.0.8 Task 1): plan_overrides promoted to plan_catalog with TpaCode+ProductTypeCode+PlanCode key, plan_level_defaults populated from PDF HTML.",
+    "DONE 2026-05-11 (Wave 27 v3.0.8 Task 2): docuseal_template_id field added per-plan in plan_catalog; per-org overrides via org-registry.json::orgs[].integrations.docuseal.template_id_by_plan.",
+    "Populate plan_catalog with the full set documented in https://docs.google.com/spreadsheets/d/1-5TMtDlNPeeoD9dtrCNUK-OCZqqtCbaOoynreeiBfyw/ — done via admin tool once Wave 27 admin agent lands.",
+    "DONE 2026-05-09 (Wave 23 v3.0.5 Task 5): vehicle_class_rule block above canonicalizes the 3yr/36k-mi gate; orchestration parallel-fires N+U calls and tags rate_class.",
+    "Confirm term_semantics by_regulated_rule_id defaults against StoneEagle eRating Integration Guide v1.31 §Plan Object (current values are educated defaults pending SE-doc/UAT verification — flagged with _TODO inline)",
+    "Move profit_markup and down_payment_percent defaults out of global Configuration into per-payment-provider config"
+  ]
+}

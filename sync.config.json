@@ -1,0 +1,51 @@
+{
+  "$comment": "Read-only upstream sources. `pushurl` for every one of these remotes is disabled in .git/config; nothing here is ever pushed to.",
+  "portals": [
+    {
+      "remote": "customer",
+      "branch": "main",
+      "dir": "apps/customer-portal",
+      "repo": "https://github.com/BlinkerGit/customer-portal"
+    },
+    {
+      "remote": "insurance",
+      "branch": "main",
+      "dir": "apps/insurance-portal",
+      "repo": "https://github.com/BlinkerGit/insurance-portal"
+    },
+    {
+      "remote": "mission",
+      "branch": "main",
+      "dir": "apps/mission-control",
+      "repo": "https://github.com/BlinkerGit/mission-control"
+    },
+    {
+      "remote": "protection",
+      "branch": "main",
+      "dir": "apps/protection-portal",
+      "repo": "https://github.com/BlinkerGit/protection-portal"
+    },
+    {
+      "remote": "refinance",
+      "branch": "main",
+      "dir": "apps/refinance-prototype",
+      "repo": "https://github.com/BlinkerGit/refinance-prototype"
+    },
+    {
+      "remote": "platform",
+      "branch": "main",
+      "dir": "packages/blinker-platform",
+      "repo": "https://github.com/BlinkerGit/blinker-platform"
+    }
+  ],
+  "keep": [
+    "vercel.json"
+  ],
+  "keepAnyDepth": [
+    "node_modules",
+    "dist",
+    ".turbo",
+    ".env",
+    ".env.local"
+  ]
+}

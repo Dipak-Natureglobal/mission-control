@@ -1,0 +1,14 @@
+{
+  "_comment": "Mock EI quote payload for the protection-plan Confirm screen's insurance cross-sell. Shape matches insurance-portal's canonical _insurance_quote_shape (in canon/ghl-fields.json). Money is in cents and the period is 6mo per architecture/06-embedded-insurance-contract.md.",
+  "_consumed_by": "src/views/customer/Confirm.jsx via insurance-portal SavingsCard",
+  "_phase_2_TODO": "Replace this fixture with a real EI tail-fetch (createLead → getLeadLink → quote.completed webhook) keyed off the contact's vehicle + applicant data. Phase 2 question — flag for product before building.",
+  "captureCarrier": "Progressive",
+  "quote": {
+    "id": "quote_xsell_demo_456",
+    "status": "completed",
+    "carrier": "Geico",
+    "totalPremiumCents": 120000,
+    "savingsAmountCents": 30000,
+    "createdAt": "2026-05-03T13:00:00.000Z"
+  }
+}

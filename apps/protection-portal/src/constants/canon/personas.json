@@ -1,0 +1,286 @@
+{
+  "_comment": "Five personas + permissions + presets. Used by mission-control's persona switcher, per-app role-gating, and the super-admin user directory. Phase 1 stubs all but agent + consumer. As of 2026-05-05 (admin-console init), the canonical badge list lives in badges.json; the `permissions` array on each persona below is shorthand and SHOULD be kept in sync with the corresponding `presets.<persona>.badges` entry in badges.json. Long-term (Phase 2), this file becomes a thin reference: persona → preset_id → badges.json.presets[preset_id].badges. As of 2026-05-08-presets-promotion (Wave 20), the per-persona `presets` array is promoted from mission-control/src/fixtures/persona-presets.json into canon (was W19 Task 6 _CANON_TODO).",
+  "_version": "2026-05-08-presets-promotion",
+  "_tag_permission_principle": "Tags sync bi-directionally with GHL (per architecture/07-data-layer.md). To prevent the GHL tag namespace from sprawling, the create vs. apply permissions are split: any org role can `add_tags` (apply existing tags to a contact), but only manager+ roles can `create_tags` (mint a new tag). Agents must search-existing-only. Consumer never tags.",
+  "_presets_principle": "Each persona carries a `presets` array of named permission templates. UI: when an admin assigns a user to a persona, they pick a preset from a dropdown; the preset determines which badges (subset of canon/badges.json) get applied. Per-user `added_badges` / `removed_badges` overrides remain on the user record (not on presets). Exactly one preset per persona may carry `is_default: true` — UI seeds new users on the default. Presets are platform-wide today; org-overrides (e.g., 'Apex agent_lead overrides canonical agent_lead for org 102 only') are an open question — see _TODO. Consumer persona deliberately omits presets (consumers don't sit in mc UserDirectory).",
+  "_presets_shape": {
+    "id":          "string — stable snake_case id, globally unique within the persona",
+    "label":       "string — human display label (sentence case)",
+    "description": "string — one-sentence intent",
+    "badges":      "string[] — subset of canon/badges.json badge ids",
+    "is_default":  "boolean? — exactly one preset per persona may carry true; UI seeds new users on this preset"
+  },
+  "personas": {
+    "super_admin": {
+      "label": "Super Admin",
+      "description": "Blinker-internal. Cross-org visibility, audit logs, sensitive ops, canon edits, integration credential reveals.",
+      "scope": "platform",
+      "preset_id": "super_admin",
+      "permissions": [
+        "view_all_orgs",
+        "edit_canon",
+        "view_audit_trail",
+        "view_audit_log",
+        "view_api_responses",
+        "view_integration_credentials",
+        "manage_admins",
+        "view_system_health",
+        "edit_integrations",
+        "edit_org_config",
+        "manage_sub_orgs",
+        "toggle_test_mode",
+        "impersonate_user",
+        "add_tags",
+        "create_tags"
+      ],
+      "presets": [
+        {
+          "id": "super_admin_full",
+          "label": "Full Super Admin",
+          "description": "Every super-admin badge. Default for new super-admin users.",
+          "is_default": true,
+          "badges": [
+            "view_all_orgs",
+            "edit_canon",
+            "view_audit_trail",
+            "view_audit_log",
+            "view_api_responses",
+            "view_integration_credentials",
+            "manage_admins",
+            "view_system_health",
+            "edit_integrations",
+            "edit_org_config",
+            "manage_sub_orgs",
+            "toggle_test_mode",
+            "impersonate_user",
+            "add_tags",
+            "create_tags"
+          ]
+        },
+        {
+          "id": "super_admin_readonly",
+          "label": "Read-only Super Admin",
+          "description": "Cross-org visibility + audit access without write or impersonation.",
+          "badges": [
+            "view_all_orgs",
+            "view_audit_trail",
+            "view_audit_log",
+            "view_api_responses",
+            "view_system_health"
+          ]
+        }
+      ]
+    },
+    "admin": {
+      "label": "Org Admin",
+      "description": "Organization administrator. Configures the org, manages users + integrations + sub-orgs, edits org config, toggles test mode (with confirm).",
+      "scope": "org",
+      "preset_id": "admin",
+      "permissions": [
+        "view_own_org",
+        "view_child_orgs",
+        "view_admin_console",
+        "view_audit_log",
+        "edit_org_config",
+        "edit_integrations",
+        "manage_org_users",
+        "manage_sub_orgs",
+        "toggle_test_mode",
+        "configure_gateways",
+        "configure_routing",
+        "view_org_analytics",
+        "view_api_responses",
+        "suspend_user",
+        "add_tags",
+        "create_tags"
+      ],
+      "presets": [
+        {
+          "id": "admin_full",
+          "label": "Full Org Admin",
+          "description": "Standard org admin. Manages users, integrations, sub-orgs, and config.",
+          "is_default": true,
+          "badges": [
+            "view_own_org",
+            "view_child_orgs",
+            "view_admin_console",
+            "view_audit_log",
+            "edit_org_config",
+            "edit_integrations",
+            "manage_org_users",
+            "manage_sub_orgs",
+            "toggle_test_mode",
+            "configure_gateways",
+            "configure_routing",
+            "view_org_analytics",
+            "view_api_responses",
+            "suspend_user",
+            "add_tags",
+            "create_tags"
+          ]
+        },
+        {
+          "id": "admin_users_only",
+          "label": "User Admin",
+          "description": "Limited admin focused on user lifecycle. No integration or config edits.",
+          "badges": [
+            "view_own_org",
+            "view_admin_console",
+            "view_audit_log",
+            "manage_org_users",
+            "suspend_user",
+            "add_tags"
+          ]
+        },
+        {
+          "id": "admin_billing",
+          "label": "Billing Admin",
+          "description": "Org config + integrations focus, no user management.",
+          "badges": [
+            "view_own_org",
+            "view_admin_console",
+            "view_audit_log",
+            "edit_org_config",
+            "edit_integrations",
+            "configure_gateways",
+            "configure_routing",
+            "view_org_analytics"
+          ]
+        }
+      ]
+    },
+    "manager": {
+      "label": "Manager",
+      "description": "Manager at the org level. Manages agents but can't edit org-level configs. Has analytics access.",
+      "scope": "org",
+      "permissions": [
+        "view_own_org",
+        "manage_agents",
+        "assign_opportunities",
+        "view_team_analytics",
+        "add_tags",
+        "create_tags"
+      ],
+      "presets": [
+        {
+          "id": "manager_standard",
+          "label": "Standard Manager",
+          "description": "Manages a team of agents with full team analytics.",
+          "is_default": true,
+          "badges": [
+            "view_own_org",
+            "manage_agents",
+            "assign_opportunities",
+            "view_team_analytics",
+            "add_tags",
+            "create_tags"
+          ]
+        },
+        {
+          "id": "manager_lead",
+          "label": "Lead Manager",
+          "description": "Senior manager — adds API-response visibility for triage.",
+          "badges": [
+            "view_own_org",
+            "manage_agents",
+            "assign_opportunities",
+            "view_team_analytics",
+            "view_api_responses",
+            "add_tags",
+            "create_tags"
+          ]
+        },
+        {
+          "id": "manager_assign_only",
+          "label": "Assignment Coordinator",
+          "description": "Routes opportunities; no team analytics.",
+          "badges": [
+            "view_own_org",
+            "assign_opportunities",
+            "add_tags"
+          ]
+        }
+      ]
+    },
+    "agent": {
+      "label": "Agent",
+      "description": "Sales agent. Daily-driver. Works the opportunity inbox + co-pilot with consumers.",
+      "scope": "assigned",
+      "permissions": [
+        "view_own_opportunities",
+        "view_assigned_contacts",
+        "edit_opportunities",
+        "send_consumer_links",
+        "co_pilot_consumer_session",
+        "add_notes",
+        "add_tags"
+      ],
+      "presets": [
+        {
+          "id": "agent_standard",
+          "label": "Standard Agent",
+          "description": "Daily-driver opportunity inbox + co-pilot. Default for new agents.",
+          "is_default": true,
+          "badges": [
+            "view_own_opportunities",
+            "view_assigned_contacts",
+            "edit_opportunities",
+            "send_consumer_links",
+            "co_pilot_consumer_session",
+            "add_notes",
+            "add_tags"
+          ]
+        },
+        {
+          "id": "agent_lead",
+          "label": "Lead Agent",
+          "description": "Tenured agent — adds API-response visibility and tag creation for handling escalations.",
+          "badges": [
+            "view_own_opportunities",
+            "view_assigned_contacts",
+            "edit_opportunities",
+            "send_consumer_links",
+            "co_pilot_consumer_session",
+            "add_notes",
+            "add_tags",
+            "create_tags",
+            "view_api_responses"
+          ]
+        },
+        {
+          "id": "agent_admin_assistant",
+          "label": "Agent / Admin Assistant",
+          "description": "Agent who also helps with org-config admin tasks. Subset of admin badges layered on agent.",
+          "badges": [
+            "view_own_opportunities",
+            "view_assigned_contacts",
+            "edit_opportunities",
+            "send_consumer_links",
+            "co_pilot_consumer_session",
+            "add_notes",
+            "add_tags",
+            "view_admin_console",
+            "view_audit_log",
+            "manage_org_users"
+          ]
+        }
+      ]
+    },
+    "consumer": {
+      "label": "Consumer",
+      "description": "End customer. Uses the customer-facing portals (customer-portal, *-portal customer views). Not a mission-control persona.",
+      "scope": "self",
+      "permissions": [
+        "view_own_data",
+        "submit_application",
+        "sign_agreement",
+        "make_payment"
+      ]
+    }
+  },
+  "_TODO": [
+    "Verify with org admin team whether Manager should also see analytics across child orgs",
+    "Confirm whether Agent should be able to view other agents' opportunities for handoff scenarios",
+    "Org-overrides for presets: should an Apex 'agent_lead' preset override the canonical 'agent_lead' for org 102 only? Today flat: one preset list per persona, applies platform-wide. Parallel question to relationships.json's custom_types_per_org structure."
+  ]
+}

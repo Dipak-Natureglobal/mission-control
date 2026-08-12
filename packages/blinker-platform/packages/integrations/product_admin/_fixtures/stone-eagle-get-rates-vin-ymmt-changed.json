@@ -1,0 +1,127 @@
+{
+  "_fixture_meta": {
+    "source": "stone-eagle-get-rates.json",
+    "scenario": "VIN decode returned a different trim than the YMMT the customer entered",
+    "expected_kind": "ymmt_changed",
+    "mutated_fields": ["request.trim", "vehicleAfter.trim"],
+    "mutation_detail": "request.trim changed from 'Sport' to 'Evolve+'. Caller supplies vehicleBefore.trim='Sport', vehicleAfter.trim='Evolve+'. Products are otherwise identical to baseline — in real SE the plan list may shift, but this fixture isolates the YMMT classification branch.",
+    "created": "2026-05-10"
+  },
+  "_comment": "VIN-attached GetRates response — trim changed from 'Sport' to 'Evolve+'. Supply vehicleBefore={ year:2025, make:'Honda', model:'Civic', trim:'Sport', vehicle_class:'used' } and vehicleAfter={ year:2025, make:'Honda', model:'Civic', trim:'Evolve+', vehicle_class:'used' } to classifyRatesChange.",
+  "request": {
+    "year": 2025,
+    "make": "Honda",
+    "model": "Civic",
+    "trim": "Evolve+",
+    "mileage": 1500,
+    "condition": "Used",
+    "state": "GA",
+    "vin": "2HGFE2F54SH551994"
+  },
+  "filters": {
+    "deductibles": [0, 100, 250, 500],
+    "coverage_periods_months": [24, 36, 48, 60, 72],
+    "default_coverage_periods_months": [48, 60],
+    "mileages": [36000, 48000, 50000, 60000, 75000, 100000, 125000],
+    "default_mileages": [48000, 50000]
+  },
+  "add_ons": [
+    { "id": "BUSINESS_USE", "name": "BUSINESS USE option", "price_delta": 0, "default_selected": false },
+    { "id": "BUSINESS_USE_VEH", "name": "Business Use Vehicles", "price_delta": 0, "default_selected": false },
+    { "id": "EEP", "name": "EEP-Enhanced Electronics Package", "price_delta": 95, "default_selected": false },
+    { "id": "EXT_MAINT_ANNUAL", "name": "Extended Maintenance - Annual", "price_delta": 0, "default_selected": true },
+    { "id": "EXT_MAINT_MONTHLY", "name": "Extended Maintenance - monthly", "price_delta": 0, "default_selected": false },
+    { "id": "NAV_EXL", "name": "NAV - EXL option", "price_delta": 0, "default_selected": false },
+    { "id": "NAV_USED", "name": "NAV -Used option", "price_delta": 0, "default_selected": false }
+  ],
+  "products": [
+    {
+      "id": "AAA_PT_PLUS_HM_48_48000",
+      "name": "AAA PT Plus High Mileage",
+      "provider": "AAA",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 48,
+      "mileage": 48000,
+      "base_price": 2895.0,
+      "monthly_price": 310.34,
+      "default_selected": true,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"],
+      "tier_hint": "good"
+    },
+    {
+      "id": "MC_EXCL_ADD_ON_60_50000",
+      "name": "MC_EXCL-Add-on miles",
+      "provider": "MC",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 60,
+      "mileage": 50000,
+      "base_price": 3244.0,
+      "monthly_price": 348.0,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"]
+    },
+    {
+      "id": "OMEGA_EXCL_ADD_ON_48_50000",
+      "name": "Omega EXCL ADD-ON",
+      "provider": "Omega",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 48,
+      "mileage": 50000,
+      "base_price": 3293.0,
+      "monthly_price": 353.0,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"],
+      "tier_hint": "better"
+    },
+    {
+      "id": "OMEGA_EXCL_ADD_ON_60_50000",
+      "name": "Omega EXCL ADD-ON",
+      "provider": "Omega",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 60,
+      "mileage": 50000,
+      "base_price": 3299.0,
+      "monthly_price": 353.6,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"]
+    },
+    {
+      "id": "OMEGA_PT_ENH_48_50000",
+      "name": "Omega POWERTRAIN ENHANCED",
+      "provider": "Omega",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 48,
+      "mileage": 50000,
+      "base_price": 3692.0,
+      "monthly_price": 395.0,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"]
+    },
+    {
+      "id": "OMEGA_PT_ENH_60_50000",
+      "name": "Omega POWERTRAIN ENHANCED",
+      "provider": "Omega",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 60,
+      "mileage": 50000,
+      "base_price": 3692.0,
+      "monthly_price": 395.0,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"]
+    },
+    {
+      "id": "OMEGA_USED_STATED_48_50000",
+      "name": "Omega USED STATED",
+      "provider": "Omega",
+      "plan_code": null,
+      "deductible": 100.0,
+      "coverage_period_months": 48,
+      "mileage": 50000,
+      "base_price": 3527.0,
+      "monthly_price": 377.0,
+      "add_ons_included": ["EXT_MAINT_ANNUAL"],
+      "tier_hint": "best"
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "_comment": "Blinker-native domain shapes. Blinker DB is the source of truth for these entities. Apps READ this shape via the Blinker API layer (mocked in Phase 1, real in Phase 2). GHL, PostHog, carrier APIs, funders, EFS, DocuSeal are downstream sync targets — their projections live in their own canon files (ghl-fields.json, posthog-events.json TBD, etc.).",
+  "_version": "2026-05-03-promote-note-activity",
+  "_principle": "One block per Blinker entity. Each block defines the canonical shape apps consume; how that shape flattens into a downstream system is documented in that system's canon file, not here. See architecture/07-data-layer.md for the source-of-truth declaration and the API-layer mocking pattern.",
+
+  "contact": {
+    "_principle": "Canonical Blinker contact shape. Source of truth = Blinker DB (User table + related). Read by mission-control ContactProfile, CoPilotPane left pane, insurance-portal agent view, refi agent view, customer-portal launchpad. The Blinker → GHL syncer flattens this to GHL's custom-field model (see ghl-fields.json `_blinker_to_ghl_projection`). Mirrors the Mission Control 2.0 PDF layout: household → contact → vehicles → opportunities → notes → activities.",
+    "_produced_by": "Blinker API layer. Phase 1: per-app src/fixtures/contacts.json conforming to this shape (validated by scripts/validate-fixtures.js). Phase 2: blinkerApi.contacts.get(id) returning this shape. The fixture-to-API swap is a one-line import change in each consumer.",
+    "_consumed_by": [
+      "mission-control/src/personas/agent/ContactProfile.jsx",
+      "mission-control/src/components/CoPilotPane.jsx (left-pane contact summary; reads _minimal_subset_for_copilotpane)",
+      "insurance-portal/src/views/agent/CaptureLinkForm.jsx (when contact lookup lands)",
+      "refi/agent/* (when refi agent view lands)",
+      "customer-portal/* (when household-level launchpad lands)"
+    ],
+    "shape": {
+      "id":              "string — Blinker User.id (UUID). Canonical across all systems per the org-id-canonical decision. The 'contact_id' that opportunities.contact_id points to.",
+      "external_ids": {
+        "_principle": "Foreign keys into downstream sync targets. Blinker owns the canonical id; these are how to find the same contact in each external system.",
+        "ghl_contact_id":      "string? — GHL contact GUID. Set by the Blinker → GHL syncer after the contact is mirrored in GHL.",
+        "posthog_distinct_id": "string? — PostHog distinct_id; usually equals Blinker User.id but tracked explicitly in case identify() drift happens.",
+        "external_lead_id":    "string? — Free-form id from inbound lead provider (per-feed). Mirrors User.attribution_data.external_contact_id."
+      },
+      "household_id":    "string? — Blinker Household.id. Nullable: not every contact has been clustered into a household yet. See `household` entity block.",
+      "name": {
+        "first":     "string",
+        "last":      "string",
+        "middle":    "string? — optional, rarely populated",
+        "preferred": "string? — what to address them as in copy/SMS/email if different from first_name. Free-form, not a nickname-table lookup."
+      },
+      "date_of_birth":   "string? — ISO 8601 date (YYYY-MM-DD). Used for age-gated workflows (insurance underwriting). May be absent for partial leads.",
+      "phones":          "Array<{ id: string, type: 'mobile'|'home'|'work'|'other', number: string (E.164, e.g. '+15551234567'), is_primary: boolean, sms_consent: boolean, sms_consent_at: ISO?, sms_consent_text_id: string?, do_not_contact: boolean, verified_at: ISO? }> — empty array if no phones on file. At most one is_primary. sms_consent_text_id references the org-disclaimers canon block (TBD) so we can audit which TCPA text the consumer agreed to.",
+      "emails":          "Array<{ id: string, type: 'personal'|'work'|'other', address: string, is_primary: boolean, opted_out: boolean, opted_out_at: ISO?, verified_at: ISO? }> — same single-primary pattern as phones.",
+      "addresses":       "Array<{ id: string, type: 'primary'|'secondary'|'mailing'|'previous', line_1: string, line_2: string?, city: string, state: string (US 2-letter), postal_code: string, country: string ('US' default), ownership: 'Own'|'Rent'|'Live with Others'|'Other'?, ownership_type: 'Primary'|'Secondary'|'Vacation'|'Investment'?, timezone: string?, is_primary: boolean }> — at most one is_primary.",
+      "vehicles":        "Array<{ id: string, year: number, make: string, model: string, trim: string?, vin: string?, mileage: number?, style: string?, ownership: 'own'|'lease'|'finance'|'forsale'|'traded'|'sold'|'totalloss'|'other'?, value: number?, payoff: number?, source: 'vin_decode'|'manual'|'partner', source_recorded_at: ISO? }> — `source` enforces the locked VIN-vs-manual-YMMT decision. See `vehicle` entity block for the full vehicle shape; this is the contact-embedded view.",
+      "opportunity_ids": "Array<string> — IDs into the `opportunity` collection. Reference, not embed: opp status changes shouldn't require a contact rewrite. ContactProfile fetches the opp records separately via blinkerApi.opportunities.list({ contact_id }) — typically up to 4 (one per workflow type: protection / refi / insurance / payments).",
+      "household_member_ids": "Array<string> — IDs of OTHER contacts sharing this contact's household_id. Pre-materialized by the API layer because household membership is rare-write / frequent-read. Empty array for solo contacts.",
+      "tags":            "Array<{ id: string, name: string, source: 'blinker'|'ghl'|'system', applied_at: ISO, applied_by: string? }> — declarative attributes on the contact. See `tags` entity block for the design and the tags-vs-opportunities semantic distinction. Tags sync bi-directionally with GHL tags. `system` source is reserved for tags applied by automation (e.g., 'imported-2026-q2', 'webhook-deduped'); 'blinker' = applied by an agent in mission-control; 'ghl' = applied in GHL and synced in. Empty array if no tags.",
+      "notes_ref":       "{ collection: 'note', filter: { contact_id: $this.id }, sort: 'created_at desc' } — pointer, not embedded. Notes live in their own entity. ContactProfile fetches via blinkerApi.notes.list({ contact_id }).",
+      "activities_ref":  "{ collection: 'activity', filter: { contact_id: $this.id }, sort: 'occurred_at desc', types: ['call','sms','email','status_change','note','agent_action','consumer_action','partner_event'] } — same pattern. ContactProfile fetches via blinkerApi.activities.list({ contact_id }).",
+      "attribution_data": "object — UTM, click ids, lead provider, first/last touch metadata. Schema mirrors the existing `attribution` block in ghl-fields.json since Blinker User.attribution_data was originally modeled to mirror what GHL stores. NOT a passthrough of GHL — Blinker owns this; the GHL syncer copies it to flat custom fields.",
+      "consent": {
+        "_principle": "Per-channel consent record, separate from sms_consent fields on phones[] because non-channel consents (privacy policy, terms of service) live here too.",
+        "tcpa_consents":   "Array<{ id: string, text_id: string, agreed_at: ISO, ip: string?, user_agent: string?, channel: 'phone'|'email'|'web' }> — references org-disclaimers canon block.",
+        "marketing_email": "{ opted_in: boolean, opted_in_at: ISO?, opted_out_at: ISO? }",
+        "tos_accepted_at": "ISO? — Blinker terms of service acceptance"
+      },
+      "created_at":      "ISO 8601 timestamp",
+      "updated_at":      "ISO 8601 timestamp"
+    },
+    "_minimal_subset_for_copilotpane": {
+      "_principle": "CoPilotPane's left-pane contact summary needs only the thin slice. Documented here so mission-control can keep its current fixture honest while the full shape lands.",
+      "fields": ["id", "name.first", "name.last", "phones[is_primary]", "emails[is_primary]", "addresses[is_primary]", "household_id", "vehicles", "opportunity_ids", "tags"]
+    },
+    "_TODO": [
+      "Define org-disclaimers canon block so sms_consent_text_id and tcpa_consents.text_id resolve. Tracked separately in coordinator backlog; this shape just declares the dependency.",
+      "Decide blinker-platform/api-mock/ extraction trigger: when the second app needs contacts, lift fixture into shared location and have apps import via `file:` dep (same pattern as protection-portal AgentView). Today only mission-control reads them, so per-app is fine."
+    ]
+  },
+
+  "tags": {
+    "_principle": "Declarative attributes on a contact (or eventually on an opportunity). Distinct from opportunities, which are stateful workflow records. Bi-directional sync with GHL tags. Tags are the right tool when an attribute (a) doesn't have its own lifecycle / status machine, (b) doesn't carry per-instance data beyond the fact of its presence, and (c) is useful for filtering and segmenting. Opportunities are the right tool when an attribute carries state that progresses through statuses, has its own data payload (premium, plan, payments), and represents real money or a real commitment.",
+    "_tags_vs_opportunities_open_question": {
+      "_principle": "How tags relate to opportunities is an open design question. The most likely model: tags describe the contact (who they are, what they've consented to, what segment they're in); opportunities describe what we're working on with them (which deal, in what state). But there are edge cases that need product input.",
+      "examples_clearly_tags": ["vip", "do-not-call", "spanish-speaker", "fleet-customer", "former-employee", "imported-from-acme", "household-clustered"],
+      "examples_clearly_opportunities": ["VSC sale in progress", "insurance lead under quote", "refi loan funded last month", "active payment plan with 8 of 24 payments made"],
+      "examples_ambiguous": [
+        "'had-claim' — tag (just a flag) OR linked to a specific past insurance opportunity?",
+        "'warm-lead' — tag (segment) OR derived from opportunity status (any opp in 'Quoted' state)?",
+        "'multi-product-customer' — tag (segment) OR derived (count of opportunities > 1)?"
+      ],
+      "_decision_principle": "Prefer DERIVED views over redundant tags when the data is computable from opportunity state. Reserve tags for attributes that are NOT derivable (consent state, language, segment assignments, ad-hoc agent annotations). When in doubt, ask: 'if all opportunities for this contact were deleted, would the tag still be meaningful?' Yes → tag. No → derived view over opportunities.",
+      "_open_questions": [
+        "Do tags ever attach to opportunities, not just contacts? (e.g., 'flagged-for-review' on a specific deal). GHL allows tags only on contacts, so cross-system parity argues no, but Blinker may want richer.",
+        "Do we have tag categories / namespaces? GHL is flat; Blinker could introduce 'consent:*', 'segment:*', 'source:*' prefixes for organization.",
+        "Who can apply / remove which tags? System-applied tags (e.g., 'household-clustered') should be immutable to agents; segment tags should be agent-editable.",
+        "Tag taxonomy governance: free-form (GHL pattern) or curated list with synonyms? Free-form drifts; curated needs a canon block."
+      ]
+    },
+    "shape": {
+      "id":         "string — Blinker Tag.id (UUID).",
+      "name":       "string — Display name. Free-form for now (see _open_questions on namespacing).",
+      "category":   "string? — Optional category for filtering ('consent', 'segment', 'source', 'compliance', 'preference'). Null = uncategorized. Resolved during taxonomy governance work.",
+      "color":      "string? — Optional hex color for UI rendering. Mirrors GHL's per-tag color convention.",
+      "ghl_tag_id": "string? — Foreign key into GHL tags table. Set by the Blinker → GHL syncer after the tag is mirrored.",
+      "system":     "boolean — true if applied by automation (cannot be edited by agents). Default false.",
+      "created_at": "ISO 8601 timestamp",
+      "updated_at": "ISO 8601 timestamp"
+    },
+    "_application_shape": {
+      "_principle": "A tag's APPLICATION to a contact is the inline `tags[]` array on contact.shape. This block is just the tag DEFINITION. Same tag definition can be applied to many contacts.",
+      "see": "contact.shape.tags"
+    },
+    "_TODO": [
+      "Decide tag taxonomy governance (free-form vs curated). Recommend curated for Blinker-side, free-form passthrough from GHL with a 'sync-import' category fallback.",
+      "Decide tags-vs-opportunities edge cases (see _tags_vs_opportunities_open_question._examples_ambiguous). Needs product input.",
+      "Decide if opportunities can carry tags too (cross-system parity says no; Blinker richness says maybe).",
+      "Define system tag inventory ('household-clustered', 'duplicate-merged', 'imported-{source}-{date}', etc.) and document write rules."
+    ]
+  },
+
+  "household":   {
+    "_TODO": "Stub. Full block when ContactProfile household panel ships. Phase 1 contract: { id, primary_contact_id, member_ids: string[], cluster_method: 'address-match'|'manual'|'imported', created_at, updated_at }. Address-clustering heuristic that creates households is TBD."
+  },
+  "household_relationship": {
+    "_principle": "An edge between two contacts within a household, capturing the relationship kind (spouse, parent, child, sibling, other) for display + workflow gating. Distinct from `household` (the cluster) — relationships are pairwise edges; a household has many relationships. Created when an agent adds a contact whose phone/email matches an existing org contact but whose name differs (Mission Control AddContact dedupe branch).",
+    "_produced_by": "Blinker API layer. Phase 1: session-only via mission-control/src/lib/contact-form.js::buildHouseholdRelationship persisted via mission-control/src/lib/session-data.js::appendHouseholdRelationship reducer. Phase 2: blinkerApi.householdRelationships.create returning this shape.",
+    "_consumed_by": [
+      "mission-control/src/components/AddContactModal.jsx (relationship-picker output)",
+      "mission-control/src/personas/agent/ContactProfile.jsx (household panel — eventual)"
+    ],
+    "shape": {
+      "id":             "string — Blinker HouseholdRelationship.id (UUID).",
+      "contact_a_id":   "string — FK to contact.id. The existing org contact matched by phone/email during AddContact dedupe.",
+      "contact_b_id":   "string — FK to contact.id. The newly added contact.",
+      "kind":           "'spouse' | 'parent' | 'child' | 'sibling' | 'other' — relationship type from contact_a's perspective. For asymmetric kinds (parent/child), order matters; for symmetric kinds (spouse/sibling), order is by addition timestamp.",
+      "recorded_at":    "ISO 8601 timestamp",
+      "source":         "'agent_add_contact_dedupe' | 'manual' | 'imported' | 'address_cluster' — how the relationship was recorded. Phase 1 only emits 'agent_add_contact_dedupe' from the AddContactModal dedupe branch."
+    },
+    "_TODO": [
+      "Decide whether 'other' should carry a free-text label or a curated sub-kind list (e.g., 'roommate', 'co-buyer', 'authorized-user').",
+      "Confirm whether household_relationship rows should drive contact.household_member_ids materialization OR if that's only computed from household.member_ids. Today mission-control's session reducer cross-links member_ids on relationship creation (assumes both contacts share a household) — this needs confirmation when the household-clustering API lands.",
+      "Decide soft-delete + edit semantics. Today neither is modeled."
+    ]
+  },
+  "opportunity": {
+    "_TODO": "Stub. Promote mission-control/src/fixtures/opportunities.json shape into here. Cross-cuts all 4 workflow types (protection / refi / insurance / payments). Common fields likely: { id, contact_id, workflow_type, status (canon machine_id), status_changed_at, owner_id, age_days (derived), next_action, workflow_specific: object }. Workflow-specific payloads stay in their own workflow blocks."
+  },
+  "vehicle":     {
+    "_TODO": "Stub. Today denormalized inside contact and opportunity. Canonicalize when first cross-app vehicle-detail screen ships. Common fields likely: { id, contact_id, year, make, model, trim, vin, mileage, style, ownership, value, payoff, source: 'vin_decode'|'manual'|'partner', source_recorded_at, ymmt_decoded_payload: object?, vin_decoded_payload: object? }.",
+    "_first_field_to_land": "annual_mileage_estimate — integer (miles/year). Computed by packages/utils/mileageEstimator.js::computeAnnualMileageEstimate; persisted on form.vehicle.annual_mileage_estimate by protection-portal VehicleDrive.jsx after condition + purchaseDate are captured. Source for Wave 19 Task 1; first concrete field in the vehicle shape. All other vehicle fields wait for the vehicle-detail screen per STATUS.md 'wait for the consumer' rule."
+  },
+  "note": {
+    "_principle": "Free-form annotation an agent (or rarely manager/admin) writes about a contact, optionally scoped to a specific opportunity. Distinct from `activity` records: a note is the *content* the human wrote; the activity feed gets a corresponding `type: 'note'` activity entry whose payload links back to the note via note_id. ContactProfile renders notes in their own panel; the activity feed shows note-creation as one event among others. Notes are append-mostly — edits are allowed within a soft-edit window (TBD) and tracked via edited_at; deletes are soft (not yet modeled here, lands when first delete UI ships).",
+    "_produced_by": "Blinker API layer. Phase 1: per-app src/fixtures/notes.json conforming to this shape. Phase 2: blinkerApi.notes.create / list / update returning this shape. Author identity comes from the authenticated agent session.",
+    "_consumed_by": [
+      "mission-control/src/personas/agent/ContactProfile.jsx (Notes panel)",
+      "mission-control/src/components/AgentInbox.jsx (latest-note preview, eventual)",
+      "refi/agent/* (working-status agent annotations — anticipated future consumer)"
+    ],
+    "shape": {
+      "id":              "string — Blinker Note.id (UUID).",
+      "contact_id":      "string — FK to contact.id. Notes are always contact-scoped.",
+      "opportunity_id":  "string? — FK to opportunity.id. Optional: a note can be opportunity-specific (e.g., 'consumer hesitated on tier pricing for opp_vsc_001') or contact-general (e.g., 'prefers Spanish, do-not-call after 7pm').",
+      "body":            "string — Free-form note text. Markdown not currently rendered; treat as plaintext.",
+      "author_id":       "string — FK to User.id of the author. For author_persona === 'system', this is the system actor id; for 'consumer', the contact's own User.id.",
+      "author_persona":  "'agent' | 'manager' | 'admin' | 'super_admin' | 'consumer' | 'system' — captured at write time so a later persona change on the User doesn't rewrite history.",
+      "created_at":      "ISO 8601 timestamp",
+      "updated_at":      "ISO 8601 timestamp — bumped on every write including soft-edits",
+      "edited_at":       "ISO? — present iff body has been edited after creation. Null/absent on first write."
+    },
+    "_TODO": [
+      "Define soft-edit window length and edit-history retention. Today edited_at is a single timestamp; if multiple edits matter for compliance, promote to an edits[] log.",
+      "Decide soft-delete model. Today notes have no deleted_at; first agent-delete UI request drives the design."
+    ]
+  },
+  "activity": {
+    "_principle": "Append-only log of things that happened to a contact / opportunity. Spans agent actions (calls, sms, email logged from mission-control), consumer actions (clicks/views from customer-portal), partner events (webhooks from EI / DocuSeal / FluidPay / Gravity / etc.), and system events (status transitions, automated tag application). Drives the ContactProfile activity feed and any future cross-contact audit views. Activities are never edited — corrections happen by appending a new activity that references the prior one.",
+    "_produced_by": "Multiple producers, all writing through the Blinker API layer. Phase 1: per-app src/fixtures/activities.json. Phase 2: blinkerApi.activities.append from agent UIs, partner webhook handlers, and system status-change side-effects. Mission-control's note panel writes both a note record AND a corresponding activity with type='note' and payload.note_id pointing at it.",
+    "_consumed_by": [
+      "mission-control/src/personas/agent/ContactProfile.jsx (Activity feed)",
+      "mission-control/src/components/AgentInbox.jsx (last-touched derivation, eventual)",
+      "insurance-portal/src/views/agent/* (partner_event auditing — anticipated future consumer)"
+    ],
+    "shape": {
+      "id":              "string — Blinker Activity.id (UUID).",
+      "contact_id":      "string — FK to contact.id. Always present.",
+      "opportunity_id":  "string? — FK to opportunity.id. Present for opportunity-scoped activities (most). Absent for contact-level events like household clustering or tag changes.",
+      "type":            "'call' | 'sms' | 'email' | 'status_change' | 'note' | 'agent_action' | 'consumer_action' | 'partner_event' — drives icon + summary_text formatting in the feed and the payload sub-shape (see _payload_shapes).",
+      "occurred_at":     "ISO 8601 timestamp — when the activity actually happened (not when it was recorded; for partner_event this is the partner's event timestamp, not webhook-receive time).",
+      "source":          "'agent' | 'consumer' | 'partner' | 'system' — who/what produced this activity. Drives source-of-truth + audit semantics. actor_id is required iff source is 'agent' or 'consumer'.",
+      "actor_id":        "string? — FK to User.id of the actor. Required for source: 'agent' (the agent's User.id) and 'consumer' (the contact's User.id). Null/absent for source: 'system' and source: 'partner'.",
+      "payload":         "object — type-dependent shape. See _payload_shapes for the per-type contract. Treated as opaque by the activity feed except for the fields summary_text was derived from.",
+      "summary_text":    "string — Human-readable one-liner shown in the activity feed. Producer pre-renders this so the feed UI doesn't have to know per-type rendering rules. Example: 'Outbound call · 6m 52s · answered'."
+    },
+    "_payload_shapes": {
+      "_principle": "Per-type payload contract. Loose by design for the prototype: each type's first real producer locks the schema. Producers should write the keys defined here when available, but the activity feed only needs summary_text — payload is for downstream analysis and audit reconstruction.",
+      "call":            "{ duration_seconds?: number, direction: 'inbound'|'outbound', recording_url?: string } — outcome and disposition belong here when call-tracking integration lands.",
+      "sms":             "{ direction: 'inbound'|'outbound', content_preview?: string } — content_preview is the first 80 chars of the message body, redacted for PII as needed. Full body lives in the messaging system, not on the activity record.",
+      "email":           "{ direction: 'inbound'|'outbound', content_preview?: string } — content_preview is subject + first 80 chars of body. Same redaction rules as sms.",
+      "status_change":   "{ from_status: string, to_status: string, workflow_type: 'protection'|'refi'|'insurance'|'payments' } — status values are canon machine_ids per ghl-status.json. workflow_type lets cross-workflow feeds disambiguate without joining to opportunity.",
+      "note":            "{ note_id: string } — FK back to the corresponding note record. The note's body lives in the note entity; the activity is just the timeline marker.",
+      "agent_action":    "{ action_name: string, target_id?: string, target_type?: string } — action_name is a stable verb ('lead_captured', 'tag_added', 'household_clustered', 'opportunity_created'). target_id + target_type identify the affected entity for actions that mutate something (e.g., target_type: 'tag', target_id: tag.id).",
+      "consumer_action": "{ action_name: string, screen_key?: string } — consumer-side analog. screen_key is the customer-view step where the action occurred (e.g., 'recommended_coverage', 'capture_contact').",
+      "partner_event":   "{ partner_name: string, event_name: string, partner_event_id?: string } — partner_event_id is the partner's own id for the event so we can reconcile against their system. Additional partner-specific fields are allowed alongside these but should land in canon when a second consumer reads them."
+    },
+    "_TODO": [
+      "Lock real type-specific schemas as each type's first real producer lands. Today payloads vary in field naming (e.g., mission-control fixture uses 'action' where the contract calls for 'action_name'); when the real Phase 2 producers ship, the activity API enforces the contract and prior fixture drift gets fixed at the producer.",
+      "Decide PII redaction policy for content_preview. Today the prototype includes plaintext snippets; real content_preview should be policy-driven."
+    ]
+  }
+}

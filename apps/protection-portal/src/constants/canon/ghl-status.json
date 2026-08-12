@@ -1,0 +1,104 @@
+{
+  "_comment": "Status taxonomy mapped to GHL pipeline stages. Source of truth for cross-app status display + GHL sync. Imported from the GHL Blinker Configuration spreadsheet's `status` tab. Working draft.",
+  "_version": "2026-05-02-init",
+  "_source": "https://docs.google.com/spreadsheets/d/1LEa6dqjh0foV8hvs9j6BsSYlepIVcwfrj7HTqjiJcbA/edit?gid=1993021756 — `status` tab",
+  "_principle": "Blinker DB + PostHog have FINE granularity (every step). GHL has COARSE stages (groupings). Multiple platform_status values can map to one crm_stage.",
+
+  "vsc": {
+    "_label": "Vehicle Service Contract / Protection Plan",
+    "_pipelines": ["VSC - Prospects", "VSC - Onboarding", "VSC - Clients"],
+    "statuses": {
+      "Empty":                          { "crm_stage": "New Lead",          "pipeline": "Prospects", "role": "agent",          "description": "A new application was started, however the vehicle and customer information was not complete enough to generate a quote." },
+      "Quoted":                         { "crm_stage": "Quoted",            "pipeline": "Prospects", "role": "agent",          "description": "Agent entered vehicle and customer info to generate quotes; product package created with default plan selected." },
+      "Quoted - No Results":            { "crm_stage": "Quoted",            "pipeline": "Prospects", "role": "agent",          "description": "Sub-status of Quoted. No plans returned." },
+      "Selected":                       { "crm_stage": "Working",           "pipeline": "Prospects", "role": "agent",          "description": "Agent reviewed, saved, and selected protection plan quote(s); consumer sent package for review." },
+      "Sent to Consumer":               { "crm_stage": "Working",           "pipeline": "Prospects", "role": "agent",          "description": "Agent sent consumer agreement and payment workflow." },
+      "Consumer Reviewed":              { "crm_stage": "Working",           "pipeline": "Prospects", "role": "consumer",       "description": "Consumer clicked on the link and visited the coverage / payment / price page." },
+      "Booked":                         { "crm_stage": "Working",           "pipeline": "Prospects", "role": "agent_consumer", "description": "Customer confirmed selected plan. Awaiting signature and billing information." },
+      "Payment Failed":                 { "crm_stage": "Lost",              "pipeline": "Prospects", "role": "agent_consumer", "description": "Consumer failed to make payment." },
+      "Payment Success":                { "crm_stage": "Payment Success",   "pipeline": "Prospects", "role": "agent_consumer", "description": "Consumer made successful payment." },
+      "Product Agreement Signed":       { "crm_stage": "Won",               "pipeline": "Prospects", "role": "agent_consumer", "description": "Consumer signed product agreement." },
+      "Payment Agreement Signed":       { "crm_stage": "Won",               "pipeline": "Prospects", "role": "agent_consumer", "description": "Consumer signed payment agreement." },
+      "Agreement Signed":               { "crm_stage": "Won",               "pipeline": "Prospects", "role": "agent_consumer", "description": "Consumer signed all required agreements." },
+      "Remitted - Product Error":       { "crm_stage": "Won",               "pipeline": "Prospects", "role": "system",         "description": "Sub-status of Remitted: error remitting to Product Provider." },
+      "Remitted - Payment Error":       { "crm_stage": "Won",               "pipeline": "Prospects", "role": "system",         "description": "Sub-status of Remitted: error remitting to Payment Provider." },
+      "Remitted - Both Error":          { "crm_stage": "Won",               "pipeline": "Prospects", "role": "system",         "description": "Sub-status of Remitted: errors at both providers." },
+      "Remitted":                       { "crm_stage": "Won",               "pipeline": "Onboarding","role": "system",         "description": "System has remitted the agreement to the provider for activation." },
+      "Active":                         { "crm_stage": "Active",            "pipeline": "Clients",   "role": "system",         "description": "Consumer making payments with active agreement." },
+      "Paid in Full":                   { "crm_stage": "Paid in Full",      "pipeline": "Clients",   "role": "system",         "description": "Consumer paid in full or completed all payments." },
+      "Pending Cancellation":           { "crm_stage": "Pending",           "pipeline": "Clients",   "role": "system",         "description": "Recurring payment failed; pending cancellation if not corrected." },
+      "Cancelled":                      { "crm_stage": "Cancelled",         "pipeline": "Clients",   "role": "system",         "description": "Protection product cancelled." }
+    }
+  },
+
+  "refi": {
+    "_label": "Refinance",
+    "_pipelines": ["REFI - Prospects"],
+    "_external_partner": "Gravity Lending (status_external); Savings Group (status_external_2 — TBD)",
+    "_TODO": [
+      "Port full Gravity status mapping from spreadsheet (DeclinedReason logic varies by case)",
+      "Add Savings Group status taxonomy when finalized"
+    ],
+    "statuses_summary": [
+      "Started", "New Lead", "Ownership Eligibility", "Auto Loan Snapshot", "Self Reported Credit",
+      "Current Housing", "Current Employment", "Identity and Consent",
+      "Duplicate", "Prequalification Submitted", "Offers Returned", "Offer Selected",
+      "Working - Waiting on Customer", "Working - Waiting for Data", "Working - Rejected",
+      "Working - No Contact", "Working - Incorrect Info", "Working - Approved",
+      "Applied", "Not Interested", "Not Interested - Approved", "Not Interested - Applied",
+      "Declined", "Pending Funding", "Funded"
+    ]
+  },
+
+  "insurance": {
+    "_label": "Insurance",
+    "_pipelines": ["INS - Prospects"],
+    "_external_partner": "Embedded Insurance (status_external)",
+    "_id_principle": "Each status has a `machine_id` (Blinker's internal canonical ID, lowercase dotted) and `external_event` (the actual Embedded Insurance webhook event name, where applicable). Human label remains the source of truth for display; machine_id is for app code and PostHog event names.",
+    "_signal_source_principle": "Each status has a `signal_source` declaring what triggers a transition INTO it. Values: `partner` (Embedded Insurance fires a webhook), `blinker_internal` (Blinker-side telemetry, e.g. URL-shortener click events), `agent_action` (agent UI action like 'Send link'), `consumer_action` (consumer UI action like form submit), `system` (Blinker backend automation, e.g. scheduled job). This makes explicit what was previously implicit (external_event: null no longer requires inference). Code that subscribes to webhook streams should filter to `signal_source: 'partner'`; agent/consumer-driven UIs use the appropriate source.",
+    "_actor_principle": "Each status has an `actor` (`agent` | `consumer` | `system`) declaring WHO, in human terms, caused the step — distinct from `signal_source` (which SYSTEM reported it) and `role` (persona visibility). Added v3.0.15 (ADR 27 D6) for the CoPilot left-rail timeline's per-step actor badge. The insurance EI flow is deterministic, so the actor is a static per-status property: agent originates + sends the link; consumer opens/captures/views/binds on EI's microsite; system handles backend cascade + error states. Protection/refi have no machine_id taxonomy — their timeline actor comes from the `step_change` activity `source` field instead (ADR 27 D7).",
+    "_insurance_flow_paths": {
+      "_principle": "An insurance lead-origination request is one of two flow paths chosen at link-generation time. flowPath determines which EI endpoint the lead link is generated against and which webhook sequence we expect.",
+      "values": {
+        "capture_and_quote": "Two-phase: EI runs verification (capture of existing policy via id-card or third-party lookup), then attempts a quote against the verified policy. Webhook sequence: verification.completed → quote.completed (or error). Used when the consumer has an existing policy and we want to surface savings vs current carrier.",
+        "quote_only":        "Single-phase: EI quotes against vehicle + applicant data without prior policy verification. No verification.completed event. Used when no prior policy exists or verification would add friction without value."
+      },
+      "_consumed_by": [
+        "insurance-portal/src/views/agent/LeadOriginationForm.jsx (flowPath segmented control)",
+        "insurance-portal/src/constants/status-map.js (LeadStatusTimeline TERMINAL_OFF_PATH_MACHINE_IDS filter)",
+        "protection-portal/src/views/customer/CrossSellSubFlow.jsx (cross-sell flow-path selector)"
+      ],
+      "_TODO": [
+        "If a third path emerges (e.g., capture_only without quote), add here and update LeadStatusTimeline's TERMINAL_OFF_PATH_MACHINE_IDS list.",
+        "Confirm partner contract names — these are Blinker-side enum values; the EI API may not surface them by these names."
+      ]
+    },
+    "statuses": {
+      "Started":                  { "machine_id": "started",                  "external_event": null,                            "signal_source": "consumer_action", "crm_stage": null,            "role": "agent_consumer_system", "actor": "agent", "description": "User starts the insurance referral workflow. Note: crm_stage is intentionally null — pre-pipeline state, no GHL stage. Code that buckets statuses by crm_stage must handle null explicitly (skip from pipeline displays, or surface as 'pre-lead')." },
+      "New Lead":                 { "machine_id": "lead.created",             "external_event": null,                            "signal_source": "system",          "crm_stage": "New Lead",      "role": "agent_consumer_system", "actor": "system", "description": "Lead shared with insurance partner via integration/transfer (partner ack returns synchronously; we surface this as our internal 'created' state)." },
+      "Capture Link Created":     { "machine_id": "capture_link.created",     "external_event": null,                            "signal_source": "system",          "crm_stage": "New Lead",      "role": "system",                "actor": "system", "description": "One-time use capture link created." },
+      "Quote Link Created":       { "machine_id": "quote_link.created",       "external_event": null,                            "signal_source": "system",          "crm_stage": "New Lead",      "role": "system",                "actor": "system", "description": "One-time use quote link created." },
+      "Error - Verification":     { "machine_id": "error.verification",       "external_event": "error",                         "signal_source": "partner",         "crm_stage": "New Lead",      "role": "system",                "actor": "system", "description": "Lead/verification-phase failure. EI fires a single `error` event (not phase-specific); adapter discriminates by summary contents — if summary is empty OR contains insuranceVerification but no quote, this is verification-stage. Stays as a Blinker-internal machine_id for taxonomy clarity even though the partner event is shared with error.quote." },
+      "Error - Quote":            { "machine_id": "error.quote",              "external_event": "error",                         "signal_source": "partner",         "crm_stage": "Quoted",        "role": "system",                "actor": "system", "description": "Quote-phase failure: verification succeeded, partner could not return a quote (rate-table miss, eligibility decline). EI fires the same `error` event as error.verification; adapter discriminates by summary.quote being present. See `_insurance_error_disambiguation` block in this file's _principles." },
+      "Duplicate":                { "machine_id": "duplicate",                "external_event": null,                            "signal_source": "partner",         "crm_stage": "Duplicate Lead","role": "system",                "actor": "system", "description": "Duplicate lead identified by partner. NOTE: EI's documented webhook contract does not include a separate 'duplicate' status — duplicates may be returned synchronously as a 4xx on POST /auto/v1/leads (per Postman docs: '4xx range indicate an error that failed given the information provided e.g duplicate lead received'). Phase 1 mock surfaces it as a webhook for demo coherence; real adapter handles the 4xx path. Flagged for canon TODO." },
+      "Capture Link Sent":        { "machine_id": "capture_link.sent",        "external_event": null,                            "signal_source": "agent_action",    "crm_stage": "Contacted",     "role": "system",                "actor": "agent", "description": "Email/SMS sent to contact for insurance capture." },
+      "Quote Link Sent":          { "machine_id": "quote_link.sent",          "external_event": null,                            "signal_source": "agent_action",    "crm_stage": "Contacted",     "role": "system",                "actor": "agent", "description": "Email/SMS sent to contact for insurance quote." },
+      "Capture Link Viewed":      { "machine_id": "capture_link.viewed",      "external_event": null,                            "signal_source": "blinker_internal","crm_stage": "Contacted",     "role": "system",                "actor": "consumer", "description": "Email/SMS link followed by contact for insurance capture. Source: Blinker URL-shortener telemetry, not partner." },
+      "Quote Link Viewed":        { "machine_id": "quote_link.viewed",        "external_event": null,                            "signal_source": "blinker_internal","crm_stage": "Contacted",     "role": "system",                "actor": "consumer", "description": "Email/SMS link followed by contact for insurance quote. Source: Blinker URL-shortener telemetry, not partner." },
+      "Capture Completed":        { "machine_id": "capture.completed",        "external_event": "verification.completed",        "signal_source": "partner",         "crm_stage": "Captured",      "role": "system",                "actor": "consumer", "description": "Insurance verification completed by EI. Webhook event: `lead_summary` with `status: verification.completed`. The summary.insuranceVerification block contains policyInfo (carrier, policyType, policyNumber, vehicles, namedInsureds), media (insurance card image URLs with expiresAt), and source ('id-card' | 'third-party'). We rename 'verification' → 'capture' at our boundary because the human-facing concept is capture; the partner concept is verification (they're verifying the consumer's existing policy)." },
+      "Working":                  { "machine_id": "working",                  "external_event": null,                            "signal_source": "agent_action",    "crm_stage": "Working",       "role": "agent",                 "actor": "agent", "description": "Agent working contact in CRM." },
+      "Quoted":                   { "machine_id": "quote.completed",          "external_event": "quote.completed",               "signal_source": "partner",         "crm_stage": "Quoted",        "role": "system",                "actor": "system", "description": "Quote successfully generated by EI. Webhook event: `lead_summary` with `status: quote.completed`. summary.quote contains: id, status: 'completed', carrier, totalPremiumCents, optional savingsAmountCents, createdAt. May also include summary.insuranceVerification if verification ran first (Capture+Quote path)." },
+      "Quote Viewed":             { "machine_id": "quote.viewed",             "external_event": "quote.viewed",                  "signal_source": "partner",         "crm_stage": "Quote Viewed",  "role": "system",                "actor": "consumer", "description": "Consumer viewed the quote on EI's microsite. Webhook event: `lead_summary` with `status: quote.viewed`. EI hosts the quote screen and fires this themselves — Blinker has no role in detecting the view. Note: a previous canon revision (2026-05-02-insurance-quote-flow-cleanup) wrongly flipped this to `consumer_action` based on an incorrect assumption that Blinker would host the quote screen. Reverted in 2026-05-03-ei-real-contract." },
+      "Policy Written":           { "machine_id": "policy.bound",             "external_event": "policy.bound",                  "signal_source": "partner",         "crm_stage": "Won",           "role": "system",                "actor": "consumer", "description": "Consumer purchased the policy on EI's microsite; partner confirmed binding. Webhook event: `lead_summary` with `status: policy.bound`. summary.policy contains: id, carrier, boundAt. Note: a previous canon revision (2026-05-02-insurance-quote-flow-cleanup) introduced a `policy.requested` status to track consumer click intent — that status has been removed in 2026-05-03-ei-real-contract because the consumer never touches Blinker for the bind action; the click happens on EI's microsite and is not separately reported." }
+    }
+  },
+
+  "_TODO": [
+    "Resolve REFI ** TBD ** rows from the spreadsheet (TBD column)",
+    "Document subaccount.id pattern for crm_opportunity (each VSC/Refi/Ins has Prospects {1 or 2 or 3} placeholder)",
+    "Confirm Lost flow for VSC: Payment Failed and Cancelled both map to Lost",
+    "Confirm Embedded Insurance partner event names: status.verification.error and status.quote.error are Blinker-side guesses; adapter must verify against real contract once available",
+    "Decide if a 'Binding' crm_stage is warranted between Quoted and Won (currently policy.requested maps to Quoted; if many opportunities sit in this state, we may need pipeline visibility)",
+    "Insurance partner-carrier registry: when a second carrier shows up in fixtures or a real adapter, add canon/insurance-carriers.json with { id, displayName, logoUrl, financialStrengthRating } so QuoteReview + SavingsCard can render carrier metadata consistently across apps"
+  ]
+}

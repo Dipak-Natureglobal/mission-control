@@ -1,0 +1,203 @@
+{
+  "_comment": "GHL contact + opportunity custom fields → Blinker model+field mapping. Imported from the GHL Blinker Configuration spreadsheet's `fields` tab. Working draft.",
+  "_version": "2026-05-02-init",
+  "_source": "https://docs.google.com/spreadsheets/d/1LEa6dqjh0foV8hvs9j6BsSYlepIVcwfrj7HTqjiJcbA/edit — `fields` tab",
+  "_principle": "GHL stores contact + opportunity attributes as flat custom fields. Vehicle data is denormalized: each contact can have up to 3 vehicles as v1_*, v2_*, v3_* slots. Confirmed live 2026-05-02 in Apex sub-account.",
+
+  "contact_fields": {
+    "_groups": ["Contact", "Address", "Vehicle", "General Info", "Additional Info", "Attribution", "Hidden"],
+    "standard": {
+      "first_name":      { "blinker_object": "User",    "blinker_field": "first_name" },
+      "last_name":       { "blinker_object": "User",    "blinker_field": "last_name" },
+      "email":           { "blinker_object": "User",    "blinker_field": "email" },
+      "phone":           { "blinker_object": "User",    "blinker_field": "phone" },
+      "date_of_birth":   { "blinker_object": "User",    "blinker_field": "dob" },
+      "state":           { "blinker_object": "Address", "blinker_field": "state" },
+      "address1":        { "blinker_object": "Address", "blinker_field": "address_line_1" },
+      "city":            { "blinker_object": "Address", "blinker_field": "city" },
+      "postal_code":     { "blinker_object": "Address", "blinker_field": "zip" },
+      "country":         { "blinker_object": "Address", "blinker_field": "country" }
+    },
+    "vehicle_slots": {
+      "_pattern": "v{1|2|3}_{year|make|model|trim|vin|mileage|style|ownership|value|payoff|external_vehicle_id|universal_vehicle_code}",
+      "_blinker_objects": ["Vehicle", "VehicleTrim"],
+      "_example_v1": {
+        "v1_year":                      { "blinker_object": "Vehicle",      "blinker_field": "year" },
+        "v1_make":                      { "blinker_object": "Vehicle",      "blinker_field": "make" },
+        "v1_model":                     { "blinker_object": "Vehicle",      "blinker_field": "model" },
+        "v1_trim":                      { "blinker_object": "VehicleTrim",  "blinker_field": "trim_name" },
+        "v1_vin":                       { "blinker_object": "Vehicle",      "blinker_field": "vin" },
+        "v1_mileage":                   { "blinker_object": "Vehicle",      "blinker_field": "mileage" },
+        "v1_style":                     { "blinker_object": "VehicleTrim",  "blinker_field": "style" },
+        "v1_ownership":                 { "blinker_object": "Vehicle",      "blinker_field": "ownership_status", "options": ["own","lease","finance","forsale","traded","sold","totalloss","other"] },
+        "v1_value":                     { "blinker_object": "Vehicle",      "blinker_field": "estimate_value_cache" },
+        "v1_payoff":                    { "blinker_object": "Vehicle",      "blinker_field": "payoff_amount" },
+        "v1_external_vehicle_id":       { "blinker_object": "Vehicle",      "blinker_field": "id" },
+        "v1_universal_vehicle_code":    { "blinker_object": "VehicleTrim",  "blinker_field": "uvc" }
+      }
+    },
+    "address_extended": {
+      "ownership":      { "blinker_object": "Address", "blinker_field": "ownership", "options": ["Own","Rent","Live with Others","Other"] },
+      "ownership_type": { "blinker_object": "Address", "blinker_field": "ownership_type", "options": ["Primary","Secondary","Vacation","Investment"] },
+      "timezone":       { "blinker_object": "Address", "blinker_field": "attribution_data.time_zone" }
+    },
+    "attribution": {
+      "_pattern": "All attribution fields go to User.attribution_data JSONB column",
+      "fields": [
+        "external_contact_id", "ga_client_id", "fb_click_id", "google_click_id", "microsoft_click_id",
+        "tiktok_click_id", "gbraid", "wbraid",
+        "first_utm_source", "first_utm_medium", "first_utm_campaign", "first_utm_term", "first_utm_content",
+        "first_landing_page", "first_referrer", "first_ip_address", "first_touch_timestamp",
+        "attribution_notes"
+      ]
+    },
+    "hidden": {
+      "metadata_json":  { "blinker_object": "User", "blinker_field": "attribution_data.metadata_json", "description": "Catch-all for unmapped CSV fields and lead-feed metadata" }
+    }
+  },
+
+  "opportunity_fields": {
+    "_principle": "Opportunity = one VSC/Refi/Insurance opportunity. Maps to product_packages (VSC) or LoanApplicantsExternal (Refi) or InsuranceQuote/Verify (Insurance).",
+    "_subject_type_hint": "Use Blinker's polymorphic subject_type+subject_id pattern as external_opportunity_id payload",
+    "shared_attribution": [
+      "external_opportunity_id", "external_lead_id", "lead_provider", "lead_feed", "provider_campaign_id", "provider_subid", "lead_price",
+      "latest_utm_source", "latest_utm_medium", "latest_utm_campaign", "latest_utm_term", "latest_utm_content",
+      "latest_landing_page", "latest_referrer", "form_submission_ip", "captured_at",
+      "compliance_id", "consent_text", "consent_timestamp", "consent_ip",
+      "quality_score", "risk_score", "fraud_score",
+      "product_type", "product_category", "vehicle_ymm", "vin", "state", "postal_code", "call_center_agent"
+    ],
+    "shared_status": ["platform_status", "platform_status_description", "external_status", "external_status_description"],
+
+    "vsc_specific": [
+      "vsc_plan_name", "vsc_plan_term_months", "vsc_plan_term_miles", "vsc_plan_price",
+      "vsc_sold_date", "vsc_cancel_date",
+      "vsc_payment_term", "vsc_payment_monthly", "vsc_payment_down", "vsc_payment_activation",
+      "vsc_payment_date", "vsc_payment_retry_date", "vsc_payment_retries", "vsc_payment_successes", "vsc_payment_day",
+      "vsc_payment_lienholder",
+      "vsc_agreement_number", "vsc_agreement_product_url", "vsc_agreement_payment_url",
+      "vsc_consumer_url", "vsc_application_url"
+    ],
+
+    "insurance_specific": [
+      "ins_premium_quoted_cents", "ins_premium_current_cents", "ins_savings_cents",
+      "ins_card_url", "ins_policy_number", "ins_policy_carrier", "ins_policy_expires_at",
+      "ins_policy_carrier_new", "ins_policy_number_new",
+      "ins_consumer_link_url", "ins_consumer_link_token", "ins_lead_flow_path",
+      "ins_lead_created_at", "ins_captured_at", "ins_quoted_at", "ins_quote_viewed_at", "ins_policy_at"
+    ],
+    "_insurance_field_notes": {
+      "ins_policy_expires_at": "When the consumer's CURRENT policy expires (collected at capture; drives savings outreach timing). Distinct from `ins_policy_at` which is when the NEW policy was bound.",
+      "ins_policy_at": "When the new (Blinker-sold) policy was bound.",
+      "ins_consumer_link_url": "One-time-use URL returned by EI's POST /auto/v1/leads/:id/get-link. Sent to the consumer via SMS/email; consumer follows it to EI's microsite. Single field for both flow paths (capture+quote and quote-only) — the path discriminator lives on `ins_lead_flow_path`. Replaces the prior split `ins_capture_link_url` + `ins_quote_link_url` (canon `2026-05-03-ei-real-contract` consolidated; rationale: same URL field, different path semantics).",
+      "ins_consumer_link_token": "Just the token portion of ins_consumer_link_url, for indexed lookup when the consumer opens the link.",
+      "ins_lead_flow_path": "'capture_and_quote' | 'quote_only'. Tracks which EI flow path was selected when the lead was created. Drives status-timeline rendering, analytics bucketing, and agent UI.",
+      "ins_premium_quoted_cents": "Quoted premium in cents (matches EI's totalPremiumCents convention). Replaces ins_premium_quoted (was decimal-with-period; canon `2026-05-03-ei-real-contract` standardized money to integer cents).",
+      "ins_premium_current_cents": "Consumer's CURRENT premium in cents. Note: EI's verification webhook does NOT return current premium — this field is populated only if Blinker has the data from another source.",
+      "ins_savings_cents": "Savings amount in cents (quoted vs current). Matches EI's savingsAmountCents."
+    },
+    "_insurance_verification_shape": {
+      "_principle": "Real Embedded Insurance verification payload as documented in EI partner docs (Blinker_Verify_Webhook_Response_v1.md). Adapters consume this shape directly; we do NOT remap to a Blinker-canonical shape because EI's structure is reasonable and remapping just adds drift surface. Replaces the invented `_insurance_extracted_shape` block from canon `2026-05-02-insurance-extracted-shape` — that shape included currentPremium, coverageLimits, and deductibles which EI does NOT return in the verification webhook. Removed from canon to avoid pretending we have data we don't.",
+      "_source_event": "lead_summary, status: verification.completed → summary.insuranceVerification",
+      "shape": {
+        "id":             "string — EI verification id (e.g. 'verification_123')",
+        "status":         "'pending' | 'failed' | 'completed'",
+        "source":         "'id-card' (consumer photographed insurance card; OCR'd) | 'third-party' (data verification, no card)",
+        "policyInfo": {
+          "carrier":        "string — current insurance carrier (e.g. 'Progressive', 'State Farm')",
+          "policyType":     "'auto' (only auto supported in v1)",
+          "policyNumber":   "string? — optional, may not be present for third-party source",
+          "vehicles":       "Array<{ vin?, year?, make?, model? }>",
+          "namedInsureds":  "Array<{ firstName?, lastName?, isPrimary? }>"
+        },
+        "media":          "Array<{ url, description, contentType, size, createdAt: ISO, expiresAt: ISO }> — empty when source: 'third-party'. Insurance card images. URLs expire (~7d typical).",
+        "verifiedAt":     "ISO 8601 timestamp"
+      },
+      "_what_EI_does_NOT_return": "Coverage limits (BI/PD/UM/MedPay), deductibles, current premium, policy expiration date. These were in our prior invented shape but EI does not surface them. Any UI claiming 'compare your current coverage' is unbacked unless we add them through a separate data source."
+    },
+    "_insurance_quote_shape": {
+      "_principle": "Real Embedded Insurance quote summary. Money in cents (totalPremiumCents, savingsAmountCents). No premium period field — assume 6mo for auto until/unless EI adds one (verify with partner contract).",
+      "_source_event": "lead_summary, status: quote.completed | quote.viewed → summary.quote",
+      "shape": {
+        "id":                  "string — EI quote id (e.g. 'quote_456')",
+        "status":              "'completed' | 'viewed'",
+        "carrier":             "string — carrier the quote is from (e.g. 'Geico', 'Allstate'). Different from policyInfo.carrier (consumer's CURRENT carrier).",
+        "totalPremiumCents":   "integer — total premium in cents (e.g. 120000 = $1,200.00). Period assumption: 6mo.",
+        "savingsAmountCents":  "integer? — optional. Savings vs current policy in cents. May be absent on quote.viewed events or if EI didn't compute savings.",
+        "createdAt":           "ISO 8601 timestamp",
+        "viewedAt":            "ISO 8601 timestamp? — present on quote.viewed events"
+      },
+      "_period_TODO": "Confirm with EI whether totalPremiumCents is always 6mo or varies. If varies, request a `period` field on the quote summary. Until confirmed, code MUST assume 6mo and label UI accordingly ('per 6 months')."
+    },
+    "_insurance_policy_shape": {
+      "_principle": "Real Embedded Insurance policy summary. Note: thinner than expected — no policyNumber, no binderUrl, no documents. If those are needed for downstream agent/CRM workflows, request via EI follow-up.",
+      "_source_event": "lead_summary, status: policy.bound → summary.policy",
+      "shape": {
+        "id":      "string — EI policy id (e.g. 'policy_789')",
+        "carrier": "string — carrier the policy is with",
+        "boundAt": "ISO 8601 timestamp"
+      }
+    },
+    "_insurance_flow_paths": {
+      "_principle": "EI supports two flow paths. Blinker prefers Capture+Quote (the consumer's current policy is captured first, used to compute apples-to-apples savings). Quote Only is offered as an agent-driven escape hatch when capture isn't viable (e.g. consumer doesn't have their card handy and won't tolerate the OCR step).",
+      "capture_and_quote": {
+        "label":          "Capture + Quote (preferred)",
+        "description":    "Full workflow: lead created → EI captures consumer's current policy via id-card OCR or third-party data verification → EI generates a quote against the captured policy → consumer views quote → consumer binds.",
+        "webhook_sequence": ["verification.completed", "quote.completed", "quote.viewed", "policy.bound"],
+        "savings_calc":   "EI computes savings against the captured current policy and returns it as quote.savingsAmountCents."
+      },
+      "quote_only": {
+        "label":          "Quote Only (escape hatch)",
+        "description":    "Skips capture entirely: lead created → EI generates a quote based on applicant + vehicle data alone → consumer views → consumer binds. No verification.completed event.",
+        "webhook_sequence": ["quote.completed", "quote.viewed", "policy.bound"],
+        "savings_calc":   "savingsAmountCents may be absent or null since there's no captured baseline to compare against. UI must handle the no-savings case."
+      },
+      "selection_mechanism_TODO": "How do we tell EI to use Quote Only? Postman docs don't show an explicit flag on POST /auto/v1/leads. Candidates: (a) a partnerData hint, (b) a flag in get-link payload, (c) a different endpoint, (d) it's automatic if consumer skips capture on EI's microsite. Confirm with EI and document the call-time mechanism here."
+    },
+    "_insurance_microsite_url_shape": {
+      "_principle": "Response shape from EI's POST /auto/v1/leads/:id/get-link. Adapter consumes this directly. Single URL applies to both flow paths; the path discriminator lives on the lead.",
+      "_source_endpoint": "POST /auto/v1/leads/:id/get-link",
+      "shape": {
+        "url": "string — one-time-use full URL to EI's hosted microsite (e.g. 'https://embeddedinsurance.com/microsite?token=...'). Consumer follows this; EI handles auth via the token."
+      },
+      "_TODO": "Confirm with EI: does the URL response include an expiration timestamp? Does it include the token separately so we can persist it for indexed lookup, or do we parse the URL ourselves? Current Phase 1 mock returns { url, token, leadId } — real shape may be just { url }."
+    }
+  },
+
+  "_blinker_to_ghl_projection": {
+    "_principle": "Blinker DB is the source of truth for contacts, households, opportunities, vehicles, notes, activities, tags (see canon/blinker-domain.json). GHL is a downstream sync target. This block documents the LOSSY projection from the Blinker domain shape down to GHL's flat custom-field model. The Blinker → GHL syncer (TBD) reads a Blinker contact, applies these projections, and writes to GHL. Reads in the other direction (GHL → Blinker) only happen for a small set of fields that GHL is authoritative on (currently: nothing — Blinker writes everything that matters; GHL is for the agent UI inside GHL only).",
+    "_sync_direction": "Blinker → GHL (write). No automatic GHL → Blinker reads in Phase 2 design.",
+    "contact_projection": {
+      "name.first → first_name":           "Direct. Single value.",
+      "name.last → last_name":             "Direct. Single value.",
+      "name.preferred → (no GHL field)":   "Dropped. GHL has no preferred-name field. If important, projects into a 'pref:{name}' tag — pending decision.",
+      "phones → phone":                    "Lossy: only phones[is_primary] is written to GHL's single phone field. Other phones are dropped from GHL's view but remain in Blinker. Per-phone sms_consent flags are not represented in GHL.",
+      "emails → email":                    "Lossy: only emails[is_primary] is written. Same shape loss as phones.",
+      "addresses → address1/city/state/postal_code/country":  "Lossy: only addresses[is_primary]. Other addresses (mailing, secondary, previous) are dropped from GHL's view.",
+      "addresses[is_primary].ownership → ownership":          "Direct, but only for the primary address.",
+      "vehicles[0..2] → v1_*/v2_*/v3_* slots":                "Materialization: array index → numeric slot. vehicles[0] becomes v1_*, vehicles[1] becomes v2_*, vehicles[2] becomes v3_*. Vehicles beyond index 2 are dropped from GHL's view.",
+      "household_id → (no GHL field)":     "Dropped. GHL has no household concept. Household members appear in GHL as separate contacts with no relationship surfaced. Cross-contact view stays in mission-control.",
+      "household_member_ids → (no GHL field)": "Dropped. Same reason.",
+      "tags → tags":                       "Bi-directional sync. Blinker tag.name → GHL tag string. tag.category, tag.color, tag.system flag stay Blinker-side (GHL tags are flat strings). On GHL → Blinker sync, GHL-applied tags come in with source: 'ghl', system: false, category: null. Conflict policy: last-writer-wins on add; deletes are explicit (per-side) until a real conflict surfaces.",
+      "opportunity_ids → GHL opportunities":   "GHL has its own opportunity object per workflow type. The Blinker → GHL syncer creates/updates GHL opportunities to mirror Blinker opportunity records. Mapping is one-to-one (Blinker opp_id ↔ GHL opportunity_id stored as ext id). Status maps via canon/ghl-status.json (Blinker machine_id → GHL stage). DETAILED OPPORTUNITY PROJECTION lives in this file's existing opportunity_fields section.",
+      "consent → (mostly dropped)":        "GHL has no first-class consent record. TCPA / TOS / marketing consent stays Blinker-side. If a consent state needs to be visible in the GHL UI, it projects into a tag (e.g., 'consent:tcpa-v3', 'opted-out:marketing-email').",
+      "attribution_data → attribution custom fields":   "Direct. Each attribution_data key maps to its corresponding GHL custom field per the existing `attribution` block above. Blinker is authoritative even though GHL had this schema first.",
+      "external_ids.ghl_contact_id":       "This is the GHL contact GUID itself. Not projected (it IS the GHL row identity).",
+      "id → external_contact_id":          "Blinker User.id is written to GHL's external_contact_id custom field so GHL → Blinker reverse lookups work.",
+      "notes_ref / activities_ref → (not projected)":  "Notes and activities stay in Blinker. GHL's notes/activities are independent. If we need a unified view in GHL, project the most-recent-N as a single rolled-up custom field. Pending decision."
+    },
+    "_lossiness_summary": "GHL captures roughly the primary-only slice of each multi-valued field, plus one of three vehicles, plus tags. Multi-channel contact info, household relationships, per-channel consent, and full activity history are Blinker-only. Mission-control ContactProfile is the canonical full-detail view; GHL UI is for agents working inside GHL with a flattened representation.",
+    "_TODO": [
+      "Decide household projection: drop entirely (current proposal) vs synthesize a 'household:{id}' tag so contacts in the same household can be filtered in GHL.",
+      "Decide preferred-name projection: drop vs 'pref:{name}' tag vs new GHL custom field.",
+      "Decide consent projections in detail: which consent states are useful in the GHL UI vs Blinker-only.",
+      "Define the syncer's conflict policy in detail beyond tags. For now Blinker is authoritative on everything except tags."
+    ]
+  },
+
+  "_TODO": [
+    "Confirm crm_stage field is being deleted as the spreadsheet says (TODO DELETE)",
+    "Add per-org GHL location_id mapping (Apex confirmed as reWBjJ4bl9eIFdUlpl4w; others TBD)",
+    "Document the GHL custom field IDs (the GUIDs GHL assigns) once we have API write access"
+  ]
+}

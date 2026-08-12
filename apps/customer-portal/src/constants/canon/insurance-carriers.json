@@ -1,0 +1,664 @@
+{
+  "_comment": "Canonical US auto-insurance carrier registry. Created Wave 36 / v3.0.14 for the insurance quote workflow self-reported current-carrier autocomplete. carriers[] is sourced verbatim from the user-supplied auto_insurance_company_customer_dropdown.xlsx \"Customer Dropdown\" sheet — 88 customer-facing US auto-insurance brands plus 4 catch-all rows tagged category \"Form option\" (other / not_sure / self_insured / no_insurance). `id` is a stable slug derived from displayName (the four Form-option rows use fixed slugs). Shape: { id, displayName, parentGroup, website, category }.",
+  "_source": "auto_insurance_company_customer_dropdown.xlsx — primary authoritative source: NAIC 2025 Top 25 Groups by Countrywide Premium (Total Private Passenger Auto). Generated 2026-05-16.",
+  "_version_note": "Authored against canon _version 2026-05-15-v3014-insurance-quote-flow.",
+  "average_premium": {
+    "six_month_cents": 150000,
+    "_comment": "US auto-insurance average ~$1,500 per 6 months (~$250/mo, ~$3,000/yr). Used by the self-reported-premium step: slider default + helper text. Consumers derive monthly (six_month_cents / 6) and annual (six_month_cents * 2) from this single source."
+  },
+  "premium_slider": {
+    "step_cents": 1000,
+    "by_cadence": {
+      "monthly": { "min_cents": 5000, "max_cents": 150000 },
+      "6mo": { "min_cents": 30000, "max_cents": 500000 },
+      "12mo": { "min_cents": 60000, "max_cents": 500000 }
+    },
+    "_comment": "Per-cadence slider bounds for the self-reported premium ($10 step): monthly $50-$1,500; 6mo $300-$5,000; 12mo $600-$5,000. The slider re-bounds when the cadence toggle changes — clamp the current value into the new range. The value is a raw dollar amount for the selected cadence; the savings calculation normalizes it to a 6-month basis."
+  },
+  "carriers": [
+    {
+      "id": "aaa_auto_club",
+      "displayName": "AAA / Auto Club",
+      "parentGroup": "AAA / regional Auto Club",
+      "website": "https://www.aaa.com/insurance/",
+      "category": "National/Regional"
+    },
+    {
+      "id": "aaa_auto_club_enterprises",
+      "displayName": "AAA / Auto Club Enterprises",
+      "parentGroup": "Auto Club Enterprises Insurance Group",
+      "website": "https://www.ace.aaa.com/insurance.html",
+      "category": "Regional"
+    },
+    {
+      "id": "aaa_auto_club_group",
+      "displayName": "AAA / Auto Club Group",
+      "parentGroup": "Automobile Club MI Group",
+      "website": "https://www.aaa.com/insurance/",
+      "category": "Regional"
+    },
+    {
+      "id": "aaa_csaa_insurance",
+      "displayName": "AAA / CSAA Insurance",
+      "parentGroup": "CSAA Insurance Group",
+      "website": "https://www.csaa-insurance.aaa.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "acceptance_insurance",
+      "displayName": "Acceptance Insurance",
+      "parentGroup": "Acceptance Insurance",
+      "website": "https://www.acceptanceinsurance.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "acuity_insurance",
+      "displayName": "Acuity Insurance",
+      "parentGroup": "Acuity",
+      "website": "https://www.acuity.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "aegis_security_insurance",
+      "displayName": "Aegis Security Insurance",
+      "parentGroup": "Aegis Security",
+      "website": "https://www.aegisfirst.com/",
+      "category": "Specialty/Regional"
+    },
+    {
+      "id": "alfa_insurance",
+      "displayName": "Alfa Insurance",
+      "parentGroup": "Alfa Insurance Group",
+      "website": "https://www.alfainsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "allstate",
+      "displayName": "Allstate",
+      "parentGroup": "Allstate Insurance Group",
+      "website": "https://www.allstate.com/",
+      "category": "National"
+    },
+    {
+      "id": "american_family_insurance",
+      "displayName": "American Family Insurance",
+      "parentGroup": "American Family Insurance Group",
+      "website": "https://www.amfam.com/",
+      "category": "National/Regional"
+    },
+    {
+      "id": "american_modern",
+      "displayName": "American Modern",
+      "parentGroup": "American Modern Insurance Group",
+      "website": "https://www.amig.com/",
+      "category": "Specialty"
+    },
+    {
+      "id": "amica",
+      "displayName": "Amica",
+      "parentGroup": "Amica Mutual Group",
+      "website": "https://www.amica.com/",
+      "category": "National/Regional"
+    },
+    {
+      "id": "arbella_insurance",
+      "displayName": "Arbella Insurance",
+      "parentGroup": "Arbella Insurance Group",
+      "website": "https://www.arbella.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "assuranceamerica",
+      "displayName": "AssuranceAmerica",
+      "parentGroup": "AssuranceAmerica",
+      "website": "https://www.assuranceamerica.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "auto_owners_insurance",
+      "displayName": "Auto-Owners Insurance",
+      "parentGroup": "Auto-Owners Group",
+      "website": "https://www.auto-owners.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "bristol_west",
+      "displayName": "Bristol West",
+      "parentGroup": "Farmers Insurance Group",
+      "website": "https://www.bristolwest.com/",
+      "category": "Nonstandard"
+    },
+    {
+      "id": "california_casualty",
+      "displayName": "California Casualty",
+      "parentGroup": "California Casualty",
+      "website": "https://www.calcas.com/",
+      "category": "Affinity/Regional"
+    },
+    {
+      "id": "chubb",
+      "displayName": "Chubb",
+      "parentGroup": "Chubb Group",
+      "website": "https://www.chubb.com/us-en/individuals-families/products/auto-insurance.html",
+      "category": "High-net-worth"
+    },
+    {
+      "id": "clearcover",
+      "displayName": "Clearcover",
+      "parentGroup": "Clearcover",
+      "website": "https://clearcover.com/",
+      "category": "Digital"
+    },
+    {
+      "id": "connect_by_american_family",
+      "displayName": "CONNECT by American Family",
+      "parentGroup": "American Family Insurance Group",
+      "website": "https://www.connectbyamfam.com/",
+      "category": "Affinity/National"
+    },
+    {
+      "id": "country_financial",
+      "displayName": "COUNTRY Financial",
+      "parentGroup": "Country Insurance & Financial Services Group",
+      "website": "https://www.countryfinancial.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "cure_auto_insurance",
+      "displayName": "CURE Auto Insurance",
+      "parentGroup": "CURE",
+      "website": "https://www.cure.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "dairyland",
+      "displayName": "Dairyland",
+      "parentGroup": "Sentry Insurance Group",
+      "website": "https://www.dairylandinsurance.com/",
+      "category": "Nonstandard"
+    },
+    {
+      "id": "direct_auto_insurance",
+      "displayName": "Direct Auto Insurance",
+      "parentGroup": "Allstate / National General",
+      "website": "https://www.directauto.com/",
+      "category": "Nonstandard"
+    },
+    {
+      "id": "elephant_insurance",
+      "displayName": "Elephant Insurance",
+      "parentGroup": "Elephant Insurance",
+      "website": "https://www.elephant.com/",
+      "category": "Regional/Digital"
+    },
+    {
+      "id": "encompass_insurance",
+      "displayName": "Encompass Insurance",
+      "parentGroup": "Allstate Insurance Group",
+      "website": "https://www.encompassinsurance.com/",
+      "category": "National/Regional"
+    },
+    {
+      "id": "erie_insurance",
+      "displayName": "Erie Insurance",
+      "parentGroup": "Erie Insurance Group",
+      "website": "https://www.erieinsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "esurance",
+      "displayName": "Esurance",
+      "parentGroup": "Allstate Insurance Group",
+      "website": "https://www.esurance.com/",
+      "category": "Digital/National"
+    },
+    {
+      "id": "farm_bureau_insurance",
+      "displayName": "Farm Bureau Insurance",
+      "parentGroup": "State Farm Bureaus / independent state companies",
+      "website": "https://www.fbfs.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "farm_bureau_insurance_of_tennessee",
+      "displayName": "Farm Bureau Insurance of Tennessee",
+      "parentGroup": "Tennessee Farmers Insurance Companies",
+      "website": "https://www.fbitn.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "farmers_insurance",
+      "displayName": "Farmers Insurance",
+      "parentGroup": "Farmers Insurance Group",
+      "website": "https://www.farmers.com/",
+      "category": "National"
+    },
+    {
+      "id": "florida_farm_bureau_insurance",
+      "displayName": "Florida Farm Bureau Insurance",
+      "parentGroup": "Florida Farm Bureau Insurance",
+      "website": "https://www.floridafarmbureau.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "foremost_insurance",
+      "displayName": "Foremost Insurance",
+      "parentGroup": "Farmers Insurance Group",
+      "website": "https://www.foremost.com/",
+      "category": "Specialty/National"
+    },
+    {
+      "id": "frankenmuth_insurance",
+      "displayName": "Frankenmuth Insurance",
+      "parentGroup": "Frankenmuth Insurance",
+      "website": "https://www.fmins.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "fred_loya_insurance",
+      "displayName": "Fred Loya Insurance",
+      "parentGroup": "Fred Loya Insurance",
+      "website": "https://www.fredloya.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "gainsco_auto_insurance",
+      "displayName": "Gainsco Auto Insurance",
+      "parentGroup": "GAINSCO / State Farm",
+      "website": "https://www.gainsco.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "geico",
+      "displayName": "GEICO",
+      "parentGroup": "Berkshire Hathaway Group",
+      "website": "https://www.geico.com/",
+      "category": "National"
+    },
+    {
+      "id": "goauto_insurance",
+      "displayName": "GoAuto Insurance",
+      "parentGroup": "GoAuto Insurance",
+      "website": "https://www.goautoinsurance.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "good2go_auto_insurance",
+      "displayName": "Good2Go Auto Insurance",
+      "parentGroup": "Good2Go",
+      "website": "https://www.good2go.com/",
+      "category": "Nonstandard"
+    },
+    {
+      "id": "grange_insurance",
+      "displayName": "Grange Insurance",
+      "parentGroup": "Grange Insurance",
+      "website": "https://www.grangeinsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "grinnell_mutual",
+      "displayName": "Grinnell Mutual",
+      "parentGroup": "Grinnell Mutual",
+      "website": "https://www.grinnellmutual.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "hagerty",
+      "displayName": "Hagerty",
+      "parentGroup": "Hagerty",
+      "website": "https://www.hagerty.com/insurance/classic-car-insurance",
+      "category": "Collector/Specialty"
+    },
+    {
+      "id": "hallmark_insurance",
+      "displayName": "Hallmark Insurance",
+      "parentGroup": "Hallmark Financial",
+      "website": "https://www.hallmarkgrp.com/",
+      "category": "Nonstandard/Specialty"
+    },
+    {
+      "id": "horace_mann",
+      "displayName": "Horace Mann",
+      "parentGroup": "Horace Mann",
+      "website": "https://www.horacemann.com/",
+      "category": "Affinity"
+    },
+    {
+      "id": "infinity_auto",
+      "displayName": "Infinity Auto",
+      "parentGroup": "Kemper Corporation Group",
+      "website": "https://www.infinityauto.com/",
+      "category": "Nonstandard"
+    },
+    {
+      "id": "kemper_auto",
+      "displayName": "Kemper Auto",
+      "parentGroup": "Kemper Corporation Group",
+      "website": "https://www.kemper.com/",
+      "category": "Nonstandard/National"
+    },
+    {
+      "id": "lemonade_car",
+      "displayName": "Lemonade Car",
+      "parentGroup": "Lemonade",
+      "website": "https://www.lemonade.com/car",
+      "category": "Digital"
+    },
+    {
+      "id": "liberty_mutual",
+      "displayName": "Liberty Mutual",
+      "parentGroup": "Liberty Mutual Group",
+      "website": "https://www.libertymutual.com/",
+      "category": "National"
+    },
+    {
+      "id": "loya_insurance_company",
+      "displayName": "Loya Insurance Company",
+      "parentGroup": "Loya Insurance",
+      "website": "https://www.loyainsurance.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "mapfre_insurance",
+      "displayName": "MAPFRE Insurance",
+      "parentGroup": "MAPFRE Insurance Group",
+      "website": "https://www.mapfreinsurance.com/",
+      "category": "Regional/National"
+    },
+    {
+      "id": "mercury_insurance",
+      "displayName": "Mercury Insurance",
+      "parentGroup": "Mercury General Group",
+      "website": "https://www.mercuryinsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "metlife_auto_home",
+      "displayName": "MetLife Auto & Home",
+      "parentGroup": "Farmers Insurance Group",
+      "website": "https://www.farmers.com/metlife/",
+      "category": "Legacy/Affinity"
+    },
+    {
+      "id": "mile_auto",
+      "displayName": "Mile Auto",
+      "parentGroup": "Mile Auto",
+      "website": "https://mileauto.com/",
+      "category": "Pay-per-mile/Digital"
+    },
+    {
+      "id": "mutual_of_enumclaw",
+      "displayName": "Mutual of Enumclaw",
+      "parentGroup": "Mutual of Enumclaw",
+      "website": "https://mutualofenumclaw.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "national_general",
+      "displayName": "National General",
+      "parentGroup": "Allstate Insurance Group",
+      "website": "https://nationalgeneral.com/",
+      "category": "National/Nonstandard"
+    },
+    {
+      "id": "nationwide",
+      "displayName": "Nationwide",
+      "parentGroup": "Nationwide Corporation Group",
+      "website": "https://www.nationwide.com/",
+      "category": "National"
+    },
+    {
+      "id": "njm_insurance",
+      "displayName": "NJM Insurance",
+      "parentGroup": "New Jersey Manufacturers Group",
+      "website": "https://www.njm.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "nodak_insurance_company",
+      "displayName": "Nodak Insurance Company",
+      "parentGroup": "Nodak Insurance Group",
+      "website": "https://www.nodakins.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "north_carolina_farm_bureau",
+      "displayName": "North Carolina Farm Bureau",
+      "parentGroup": "NC Farm Bureau Mutual Insurance",
+      "website": "https://www.ncfbins.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "plymouth_rock_assurance",
+      "displayName": "Plymouth Rock Assurance",
+      "parentGroup": "Plymouth Rock",
+      "website": "https://www.plymouthrock.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "progressive",
+      "displayName": "Progressive",
+      "parentGroup": "Progressive Group",
+      "website": "https://www.progressive.com/",
+      "category": "National"
+    },
+    {
+      "id": "pure_insurance",
+      "displayName": "PURE Insurance",
+      "parentGroup": "Tokio Marine / PURE Group",
+      "website": "https://www.pureinsurance.com/",
+      "category": "High-net-worth"
+    },
+    {
+      "id": "root_insurance",
+      "displayName": "Root Insurance",
+      "parentGroup": "Root",
+      "website": "https://www.joinroot.com/",
+      "category": "Digital"
+    },
+    {
+      "id": "safeauto",
+      "displayName": "SafeAuto",
+      "parentGroup": "Direct Auto / Allstate",
+      "website": "https://www.safeauto.com/",
+      "category": "Nonstandard"
+    },
+    {
+      "id": "safeco",
+      "displayName": "Safeco",
+      "parentGroup": "Liberty Mutual Group",
+      "website": "https://www.safeco.com/",
+      "category": "National/Independent agent"
+    },
+    {
+      "id": "safety_insurance",
+      "displayName": "Safety Insurance",
+      "parentGroup": "Safety Insurance Group",
+      "website": "https://www.safetyinsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "secura_insurance",
+      "displayName": "SECURA Insurance",
+      "parentGroup": "SECURA Insurance",
+      "website": "https://www.secura.net/",
+      "category": "Regional"
+    },
+    {
+      "id": "shelter_insurance",
+      "displayName": "Shelter Insurance",
+      "parentGroup": "Shelter Insurance Group",
+      "website": "https://www.shelterinsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "state_auto",
+      "displayName": "State Auto",
+      "parentGroup": "Liberty Mutual Group",
+      "website": "https://www.stateauto.com/",
+      "category": "Regional/Legacy"
+    },
+    {
+      "id": "state_farm",
+      "displayName": "State Farm",
+      "parentGroup": "State Farm Group",
+      "website": "https://www.statefarm.com/",
+      "category": "National"
+    },
+    {
+      "id": "stillwater_insurance",
+      "displayName": "Stillwater Insurance",
+      "parentGroup": "Stillwater",
+      "website": "https://www.stillwaterinsurance.com/",
+      "category": "Regional/National"
+    },
+    {
+      "id": "tesla_insurance",
+      "displayName": "Tesla Insurance",
+      "parentGroup": "Tesla Insurance",
+      "website": "https://www.tesla.com/insurance",
+      "category": "Digital/OEM"
+    },
+    {
+      "id": "texas_farm_bureau_insurance",
+      "displayName": "Texas Farm Bureau Insurance",
+      "parentGroup": "Texas Farm Bureau Insurance",
+      "website": "https://www.txfb-ins.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "the_general",
+      "displayName": "The General",
+      "parentGroup": "American Family Insurance Group",
+      "website": "https://www.thegeneral.com/",
+      "category": "Nonstandard/National"
+    },
+    {
+      "id": "the_hanover",
+      "displayName": "The Hanover",
+      "parentGroup": "The Hanover Insurance Group",
+      "website": "https://www.hanover.com/",
+      "category": "Regional/National"
+    },
+    {
+      "id": "the_hartford",
+      "displayName": "The Hartford",
+      "parentGroup": "Hartford Fire & Casualty Group",
+      "website": "https://www.thehartford.com/",
+      "category": "National"
+    },
+    {
+      "id": "toggle",
+      "displayName": "Toggle",
+      "parentGroup": "Farmers Insurance Group",
+      "website": "https://www.gettoggle.com/",
+      "category": "Digital"
+    },
+    {
+      "id": "travelers",
+      "displayName": "Travelers",
+      "parentGroup": "Travelers Group",
+      "website": "https://www.travelers.com/",
+      "category": "National"
+    },
+    {
+      "id": "united_automobile_insurance_company",
+      "displayName": "United Automobile Insurance Company",
+      "parentGroup": "UAIC",
+      "website": "https://www.uaig.net/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "united_fire_group",
+      "displayName": "United Fire Group",
+      "parentGroup": "UFG Insurance",
+      "website": "https://www.ufginsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "united_heritage_insurance",
+      "displayName": "United Heritage Insurance",
+      "parentGroup": "United Heritage",
+      "website": "https://www.unitedheritage.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "usaa",
+      "displayName": "USAA",
+      "parentGroup": "United Services Automobile Association Group",
+      "website": "https://www.usaa.com/",
+      "category": "National/Military affinity"
+    },
+    {
+      "id": "utica_national_insurance_group",
+      "displayName": "Utica National Insurance Group",
+      "parentGroup": "Utica National",
+      "website": "https://www.uticanational.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "wawanesa_insurance",
+      "displayName": "Wawanesa Insurance",
+      "parentGroup": "Wawanesa",
+      "website": "https://www.wawanesa.com/us/",
+      "category": "Regional"
+    },
+    {
+      "id": "west_bend_insurance",
+      "displayName": "West Bend Insurance",
+      "parentGroup": "West Bend",
+      "website": "https://www.thesilverlining.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "westfield_insurance",
+      "displayName": "Westfield Insurance",
+      "parentGroup": "Westfield",
+      "website": "https://www.westfieldinsurance.com/",
+      "category": "Regional"
+    },
+    {
+      "id": "workmen_s_auto_insurance",
+      "displayName": "Workmen's Auto Insurance",
+      "parentGroup": "Workmen's Auto",
+      "website": "https://www.workmensauto.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "young_america_insurance",
+      "displayName": "Young America Insurance",
+      "parentGroup": "Young America / Fred Loya",
+      "website": "https://www.youngamericaauto.com/",
+      "category": "Nonstandard/Regional"
+    },
+    {
+      "id": "other",
+      "displayName": "Other / Not listed",
+      "parentGroup": null,
+      "website": null,
+      "category": "Form option"
+    },
+    {
+      "id": "not_sure",
+      "displayName": "Not sure",
+      "parentGroup": null,
+      "website": null,
+      "category": "Form option"
+    },
+    {
+      "id": "self_insured",
+      "displayName": "Self-insured / Fleet policy",
+      "parentGroup": null,
+      "website": null,
+      "category": "Form option"
+    },
+    {
+      "id": "no_insurance",
+      "displayName": "No current insurance",
+      "parentGroup": null,
+      "website": null,
+      "category": "Form option"
+    }
+  ]
+}

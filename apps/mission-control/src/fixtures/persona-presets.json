@@ -1,0 +1,239 @@
+{
+  "_DEPRECATED_DELETE_AFTER_VERIFY": [
+    "================================================================",
+    "DEPRECATED — DELETE AFTER VERIFY (Wave 20, 2026-05-08).",
+    "Source-of-truth for persona presets is now canon at:",
+    "  canon/personas.json#personas.<persona_id>.presets",
+    "(synced into src/constants/canon/personas.json).",
+    "src/lib/super-admin-storage.js#listPresets reads canon directly.",
+    "This fixture is no longer imported anywhere; left in place for one",
+    "smoke-verify cycle so the user can confirm preset behavior is",
+    "unchanged before the file is deleted.",
+    "================================================================"
+  ],
+  "_CANON_TODO_HISTORICAL": [
+    "================================================================",
+    "[HISTORICAL — RESOLVED 2026-05-08]",
+    "CANON _TODO — invented in mc Wave 19 Task 6 (super-admin shell).",
+    "Promote this fixture to canon/personas.json once product reviews.",
+    "================================================================",
+    "",
+    "PROPOSED CANON BLOCK SHAPE for canon/personas.json:",
+    "",
+    "  personas.<persona_id>.presets : Preset[]",
+    "",
+    "  where Preset = {",
+    "    id:           string  — stable snake_case id, globally unique within the persona",
+    "    label:        string  — human display label (sentence case)",
+    "    description:  string  — one-sentence intent",
+    "    badges:       string[] — subset of canon/badges.json badge ids",
+    "    is_default:   boolean? — exactly one preset per persona may carry true; UI seeds new users on this preset",
+    "  }",
+    "",
+    "Example (super_admin) would land at canon/personas.json#personas.super_admin.presets:",
+    "  [",
+    "    { id: 'super_admin_full',     label: 'Full', description: '...', badges: [...], is_default: true },",
+    "    { id: 'super_admin_readonly', label: 'Read-only', description: '...', badges: [...] }",
+    "  ]",
+    "",
+    "MIGRATION:",
+    "  1. Move each persona's preset[] from this fixture into canon/personas.json under personas.<persona>.presets.",
+    "  2. Bump canon/_version (ISO date + tag).",
+    "  3. Run scripts/sync-canon-into-apps.sh.",
+    "  4. Replace src/fixtures/persona-presets.json reads with canon reads in",
+    "     src/lib/super-admin-storage.js (listPresets) and",
+    "     src/personas/super/UserDirectory.jsx (preset dropdown).",
+    "  5. Delete this fixture.",
+    "",
+    "OPEN QUESTIONS for product:",
+    "  - Should presets cascade: e.g. an Apex 'agent_lead' preset overrides the canon 'agent_lead' for org 102 only? Today flat: one preset list per persona, applies platform-wide.",
+    "  - Should removed_badges live on the preset or stay user-level only? Today: presets are additive-only (a badge subset); per-user added/removed overrides remain on the user record.",
+    "  - Should the 'consumer' persona have presets? Today: omitted (consumers don't sit in mc UserDirectory).",
+    "================================================================"
+  ],
+  "_comment": "Fixture for Wave 19 Task 6 super-admin User Directory. Each persona gets 2-3 named presets that bundle a subset of the persona's full canon permissions. UI: when an admin assigns a user to a persona, they pick a preset from a dropdown; the preset determines which permissions get applied. Badge ids must exist in canon/badges.json. See _CANON_TODO above for promotion plan.",
+  "_version": "2026-05-08-wave19-task6-init",
+  "presets": {
+    "super_admin": [
+      {
+        "id": "super_admin_full",
+        "label": "Full Super Admin",
+        "description": "Every super-admin badge. Default for new super-admin users.",
+        "is_default": true,
+        "badges": [
+          "view_all_orgs",
+          "edit_canon",
+          "view_audit_trail",
+          "view_audit_log",
+          "view_api_responses",
+          "view_integration_credentials",
+          "manage_admins",
+          "view_system_health",
+          "edit_integrations",
+          "edit_org_config",
+          "manage_sub_orgs",
+          "toggle_test_mode",
+          "impersonate_user",
+          "add_tags",
+          "create_tags"
+        ]
+      },
+      {
+        "id": "super_admin_readonly",
+        "label": "Read-only Super Admin",
+        "description": "Cross-org visibility + audit access without write or impersonation.",
+        "badges": [
+          "view_all_orgs",
+          "view_audit_trail",
+          "view_audit_log",
+          "view_api_responses",
+          "view_system_health"
+        ]
+      }
+    ],
+    "admin": [
+      {
+        "id": "admin_full",
+        "label": "Full Org Admin",
+        "description": "Standard org admin. Manages users, integrations, sub-orgs, and config.",
+        "is_default": true,
+        "badges": [
+          "view_own_org",
+          "view_child_orgs",
+          "view_admin_console",
+          "view_audit_log",
+          "edit_org_config",
+          "edit_integrations",
+          "manage_org_users",
+          "manage_sub_orgs",
+          "toggle_test_mode",
+          "configure_gateways",
+          "configure_routing",
+          "view_org_analytics",
+          "view_api_responses",
+          "suspend_user",
+          "add_tags",
+          "create_tags"
+        ]
+      },
+      {
+        "id": "admin_users_only",
+        "label": "User Admin",
+        "description": "Limited admin focused on user lifecycle. No integration or config edits.",
+        "badges": [
+          "view_own_org",
+          "view_admin_console",
+          "view_audit_log",
+          "manage_org_users",
+          "suspend_user",
+          "add_tags"
+        ]
+      },
+      {
+        "id": "admin_billing",
+        "label": "Billing Admin",
+        "description": "Org config + integrations focus, no user management.",
+        "badges": [
+          "view_own_org",
+          "view_admin_console",
+          "view_audit_log",
+          "edit_org_config",
+          "edit_integrations",
+          "configure_gateways",
+          "configure_routing",
+          "view_org_analytics"
+        ]
+      }
+    ],
+    "manager": [
+      {
+        "id": "manager_standard",
+        "label": "Standard Manager",
+        "description": "Manages a team of agents with full team analytics.",
+        "is_default": true,
+        "badges": [
+          "view_own_org",
+          "manage_agents",
+          "assign_opportunities",
+          "view_team_analytics",
+          "add_tags",
+          "create_tags"
+        ]
+      },
+      {
+        "id": "manager_lead",
+        "label": "Lead Manager",
+        "description": "Senior manager — adds API-response visibility for triage.",
+        "badges": [
+          "view_own_org",
+          "manage_agents",
+          "assign_opportunities",
+          "view_team_analytics",
+          "view_api_responses",
+          "add_tags",
+          "create_tags"
+        ]
+      },
+      {
+        "id": "manager_assign_only",
+        "label": "Assignment Coordinator",
+        "description": "Routes opportunities; no team analytics.",
+        "badges": [
+          "view_own_org",
+          "assign_opportunities",
+          "add_tags"
+        ]
+      }
+    ],
+    "agent": [
+      {
+        "id": "agent_standard",
+        "label": "Standard Agent",
+        "description": "Daily-driver opportunity inbox + co-pilot. Default for new agents.",
+        "is_default": true,
+        "badges": [
+          "view_own_opportunities",
+          "view_assigned_contacts",
+          "edit_opportunities",
+          "send_consumer_links",
+          "co_pilot_consumer_session",
+          "add_notes",
+          "add_tags"
+        ]
+      },
+      {
+        "id": "agent_lead",
+        "label": "Lead Agent",
+        "description": "Tenured agent — adds API-response visibility and tag creation for handling escalations.",
+        "badges": [
+          "view_own_opportunities",
+          "view_assigned_contacts",
+          "edit_opportunities",
+          "send_consumer_links",
+          "co_pilot_consumer_session",
+          "add_notes",
+          "add_tags",
+          "create_tags",
+          "view_api_responses"
+        ]
+      },
+      {
+        "id": "agent_admin_assistant",
+        "label": "Agent / Admin Assistant",
+        "description": "Agent who also helps with org-config admin tasks. Subset of admin badges layered on agent.",
+        "badges": [
+          "view_own_opportunities",
+          "view_assigned_contacts",
+          "edit_opportunities",
+          "send_consumer_links",
+          "co_pilot_consumer_session",
+          "add_notes",
+          "add_tags",
+          "view_admin_console",
+          "view_audit_log",
+          "manage_org_users"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1453 @@
+{
+  "_comment": "Phase-1 opportunities fixture for the blinker-platform domain SDK. Each opportunity is the unit of work for an agent — replaces the legacy flat Products Dashboard. Status values must match canon/ghl-status.json for the corresponding type. The `payments` type has no GHL canon yet (it's an EFS construct); statuses use the EFS prototype set. Migrated from mission-control/src/fixtures/opportunities.json (Wave 18) and expanded with 7 new opps that exercise: protection Empty/Booked, refi Started/Self Reported Credit, insurance Quote Viewed/Policy Written. Wave 26a fu4: added 33 more opps (opp_vsc_101–opp_vsc_121, opp_refi_101–opp_refi_114, opp_ins_101–opp_ins_109, opp_pay_101–opp_pay_102) to hit ~50 total; spread across all canonical statuses with 6+ lost opps for Home KPI.",
+  "_dateBasis": "2026-05-08",
+  "_test_case_principle": "Each opportunity carries an optional `_test_case: <slug>` annotation describing what scenario it exercises (resume-at-billing, post-sale-awaiting-remit, …). Underscore prefix means validate-fixtures.js treats it as meta. AgentInbox renders `_test_case` as a tooltip on the Type pill ONLY when the active org has `test_mode: true`. opp_refi_004 (Started) deliberately has NO entries in notes.json to cover the 'opportunities without notes' test case.",
+  "opportunities": [
+    {
+      "id": "opp_vsc_001",
+      "_test_case": "resume-at-signature-followup",
+      "type": "protection",
+      "contact_id": "ct_alvarez",
+      "contact_name": "Maria Alvarez",
+      "household": "Alvarez Household",
+      "vehicle": "2022 Toyota RAV4",
+      "status": "Sent to Consumer",
+      "owner": "Jordan Reese",
+      "created_at": "2026-04-29T15:12:00Z",
+      "updated_at": "2026-05-01T18:42:00Z",
+      "value": 2895,
+      "next_action": "Follow up on signature",
+      "deadline": "2026-05-05T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 5,
+        "furthest_step_key": "confirm",
+        "updated_at": "2026-05-01T18:42:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_002",
+      "_test_case": "resume-at-send-package",
+      "type": "protection",
+      "contact_id": "ct_chen",
+      "contact_name": "Wei Chen",
+      "household": "Chen Household",
+      "vehicle": "2019 Honda Pilot",
+      "status": "Quoted",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-02T09:08:00Z",
+      "updated_at": "2026-05-02T09:08:00Z",
+      "value": 3250,
+      "next_action": "Send package to consumer",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 4,
+        "furthest_step_key": "recommended_coverage",
+        "updated_at": "2026-05-02T09:08:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_003",
+      "_test_case": "resume-at-payment-recovery",
+      "type": "protection",
+      "contact_id": "ct_okafor",
+      "contact_name": "Ade Okafor",
+      "household": "Okafor Household",
+      "vehicle": "2024 Ford F-150",
+      "status": "Payment Failed",
+      "owner": "Sam Patel",
+      "created_at": "2026-04-21T14:00:00Z",
+      "updated_at": "2026-04-30T11:21:00Z",
+      "value": 4120,
+      "next_action": "Recover payment or close",
+      "deadline": "2026-05-03T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 6,
+        "furthest_step_key": "billing_payment",
+        "updated_at": "2026-04-30T11:21:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_004",
+      "_test_case": "post-sale-awaiting-remit",
+      "type": "protection",
+      "contact_id": "ct_nguyen",
+      "contact_name": "Linh Nguyen",
+      "household": "Nguyen Household",
+      "vehicle": "2021 Subaru Outback",
+      "status": "Agreement Signed",
+      "owner": "Sam Patel",
+      "created_at": "2026-04-18T10:45:00Z",
+      "updated_at": "2026-05-01T16:02:00Z",
+      "value": 2740,
+      "next_action": "Awaiting remit (system)",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-05-01T16:02:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_005",
+      "_test_case": "vehicle-without-vin",
+      "type": "protection",
+      "contact_id": "ct_manual_ymmt",
+      "contact_name": "Beatriz Santos",
+      "household": "Santos Household",
+      "vehicle": "2016 Ford Explorer",
+      "status": "Empty",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-07T14:12:00Z",
+      "updated_at": "2026-05-07T14:12:00Z",
+      "value": null,
+      "next_action": "Decode manually-entered YMMT and generate quote",
+      "deadline": null
+    },
+    {
+      "id": "opp_vsc_006",
+      "_test_case": "vehicle-without-mileage",
+      "type": "protection",
+      "contact_id": "ct_no_mileage",
+      "contact_name": "Marcus Holloway",
+      "household": "Holloway Household",
+      "vehicle": "2020 Ford Mustang EcoBoost",
+      "vehicle_id": "veh_hol_mustang",
+      "status": "Quoted",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-06T16:42:00Z",
+      "updated_at": "2026-05-06T16:42:00Z",
+      "value": 2980,
+      "next_action": "Capture mileage before send to consumer",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 4,
+        "furthest_step_key": "recommended_coverage",
+        "updated_at": "2026-05-06T16:42:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_007",
+      "_test_case": "resume-at-billing",
+      "type": "protection",
+      "contact_id": "ct_protection_booked",
+      "contact_name": "Yuki Tanaka",
+      "household": "Tanaka Household",
+      "vehicle": "2021 Toyota Highlander",
+      "status": "Booked",
+      "owner": "Sam Patel",
+      "created_at": "2026-05-03T13:22:00Z",
+      "updated_at": "2026-05-07T11:00:00Z",
+      "value": 3415,
+      "next_action": "Collect signature + billing details",
+      "deadline": "2026-05-10T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 6,
+        "furthest_step_key": "billing_payment",
+        "updated_at": "2026-05-07T11:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_001",
+      "_test_case": "resume-at-offer-walkthrough",
+      "type": "refi",
+      "contact_id": "ct_alvarez",
+      "contact_name": "Maria Alvarez",
+      "household": "Alvarez Household",
+      "vehicle": "2022 Toyota RAV4",
+      "status": "Offers Returned",
+      "owner": "Jordan Reese",
+      "created_at": "2026-04-30T13:00:00Z",
+      "updated_at": "2026-05-02T08:30:00Z",
+      "value": 18400,
+      "next_action": "Walk consumer through offers",
+      "deadline": "2026-05-04T23:59:59Z",
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-05-02T08:30:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_002",
+      "_test_case": "resume-at-doc-followup",
+      "type": "refi",
+      "contact_id": "ct_brooks",
+      "contact_name": "Tasha Brooks",
+      "household": "Brooks Household",
+      "vehicle": "2020 Chevy Equinox",
+      "status": "Working - Waiting on Customer",
+      "owner": "Sam Patel",
+      "created_at": "2026-04-12T09:30:00Z",
+      "updated_at": "2026-04-28T17:15:00Z",
+      "value": 14200,
+      "next_action": "Need pay stub upload",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-04-28T17:15:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_003",
+      "_test_case": "post-sale-refi-funded",
+      "type": "refi",
+      "contact_id": "ct_pham",
+      "contact_name": "Kevin Pham",
+      "household": "Pham Household",
+      "vehicle": "2023 Tesla Model Y",
+      "status": "Funded",
+      "owner": "Devon Lee",
+      "created_at": "2026-03-22T11:00:00Z",
+      "updated_at": "2026-04-15T14:50:00Z",
+      "value": 32100,
+      "next_action": "Closed — review for upsell",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-04-15T14:50:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_004",
+      "_test_case": "resume-at-refi-intake",
+      "type": "refi",
+      "contact_id": "ct_refi_started",
+      "contact_name": "Hannah Becker",
+      "household": "Becker Household",
+      "vehicle": "2022 Honda Civic",
+      "status": "Started",
+      "owner": "Devon Lee",
+      "created_at": "2026-05-08T08:15:00Z",
+      "updated_at": "2026-05-08T08:17:00Z",
+      "value": null,
+      "next_action": "Begin ownership eligibility intake",
+      "deadline": null
+    },
+    {
+      "id": "opp_refi_005",
+      "_test_case": "resume-at-credit-step",
+      "type": "refi",
+      "contact_id": "ct_refi_credit",
+      "contact_name": "Daniel Kowalski",
+      "household": "Kowalski Household",
+      "vehicle": "2020 Audi Q5",
+      "status": "Self Reported Credit",
+      "owner": "Devon Lee",
+      "created_at": "2026-05-05T10:00:00Z",
+      "updated_at": "2026-05-07T15:30:00Z",
+      "value": 22100,
+      "next_action": "Validate self-reported credit; advance to housing",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 4,
+        "furthest_step_key": "s1_credit",
+        "updated_at": "2026-05-07T15:30:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_001",
+      "_test_case": "resume-at-link-engagement-wait",
+      "type": "insurance",
+      "contact_id": "ct_chen",
+      "contact_name": "Wei Chen",
+      "household": "Chen Household",
+      "vehicle": "2019 Honda Pilot",
+      "status": "Quote Link Sent",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-01T16:10:00Z",
+      "updated_at": "2026-05-01T16:10:00Z",
+      "value": null,
+      "next_action": "Wait for consumer click",
+      "deadline": null,
+      "flowPath": "quote_only",
+      "current_insurance": {
+        "carrierId": "state_farm",
+        "carrier": "State Farm",
+        "premiumCents": 150000,
+        "cadence": "6mo"
+      }
+    },
+    {
+      "id": "opp_ins_002",
+      "_test_case": "resume-at-quote-review",
+      "type": "insurance",
+      "contact_id": "ct_marquez",
+      "contact_name": "Rosa Marquez",
+      "household": "Marquez Household",
+      "vehicle": "2018 Mazda CX-5",
+      "status": "Quoted",
+      "owner": "Devon Lee",
+      "created_at": "2026-04-25T12:20:00Z",
+      "updated_at": "2026-04-30T10:05:00Z",
+      "value": null,
+      "next_action": "Review quote with customer",
+      "deadline": "2026-05-06T23:59:59Z",
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "GEICO",
+              "policyNumber": "GC-2284-118",
+              "vehicles": [
+                {
+                  "year": 2018,
+                  "make": "Mazda",
+                  "model": "CX-5"
+                }
+              ]
+            },
+            "source": "id-card",
+            "media": [
+              {
+                "type": "id-card",
+                "url": "https://ei.example.com/id-cards/opp_ins_002.jpg"
+              }
+            ],
+            "verifiedAt": "2026-04-29T16:40:00Z"
+          }
+        },
+        "quote": {
+          "payload": {
+            "carrier": "Progressive",
+            "totalPremiumCents": 118400,
+            "savingsAmountCents": 22600,
+            "createdAt": "2026-04-30T10:02:00Z"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_ins_003",
+      "_test_case": "resume-at-quote-followup",
+      "type": "insurance",
+      "contact_id": "ct_ins_quote_viewed",
+      "contact_name": "Olivia Carrington",
+      "household": "Carrington Household",
+      "vehicle": "2022 Volvo XC60",
+      "status": "Quote Viewed",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-06T12:05:00Z",
+      "updated_at": "2026-05-08T07:45:00Z",
+      "value": null,
+      "next_action": "Follow up — consumer viewed quote, ask if ready to bind",
+      "deadline": "2026-05-12T23:59:59Z",
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "State Farm",
+              "policyNumber": "SF-90871-22",
+              "vehicles": [
+                {
+                  "year": 2022,
+                  "make": "Volvo",
+                  "model": "XC60"
+                }
+              ]
+            },
+            "source": "id-card",
+            "media": [
+              {
+                "type": "id-card",
+                "url": "https://ei.example.com/id-cards/opp_ins_003.jpg"
+              }
+            ],
+            "verifiedAt": "2026-05-07T13:15:00Z"
+          }
+        },
+        "quote": {
+          "payload": {
+            "carrier": "GEICO",
+            "totalPremiumCents": 134900,
+            "savingsAmountCents": 31200,
+            "createdAt": "2026-05-07T13:30:00Z",
+            "viewedAt": "2026-05-08T07:44:00Z"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_ins_004",
+      "_test_case": "post-sale-insurance",
+      "type": "insurance",
+      "contact_id": "ct_ins_policy_written",
+      "contact_name": "Greg Watson",
+      "household": "Watson Household",
+      "vehicle": "2019 Toyota 4Runner",
+      "status": "Policy Written",
+      "owner": "Devon Lee",
+      "created_at": "2026-04-22T15:05:00Z",
+      "updated_at": "2026-05-04T09:10:00Z",
+      "value": null,
+      "next_action": "Closed — review for cross-sell (VSC)",
+      "deadline": null,
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "Allstate",
+              "policyNumber": "AL-55218-09",
+              "vehicles": [
+                {
+                  "year": 2019,
+                  "make": "Toyota",
+                  "model": "4Runner"
+                }
+              ]
+            },
+            "source": "third-party",
+            "verifiedAt": "2026-05-02T11:20:00Z"
+          }
+        },
+        "quote": {
+          "payload": {
+            "carrier": "Progressive",
+            "totalPremiumCents": 142500,
+            "savingsAmountCents": 28800,
+            "createdAt": "2026-05-02T11:35:00Z",
+            "viewedAt": "2026-05-03T09:05:00Z"
+          }
+        },
+        "policy": {
+          "payload": {
+            "carrier": "Progressive",
+            "id": "policy_4a7c2e9b"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_pay_001",
+      "_test_case": "resume-at-decline-recovery",
+      "type": "payments",
+      "contact_id": "ct_okafor",
+      "contact_name": "Ade Okafor",
+      "household": "Okafor Household",
+      "vehicle": "2024 Ford F-150",
+      "status": "Late",
+      "owner": "Sam Patel",
+      "created_at": "2026-04-21T14:05:00Z",
+      "updated_at": "2026-05-02T07:00:00Z",
+      "value": 412,
+      "next_action": "Decline recovery — call consumer",
+      "deadline": "2026-05-03T23:59:59Z"
+    },
+    {
+      "id": "opp_vsc_101",
+      "type": "protection",
+      "contact_id": "ct_morgan_1",
+      "contact_name": "Casey Morgan",
+      "household": "Morgan Household",
+      "vehicle": "2020 Ford Explorer",
+      "status": "Active",
+      "owner": "Casey Morgan",
+      "created_at": "2026-03-10T09:05:00Z",
+      "updated_at": "2026-04-01T10:00:00Z",
+      "value": 2640,
+      "next_action": "Active client — review at renewal",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-04-01T10:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_101",
+      "type": "refi",
+      "contact_id": "ct_morgan_1",
+      "contact_name": "Casey Morgan",
+      "household": "Morgan Household",
+      "vehicle": "2017 Toyota Tacoma",
+      "status": "Declined",
+      "owner": "Casey Morgan",
+      "created_at": "2026-02-20T11:00:00Z",
+      "updated_at": "2026-03-05T09:00:00Z",
+      "value": null,
+      "next_action": "Declined by lender — re-engage in 6 months",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-03-05T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_101",
+      "type": "insurance",
+      "contact_id": "ct_morgan_2",
+      "contact_name": "Jordan Morgan",
+      "household": "Morgan Household",
+      "vehicle": "2021 Honda CR-V",
+      "status": "Policy Written",
+      "owner": "Casey Morgan",
+      "created_at": "2026-03-11T10:05:00Z",
+      "updated_at": "2026-04-10T09:00:00Z",
+      "value": null,
+      "next_action": "Closed — follow up for VSC cross-sell",
+      "deadline": null,
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "Liberty Mutual",
+              "policyNumber": "LM-71240-31",
+              "vehicles": [
+                {
+                  "year": 2021,
+                  "make": "Honda",
+                  "model": "CR-V"
+                }
+              ]
+            },
+            "source": "id-card",
+            "media": [
+              {
+                "type": "id-card",
+                "url": "https://ei.example.com/id-cards/opp_ins_101.jpg"
+              }
+            ],
+            "verifiedAt": "2026-04-08T10:10:00Z"
+          }
+        },
+        "quote": {
+          "payload": {
+            "carrier": "GEICO",
+            "totalPremiumCents": 121000,
+            "savingsAmountCents": 24300,
+            "createdAt": "2026-04-08T10:25:00Z",
+            "viewedAt": "2026-04-09T15:40:00Z"
+          }
+        },
+        "policy": {
+          "payload": {
+            "carrier": "GEICO",
+            "id": "policy_b93f1d07"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_refi_102",
+      "type": "refi",
+      "contact_id": "ct_riley_chen",
+      "contact_name": "Riley Chen",
+      "household": "Chen Household",
+      "vehicle": "2022 Tesla Model 3",
+      "status": "Offers Returned",
+      "owner": "Riley Chen",
+      "created_at": "2026-04-05T11:05:00Z",
+      "updated_at": "2026-05-06T16:00:00Z",
+      "value": 24100,
+      "next_action": "Walk consumer through 2 offers",
+      "deadline": "2026-05-14T23:59:59Z",
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-05-06T16:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_102",
+      "type": "protection",
+      "contact_id": "ct_riley_chen",
+      "contact_name": "Riley Chen",
+      "household": "Chen Household",
+      "vehicle": "2022 Tesla Model 3",
+      "status": "Selected",
+      "owner": "Riley Chen",
+      "created_at": "2026-04-20T14:00:00Z",
+      "updated_at": "2026-05-01T10:00:00Z",
+      "value": 3180,
+      "next_action": "Consumer selected plan — send package",
+      "deadline": "2026-05-08T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 5,
+        "furthest_step_key": "confirm",
+        "updated_at": "2026-05-01T10:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_103",
+      "type": "protection",
+      "contact_id": "ct_avery_patel",
+      "contact_name": "Avery Patel",
+      "household": "Patel Household",
+      "vehicle": "2019 Honda Odyssey",
+      "status": "Paid in Full",
+      "owner": "Avery Patel",
+      "created_at": "2025-11-10T10:00:00Z",
+      "updated_at": "2026-02-20T09:00:00Z",
+      "value": 2880,
+      "next_action": "Paid in full — closed",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-02-20T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_102",
+      "type": "insurance",
+      "contact_id": "ct_avery_patel",
+      "contact_name": "Avery Patel",
+      "household": "Patel Household",
+      "vehicle": "2023 Honda Accord",
+      "status": "Quoted",
+      "owner": "Avery Patel",
+      "created_at": "2026-04-28T09:00:00Z",
+      "updated_at": "2026-05-01T11:20:00Z",
+      "value": null,
+      "next_action": "Review quote details with customer",
+      "deadline": "2026-05-15T23:59:59Z",
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "Progressive",
+              "policyNumber": "PG-33892-14",
+              "vehicles": [
+                {
+                  "year": 2023,
+                  "make": "Honda",
+                  "model": "Accord"
+                }
+              ]
+            },
+            "source": "id-card",
+            "media": [
+              {
+                "type": "id-card",
+                "url": "https://ei.example.com/id-cards/opp_ins_102.jpg"
+              }
+            ],
+            "verifiedAt": "2026-04-30T17:50:00Z"
+          }
+        },
+        "quote": {
+          "payload": {
+            "carrier": "Allstate",
+            "totalPremiumCents": 127300,
+            "savingsAmountCents": 19900,
+            "createdAt": "2026-05-01T11:18:00Z"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_refi_103",
+      "type": "refi",
+      "contact_id": "ct_deepa_patel",
+      "contact_name": "Deepa Patel",
+      "household": "Patel Household",
+      "vehicle": "2018 Honda CR-V",
+      "status": "Not Interested",
+      "owner": "Avery Patel",
+      "created_at": "2026-02-15T09:05:00Z",
+      "updated_at": "2026-03-10T08:00:00Z",
+      "value": null,
+      "next_action": "Not interested — archive",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-03-10T08:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_104",
+      "type": "protection",
+      "contact_id": "ct_drew_nakamura",
+      "contact_name": "Drew Nakamura",
+      "household": "Nakamura Household",
+      "vehicle": "2021 Honda Ridgeline",
+      "status": "Consumer Reviewed",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-04-15T13:05:00Z",
+      "updated_at": "2026-05-05T09:30:00Z",
+      "value": 2990,
+      "next_action": "Consumer reviewed — follow up for decision",
+      "deadline": "2026-05-13T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 5,
+        "furthest_step_key": "confirm",
+        "updated_at": "2026-05-05T09:30:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_103",
+      "type": "insurance",
+      "contact_id": "ct_quinn_rivera",
+      "contact_name": "Quinn Rivera",
+      "household": "Rivera Household",
+      "vehicle": "2019 Volkswagen Jetta",
+      "status": "Capture Completed",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-03-28T15:05:00Z",
+      "updated_at": "2026-04-15T10:00:00Z",
+      "value": null,
+      "next_action": "Capture done — advance to quote",
+      "deadline": null,
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "GEICO",
+              "policyNumber": "GC-44109-27",
+              "vehicles": [
+                {
+                  "year": 2019,
+                  "make": "Volkswagen",
+                  "model": "Jetta"
+                }
+              ]
+            },
+            "source": "third-party",
+            "verifiedAt": "2026-04-15T09:55:00Z"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_refi_104",
+      "type": "refi",
+      "contact_id": "ct_quinn_rivera",
+      "contact_name": "Quinn Rivera",
+      "household": "Rivera Household",
+      "vehicle": "2019 Volkswagen Jetta",
+      "status": "Working - Approved",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-03-28T15:10:00Z",
+      "updated_at": "2026-05-04T14:20:00Z",
+      "value": 8200,
+      "next_action": "Approved — advance to pending funding",
+      "deadline": "2026-05-16T23:59:59Z",
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-05-04T14:20:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_105",
+      "type": "protection",
+      "contact_id": "ct_elena_vasquez",
+      "contact_name": "Elena Vasquez",
+      "household": "Vasquez Household",
+      "vehicle": "2018 Chevrolet Suburban",
+      "status": "Agreement Signed",
+      "owner": "Casey Morgan",
+      "created_at": "2026-01-22T10:05:00Z",
+      "updated_at": "2026-02-15T09:00:00Z",
+      "value": 3920,
+      "next_action": "Awaiting remit",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-02-15T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_pay_101",
+      "type": "payments",
+      "contact_id": "ct_elena_vasquez",
+      "contact_name": "Elena Vasquez",
+      "household": "Vasquez Household",
+      "vehicle": "2018 Chevrolet Suburban",
+      "status": "Active",
+      "owner": "Casey Morgan",
+      "created_at": "2026-02-16T09:00:00Z",
+      "updated_at": "2026-05-07T08:00:00Z",
+      "value": 392,
+      "next_action": "Next payment due 2026-06-01",
+      "deadline": null
+    },
+    {
+      "id": "opp_vsc_106",
+      "type": "protection",
+      "contact_id": "ct_marco_vasquez",
+      "contact_name": "Marco Vasquez",
+      "household": "Vasquez Household",
+      "vehicle": "2016 Chevrolet Silverado 1500",
+      "status": "Cancelled",
+      "owner": "Casey Morgan",
+      "created_at": "2026-01-23T09:05:00Z",
+      "updated_at": "2026-04-10T12:00:00Z",
+      "value": null,
+      "next_action": "Cancelled — offer new plan on next touchpoint",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-04-10T12:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_105",
+      "type": "refi",
+      "contact_id": "ct_tyrell_washington",
+      "contact_name": "Tyrell Washington",
+      "household": "Washington Household",
+      "vehicle": "2020 Nissan Altima",
+      "status": "Identity and Consent",
+      "owner": "Riley Chen",
+      "created_at": "2026-04-20T14:05:00Z",
+      "updated_at": "2026-05-08T11:00:00Z",
+      "value": 9400,
+      "next_action": "Complete identity and consent step",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 9,
+        "furthest_step_key": "s1_identity_consent",
+        "updated_at": "2026-05-08T11:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_107",
+      "type": "protection",
+      "contact_id": "ct_tyrell_washington",
+      "contact_name": "Tyrell Washington",
+      "household": "Washington Household",
+      "vehicle": "2020 Nissan Altima",
+      "status": "Quoted",
+      "owner": "Riley Chen",
+      "created_at": "2026-04-22T10:00:00Z",
+      "updated_at": "2026-04-25T09:00:00Z",
+      "value": 1980,
+      "next_action": "Send package to consumer",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 4,
+        "furthest_step_key": "recommended_coverage",
+        "updated_at": "2026-04-25T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_108",
+      "type": "protection",
+      "contact_id": "ct_fatima_al_rashid",
+      "contact_name": "Fatima Al-Rashid",
+      "household": "Al-Rashid Household",
+      "vehicle": "2022 Honda Passport",
+      "status": "Remitted",
+      "owner": "Avery Patel",
+      "created_at": "2026-04-01T09:05:00Z",
+      "updated_at": "2026-05-03T15:00:00Z",
+      "value": 3440,
+      "next_action": "Remitted — monitoring activation",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-05-03T15:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_109",
+      "type": "protection",
+      "contact_id": "ct_brenda_kowalczyk",
+      "contact_name": "Brenda Kowalczyk",
+      "household": "Kowalczyk Household",
+      "vehicle": "2020 Dodge Durango",
+      "status": "Payment Success",
+      "owner": "Sam Patel",
+      "created_at": "2026-03-05T12:05:00Z",
+      "updated_at": "2026-04-22T10:00:00Z",
+      "value": 2960,
+      "next_action": "Payment received — advance to agreement signing",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 7,
+        "furthest_step_key": "docuseal",
+        "updated_at": "2026-04-22T10:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_106",
+      "type": "refi",
+      "contact_id": "ct_brenda_kowalczyk",
+      "contact_name": "Brenda Kowalczyk",
+      "household": "Kowalczyk Household",
+      "vehicle": "2020 Dodge Durango",
+      "status": "Working - No Contact",
+      "owner": "Sam Patel",
+      "created_at": "2026-03-06T09:00:00Z",
+      "updated_at": "2026-04-30T13:00:00Z",
+      "value": null,
+      "next_action": "No contact — try alternate phone",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-04-30T13:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_107",
+      "type": "refi",
+      "contact_id": "ct_jerome_butler",
+      "contact_name": "Jerome Butler",
+      "household": "Butler Household",
+      "vehicle": "2021 Acura MDX",
+      "status": "Pending Funding",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-04-08T10:35:00Z",
+      "updated_at": "2026-05-09T08:00:00Z",
+      "value": 28100,
+      "next_action": "Docs signed — awaiting lender funding",
+      "deadline": "2026-05-15T23:59:59Z",
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-05-09T08:00:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_104",
+      "type": "insurance",
+      "contact_id": "ct_jerome_butler",
+      "contact_name": "Jerome Butler",
+      "household": "Butler Household",
+      "vehicle": "2021 Acura MDX",
+      "status": "Quote Viewed",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-05-02T08:00:00Z",
+      "updated_at": "2026-05-09T08:00:00Z",
+      "value": null,
+      "next_action": "Consumer viewed quote — follow up",
+      "deadline": "2026-05-16T23:59:59Z",
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "State Farm",
+              "policyNumber": "SF-62277-50",
+              "vehicles": [
+                {
+                  "year": 2021,
+                  "make": "Acura",
+                  "model": "MDX"
+                }
+              ]
+            },
+            "source": "id-card",
+            "media": [
+              {
+                "type": "id-card",
+                "url": "https://ei.example.com/id-cards/opp_ins_104.jpg"
+              }
+            ],
+            "verifiedAt": "2026-05-08T08:20:00Z"
+          }
+        },
+        "quote": {
+          "payload": {
+            "carrier": "Progressive",
+            "totalPremiumCents": 138600,
+            "savingsAmountCents": 26700,
+            "createdAt": "2026-05-08T08:35:00Z",
+            "viewedAt": "2026-05-09T07:58:00Z"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_vsc_110",
+      "type": "protection",
+      "contact_id": "ct_ethan_price",
+      "contact_name": "Ethan Price",
+      "household": "Price Household",
+      "vehicle": "2023 Toyota Camry",
+      "status": "Empty",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-09T09:02:00Z",
+      "updated_at": "2026-05-09T09:02:00Z",
+      "value": null,
+      "next_action": "Generate initial quote",
+      "deadline": null
+    },
+    {
+      "id": "opp_ins_105",
+      "type": "insurance",
+      "contact_id": "ct_vanessa_osei",
+      "contact_name": "Vanessa Osei",
+      "household": "Osei Household",
+      "vehicle": "2022 Audi Q3",
+      "status": "Working",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-03-18T14:05:00Z",
+      "updated_at": "2026-05-05T16:00:00Z",
+      "value": null,
+      "next_action": "Follow up — call scheduled",
+      "deadline": null,
+      "summary": {
+        "capture": {
+          "verification": {
+            "policyInfo": {
+              "carrier": "Nationwide",
+              "policyNumber": "NW-80155-63",
+              "vehicles": [
+                {
+                  "year": 2022,
+                  "make": "Audi",
+                  "model": "Q3"
+                }
+              ]
+            },
+            "source": "id-card",
+            "media": [
+              {
+                "type": "id-card",
+                "url": "https://ei.example.com/id-cards/opp_ins_105.jpg"
+              }
+            ],
+            "verifiedAt": "2026-05-05T15:45:00Z"
+          }
+        }
+      },
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_vsc_111",
+      "type": "protection",
+      "contact_id": "ct_vanessa_osei",
+      "contact_name": "Vanessa Osei",
+      "household": "Osei Household",
+      "vehicle": "2019 Volkswagen Tiguan",
+      "status": "Quoted - No Results",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-04-10T10:00:00Z",
+      "updated_at": "2026-04-12T09:00:00Z",
+      "value": null,
+      "next_action": "No plans returned — check vehicle eligibility",
+      "deadline": null
+    },
+    {
+      "id": "opp_vsc_112",
+      "type": "protection",
+      "contact_id": "ct_samuel_pierre",
+      "contact_name": "Samuel Pierre",
+      "household": "Pierre Household",
+      "vehicle": "2021 Ford Expedition",
+      "status": "Sent to Consumer",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-04-12T09:35:00Z",
+      "updated_at": "2026-05-07T10:00:00Z",
+      "value": 4180,
+      "next_action": "Follow up on signature",
+      "deadline": "2026-05-14T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 5,
+        "furthest_step_key": "confirm",
+        "updated_at": "2026-05-07T10:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_108",
+      "type": "refi",
+      "contact_id": "ct_samuel_pierre",
+      "contact_name": "Samuel Pierre",
+      "household": "Pierre Household",
+      "vehicle": "2021 Ford Expedition",
+      "status": "Prequalification Submitted",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-04-14T09:00:00Z",
+      "updated_at": "2026-05-07T10:00:00Z",
+      "value": 31100,
+      "next_action": "Awaiting prequalification result",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 10,
+        "furthest_step_key": "decision_engine",
+        "updated_at": "2026-05-07T10:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_113",
+      "type": "protection",
+      "contact_id": "ct_lila_fernandez",
+      "contact_name": "Lila Fernandez",
+      "household": "Fernandez Household",
+      "vehicle": "2021 Nissan Sentra",
+      "status": "Empty",
+      "owner": "Jordan Reese",
+      "created_at": "2026-05-10T10:02:00Z",
+      "updated_at": "2026-05-10T10:02:00Z",
+      "value": null,
+      "next_action": "Generate first quote",
+      "deadline": null
+    },
+    {
+      "id": "opp_vsc_114",
+      "type": "protection",
+      "contact_id": "ct_darren_hobbs",
+      "contact_name": "Darren Hobbs",
+      "household": "Hobbs Household",
+      "vehicle": "2018 Toyota Tundra",
+      "status": "Pending Cancellation",
+      "owner": "Sam Patel",
+      "created_at": "2025-12-10T11:05:00Z",
+      "updated_at": "2026-03-22T09:00:00Z",
+      "value": 2800,
+      "next_action": "Retry payment before cancellation window closes",
+      "deadline": "2026-04-05T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-03-22T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_109",
+      "type": "refi",
+      "contact_id": "ct_sarah_kim",
+      "contact_name": "Sarah Kim",
+      "household": "Kim Household",
+      "vehicle": "2022 Hyundai Tucson",
+      "status": "Funded",
+      "owner": "Riley Chen",
+      "created_at": "2026-03-01T10:00:00Z",
+      "updated_at": "2026-05-08T15:00:00Z",
+      "value": 17200,
+      "next_action": "Funded — cross-sell VSC on second vehicle",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-05-08T15:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_115",
+      "type": "protection",
+      "contact_id": "ct_sarah_kim",
+      "contact_name": "Sarah Kim",
+      "household": "Kim Household",
+      "vehicle": "2023 Hyundai IONIQ 6",
+      "status": "Booked",
+      "owner": "Riley Chen",
+      "created_at": "2026-05-06T09:00:00Z",
+      "updated_at": "2026-05-08T15:00:00Z",
+      "value": 3660,
+      "next_action": "Collect signature and billing",
+      "deadline": "2026-05-15T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 6,
+        "furthest_step_key": "billing_payment",
+        "updated_at": "2026-05-08T15:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_116",
+      "type": "protection",
+      "contact_id": "ct_raymond_liu",
+      "contact_name": "Raymond Liu",
+      "household": "Liu Household",
+      "vehicle": "2020 Lexus GX 460",
+      "status": "Product Agreement Signed",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-03-30T10:05:00Z",
+      "updated_at": "2026-05-06T10:00:00Z",
+      "value": 4840,
+      "next_action": "Awaiting payment agreement",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 7,
+        "furthest_step_key": "docuseal",
+        "updated_at": "2026-05-06T10:00:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_106",
+      "type": "insurance",
+      "contact_id": "ct_raymond_liu",
+      "contact_name": "Raymond Liu",
+      "household": "Liu Household",
+      "vehicle": "2020 Lexus GX 460",
+      "status": "New Lead",
+      "owner": "Drew Nakamura",
+      "created_at": "2026-05-06T10:10:00Z",
+      "updated_at": "2026-05-06T10:10:00Z",
+      "value": null,
+      "next_action": "Send quote link",
+      "deadline": null,
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_refi_110",
+      "type": "refi",
+      "contact_id": "ct_tanya_okonkwo",
+      "contact_name": "Tanya Okonkwo",
+      "household": "Okonkwo Household",
+      "vehicle": "2019 Lexus RX 350",
+      "status": "Working - Rejected",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-04-17T13:05:00Z",
+      "updated_at": "2026-05-10T11:30:00Z",
+      "value": null,
+      "next_action": "Rejected by lender — re-engage Q3",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-05-10T11:30:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_107",
+      "type": "insurance",
+      "contact_id": "ct_tanya_okonkwo",
+      "contact_name": "Tanya Okonkwo",
+      "household": "Okonkwo Household",
+      "vehicle": "2019 Lexus RX 350",
+      "status": "Quote Link Sent",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-05-09T09:00:00Z",
+      "updated_at": "2026-05-10T11:30:00Z",
+      "value": null,
+      "next_action": "Wait for consumer click",
+      "deadline": null,
+      "flowPath": "quote_only",
+      "current_insurance": {
+        "carrierId": "allstate",
+        "carrier": "Allstate",
+        "premiumCents": 28000,
+        "cadence": "monthly"
+      }
+    },
+    {
+      "id": "opp_vsc_117",
+      "type": "protection",
+      "contact_id": "ct_marcus_grant",
+      "contact_name": "Marcus Grant",
+      "household": "Grant Household",
+      "vehicle": "2019 Ford F-250",
+      "status": "Remitted - Product Error",
+      "owner": "Sam Patel",
+      "created_at": "2026-02-03T09:10:00Z",
+      "updated_at": "2026-05-01T08:00:00Z",
+      "value": 4200,
+      "next_action": "Investigate product remit error",
+      "deadline": "2026-05-08T23:59:59Z"
+    },
+    {
+      "id": "opp_pay_102",
+      "type": "payments",
+      "contact_id": "ct_marcus_grant",
+      "contact_name": "Marcus Grant",
+      "household": "Grant Household",
+      "vehicle": "2021 Ford Mustang GT",
+      "status": "Overdue",
+      "owner": "Sam Patel",
+      "created_at": "2026-02-04T09:00:00Z",
+      "updated_at": "2026-05-01T08:00:00Z",
+      "value": 420,
+      "next_action": "Call customer — overdue",
+      "deadline": "2026-05-07T23:59:59Z"
+    },
+    {
+      "id": "opp_refi_111",
+      "type": "refi",
+      "contact_id": "ct_ingrid_sorensen",
+      "contact_name": "Ingrid Sorensen",
+      "household": "Sorensen Household",
+      "vehicle": "2021 Volvo XC90",
+      "status": "Offer Selected",
+      "owner": "Avery Patel",
+      "created_at": "2026-03-14T10:05:00Z",
+      "updated_at": "2026-04-22T14:00:00Z",
+      "value": 31200,
+      "next_action": "Advance to working — awaiting stipulations",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-04-22T14:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_118",
+      "type": "protection",
+      "contact_id": "ct_damon_cross",
+      "contact_name": "Damon Cross",
+      "household": "Cross Household",
+      "vehicle": "2020 Jeep Wrangler",
+      "status": "Payment Failed",
+      "owner": "Jordan Reese",
+      "created_at": "2026-04-26T08:05:00Z",
+      "updated_at": "2026-05-09T14:00:00Z",
+      "value": 3820,
+      "next_action": "Recover payment",
+      "deadline": "2026-05-12T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 6,
+        "furthest_step_key": "billing_payment",
+        "updated_at": "2026-05-09T14:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_112",
+      "type": "refi",
+      "contact_id": "ct_damon_cross",
+      "contact_name": "Damon Cross",
+      "household": "Cross Household",
+      "vehicle": "2020 Jeep Wrangler",
+      "status": "Auto Loan Snapshot",
+      "owner": "Jordan Reese",
+      "created_at": "2026-04-26T08:10:00Z",
+      "updated_at": "2026-05-09T14:00:00Z",
+      "value": 24400,
+      "next_action": "Customer completing auto loan snapshot",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 3,
+        "furthest_step_key": "s1_auto_loan",
+        "updated_at": "2026-05-09T14:00:00Z"
+      }
+    },
+    {
+      "id": "opp_vsc_119",
+      "type": "protection",
+      "contact_id": "ct_nalini_iyer",
+      "contact_name": "Nalini Iyer",
+      "household": "Iyer Household",
+      "vehicle": "2022 Toyota Prius Prime",
+      "status": "Sent to Consumer",
+      "owner": "Jordan Reese",
+      "created_at": "2026-04-10T11:05:00Z",
+      "updated_at": "2026-05-02T09:00:00Z",
+      "value": 2760,
+      "next_action": "Follow up on agreement",
+      "deadline": "2026-05-12T23:59:59Z",
+      "protection_progress": {
+        "furthest_step_idx": 5,
+        "furthest_step_key": "confirm",
+        "updated_at": "2026-05-02T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_refi_113",
+      "type": "refi",
+      "contact_id": "ct_jacob_thornton",
+      "contact_name": "Jacob Thornton",
+      "household": "Thornton Household",
+      "vehicle": "2020 Honda Civic",
+      "status": "New Lead",
+      "owner": "Riley Chen",
+      "created_at": "2026-05-01T10:05:00Z",
+      "updated_at": "2026-05-07T11:30:00Z",
+      "value": null,
+      "next_action": "Begin intake",
+      "deadline": null
+    },
+    {
+      "id": "opp_vsc_120",
+      "type": "protection",
+      "contact_id": "ct_grace_oduya",
+      "contact_name": "Grace Oduya",
+      "household": "Oduya Household",
+      "vehicle": "2020 Chevrolet Traverse",
+      "status": "Cancelled",
+      "owner": "Casey Morgan",
+      "created_at": "2025-11-15T09:05:00Z",
+      "updated_at": "2026-04-28T12:00:00Z",
+      "value": null,
+      "next_action": "Cancelled — re-offer at next touchpoint",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 8,
+        "furthest_step_key": "thank_you",
+        "updated_at": "2026-04-28T12:00:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_108",
+      "type": "insurance",
+      "contact_id": "ct_grace_oduya",
+      "contact_name": "Grace Oduya",
+      "household": "Oduya Household",
+      "vehicle": "2020 Chevrolet Traverse",
+      "status": "Capture Link Sent",
+      "owner": "Casey Morgan",
+      "created_at": "2026-04-28T12:05:00Z",
+      "updated_at": "2026-04-28T12:05:00Z",
+      "value": null,
+      "next_action": "Wait for link engagement",
+      "deadline": null,
+      "flowPath": "capture_and_quote"
+    },
+    {
+      "id": "opp_refi_114",
+      "type": "refi",
+      "contact_id": "ct_felix_oduya",
+      "contact_name": "Felix Oduya",
+      "household": "Oduya Household",
+      "vehicle": "2021 Hyundai Elantra",
+      "status": "Working - Waiting for Data",
+      "owner": "Riley Chen",
+      "created_at": "2025-12-01T10:05:00Z",
+      "updated_at": "2026-03-18T09:00:00Z",
+      "value": 9600,
+      "next_action": "Waiting on income verification docs",
+      "deadline": null,
+      "refi_progress": {
+        "furthest_step_idx": 11,
+        "furthest_step_key": "stage2_result",
+        "updated_at": "2026-03-18T09:00:00Z"
+      }
+    },
+    {
+      "id": "opp_ins_109",
+      "type": "insurance",
+      "contact_id": "ct_alicia_ramos",
+      "contact_name": "Alicia Ramos",
+      "household": "Ramos Household",
+      "vehicle": "2021 Nissan Pathfinder",
+      "status": "Quote Link Created",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-05-03T09:00:00Z",
+      "updated_at": "2026-05-04T15:00:00Z",
+      "value": null,
+      "next_action": "Send quote link to consumer",
+      "deadline": null,
+      "flowPath": "quote_only",
+      "current_insurance": {
+        "carrierId": "progressive",
+        "carrier": "Progressive",
+        "premiumCents": 320000,
+        "cadence": "12mo"
+      }
+    },
+    {
+      "id": "opp_vsc_121",
+      "type": "protection",
+      "contact_id": "ct_alicia_ramos",
+      "contact_name": "Alicia Ramos",
+      "household": "Ramos Household",
+      "vehicle": "2021 Nissan Pathfinder",
+      "status": "Quoted",
+      "owner": "Quinn Rivera",
+      "created_at": "2026-03-22T09:05:00Z",
+      "updated_at": "2026-05-04T15:00:00Z",
+      "value": 3240,
+      "next_action": "Review quote and send package",
+      "deadline": null,
+      "protection_progress": {
+        "furthest_step_idx": 4,
+        "furthest_step_key": "recommended_coverage",
+        "updated_at": "2026-05-04T15:00:00Z"
+      }
+    }
+  ]
+}
