@@ -285,22 +285,3 @@ no Vercel project. Port `30004` is reserved for it.
 `home-protection-portal`, `insurance-portal`, `mission-control`, and `protection-portal` are
 JavaScript (JSX) upstream. `refinance-prototype` is TypeScript. This repo vendors each exactly as
 published — no migration is applied here.
-
-## Known state: `pnpm lint` fails
-
-`pnpm build` passes for all five buildable apps. `pnpm lint` does **not** — four of the five report
-errors:
-
-| App                      | Lint                   |
-| ------------------------ | ---------------------- |
-| `home-protection-portal` | passes                 |
-| `insurance-portal`       | 2 errors, 6 warnings   |
-| `protection-portal`      | 12 errors, 11 warnings |
-| `refinance-prototype`    | 6 errors, 18 warnings  |
-| `mission-control`        | 37 errors, 39 warnings |
-
-These are upstream code issues, not monorepo artifacts — `react-hooks/rules-of-hooks`,
-`react-refresh/only-export-components`, React Compiler diagnostics ("Calling setState synchronously
-within an effect", "Cannot access refs during render"), `no-dupe-keys`, and `__dirname` flagged as
-`no-undef` inside `vite.config.js`. None of them involve dependency resolution, ports, or hoisting.
-Fix them upstream in BlinkerGit; do not patch vendored source here.
