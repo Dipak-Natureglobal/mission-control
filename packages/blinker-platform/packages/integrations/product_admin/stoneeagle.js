@@ -39,6 +39,8 @@ import fixturePriceLower      from './_fixtures/stone-eagle-get-rates-vin-price-
 import fixturePriceWithinTol  from './_fixtures/stone-eagle-get-rates-vin-price-within-tolerance.json' with { type: 'json' };
 import fixturePriceOutsideTol from './_fixtures/stone-eagle-get-rates-vin-price-outside-tolerance.json' with { type: 'json' };
 import fixtureMonthly         from './_fixtures/stone-eagle-get-rates-monthly.json'                   with { type: 'json' };
+import fixtureHome from './_fixtures/stone-eagle-get-rates-home.json'  with { type: 'json' };
+import { buildSoapEnvelope } from './soap-envelope.js';
 import orgRegistry  from '../../../canon/org-registry.json'        with { type: 'json' };
 import planMappings from '../../../canon/plan-mappings.json'       with { type: 'json' };
 import { computePlanPrice, getOrgMarkupSnapshot, resolveMonthlyMembershipPricing } from '../../utils/protection-pricing.js';
@@ -192,6 +194,17 @@ function computeFixture(input, fixtureData) {
 
 async function getRatesFixture(input) {
   await new Promise((resolve) => setTimeout(resolve, NETWORK_DELAY_MS));
+  // ADR 30 — home rating has its own fixture. It is returned VERBATIM (no
+  // price perturbation): computeFixture seeds its jitter from VIN + YMMT +
+  // mileage, none of which a home request carries, so perturbing here would
+  // be seeded off constants and produce the same "random" number every time.
+  if (input?.asset_kind === 'home') {
+    track('home_protection.stoneeagle.fixture.loaded', {
+      products: (fixtureHome.products || []).length,
+      state: input?.state ?? null,
+    });
+    return JSON.parse(JSON.stringify(fixtureHome));
+  }
   // Wave 25 v3.0.7: when a VIN-validate scenario is active, swap in the
   // matching variant fixture so the second SE call returns scenario-specific
   // data for classifyRatesChange() smoke testing.
@@ -222,79 +235,8 @@ const SOAP_ACTION_GET_RATES = 'http://www.natinc.com/SCSAutoService/GetRates';
 // builds never reach this path because resolveProviderMode() forces fixture.
 const PROXIED_PATH = '/se-rating/scsautoservice.asmx';
 
-function escapeXml(s) {
-  return String(s ?? '').replace(/[<>&"']/g, (c) => ({
-    '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;',
-  })[c]);
-}
-
-function buildSoapEnvelope(input, creds) {
-  const today = new Date().toISOString().slice(0, 10);
-  // input.condition can be 'N'/'U' directly (from the parallel orchestrator)
-  // or a free-form 'new'/'used' string (from legacy callers).
-  const newUsed = input.condition === 'N' || input.condition === 'U'
-    ? input.condition
-    : (input.condition && /new/i.test(input.condition)) ? 'N' : 'U';
-  const mileage = input.mileage ?? 0;
-
-  // Wave 23-fu2 — AssetType resolution (PDF v3.0.5 follow-up).
-  // SE recognizes 'P' (passenger), 'T' (truck/SUV/van/etc.), 'AL' (antique).
-  // Caller resolves from VinAudit `type` (VIN path) or YMMT lookup
-  // (make/model path) via packages/utils/asset-type.js + ymmt-data.js, then
-  // passes input.asset_type. Default 'P' covers the common consumer-vehicle
-  // case; the previous hardcoded 'T' miscategorized every sedan as a truck
-  // and skewed GetRates output (surfaced 2026-05-09 OMGA UAT — Maxima SR
-  // returned wrong rate set).
-  const assetType = input.asset_type && /^(P|T|AL)$/i.test(input.asset_type)
-    ? input.asset_type.toUpperCase()
-    : 'P';
-
-  let vehicleIdentifier;
-  if (input.vin) {
-    const trimTag = input.trim ? `<Trim>${escapeXml(String(input.trim).toUpperCase())}</Trim>` : '';
-    vehicleIdentifier = `<VIN>${escapeXml(input.vin)}</VIN>${trimTag}`;
-  } else {
-    vehicleIdentifier = `<VehicleYear>${escapeXml(input.year)}</VehicleYear>
-        <VehicleMake>${escapeXml(String(input.make ?? '').toUpperCase())}</VehicleMake>
-        <VehicleModel>${escapeXml(String(input.model ?? '').toUpperCase())}</VehicleModel>
-        <Trim>${escapeXml(String(input.trim ?? '').toUpperCase())}</Trim>
-        <AssetType>${assetType}</AssetType>`;
-  }
-
-  // Wave 23 v3.0.5 Task 4: surface buyer state to SE so filed-rate plans
-  // (FL VSC, TX GAP) return the right rate set. OMIT entirely when missing
-  // — sending an empty <State/> is worse than no element (some SE handlers
-  // treat empty as 'unknown' and short-circuit).
-  // TODO(SE-doc): confirm element name with SEFI — `<State>` is a reasonable
-  // default; SE eRating Integration Guide v1.31 should pin the exact field.
-  const stateTag = input.state ? `<State>${escapeXml(String(input.state).toUpperCase())}</State>` : '';
-
-  return `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-               xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <GetRates xmlns="http://www.natinc.com/SCSAutoService/">
-      <objGetRatesRequest>
-        <TpaCode>${escapeXml(creds?.tpa_code)}</TpaCode>
-        <UserId>${escapeXml(creds?.user_id)}</UserId>
-        <Password>${escapeXml(creds?.password)}</Password>
-        <DealerNo>${escapeXml(creds?.dealer_no)}</DealerNo>
-        <SaleDate>${today}</SaleDate>
-        <NewUsed>${newUsed}</NewUsed>
-        ${stateTag}
-        ${vehicleIdentifier}
-        <VehicleOdometer>${escapeXml(mileage)}</VehicleOdometer>
-        <ProductCollection>
-          <Product>
-            <Code>VSC</Code>
-          </Product>
-        </ProductCollection>
-      </objGetRatesRequest>
-    </GetRates>
-  </soap:Body>
-</soap:Envelope>`;
-}
+// escapeXml + buildSoapEnvelope live in ./soap-envelope.js (Wave 39) so the
+// SOAP request contract is testable without loading this module's JSON fixtures.
 
 // XML helpers — namespace-agnostic local-name walks via the wildcard NS API.
 function findAll(node, tag) {
@@ -501,6 +443,13 @@ function emptyNormalized(input) {
 // config edit; defaults to 999999 if canon omits it.
 const MONTHLY_SENTINEL_MILEAGE =
   (planMappings.monthly_membership && Number(planMappings.monthly_membership.sentinel_mileage)) || 999999;
+// ADR 30 R1 — home month-to-month plans are ContractType 40, and the 999999
+// mileage sentinel may not fire for them at all (a home request sends
+// VehicleOdometer 0 and the Omega-J Home line has no mileage axis). Canon-driven
+// so the allowlist can grow without a code change.
+const MONTHLY_CONTRACT_TYPES = new Set(
+  (planMappings.monthly_membership?.contract_type_allowlist || []).map(Number),
+);
 
 // Secondary signals are TELEMETRY/SANITY ONLY — they never gate detection (the
 // sentinel does). Records whether the plan code is in the canon allowlist and
@@ -614,6 +563,11 @@ function buildMonthlyProduct(group, ctx) {
 function normalizeToFixtureShape(doc, input, ctx) {
   const planRates = findAll(doc, 'PlanRate');
   const orgId = ctx?.orgId ?? null;
+  // ADR 30 — home responses differ in three ways: there is no mileage axis,
+  // the month-to-month plans are marked by ContractType rather than (or as
+  // well as) the mileage sentinel, and each term product carries its own
+  // <Option> rows that the wizard filters by plan code + term downstream.
+  const isHome = input?.asset_kind === 'home';
   const state = input?.state ?? null;
   // Wave 27 v3.0.8 — TpaCode used for this proxy call; tagged onto each
   // product for the plan-presentation resolver. Null in fixture-mode (the
@@ -698,7 +652,25 @@ function normalizeToFixtureShape(doc, input, ctx) {
       // org config can pick which TermMile.Term to price the monthly charge
       // from. These rows do NOT enter the term/mileage/deductible slider sets,
       // so the sentinel never leaks into the wizard's range pickers.
-      if (mileage === MONTHLY_SENTINEL_MILEAGE) {
+      // ADR 30 R1 — the sentinel and ContractType 40 are CO-AUTHORITATIVE:
+      // either one flags a monthly-membership row. Vehicle behavior is
+      // unchanged because vehicle rows have never carried ContractType 40,
+      // so this can only add monthly rows on home responses. When the two
+      // detectors disagree we emit telemetry rather than picking a winner —
+      // that divergence is exactly what the first real AUG2 capture must
+      // resolve.
+      const contractType = planEl ? numOf(planEl, 'ContractType') : null;
+      const contractTypeIsMonthly = MONTHLY_CONTRACT_TYPES.has(Number(contractType));
+      const sentinelIsMonthly = mileage === MONTHLY_SENTINEL_MILEAGE;
+      if (sentinelIsMonthly || contractTypeIsMonthly) {
+        if (sentinelIsMonthly !== contractTypeIsMonthly) {
+          track('protection.stoneeagle.monthly_detector_divergence', {
+            plan_code: planCode || null,
+            sentinel: sentinelIsMonthly,
+            contract_type: contractType,
+            asset_kind: isHome ? 'home' : 'vehicle',
+          });
+        }
         const groupKey = `${planCode || planId || tpaName}::${deductAmt ?? 0}`;
         let group = monthlyRowsByGroup.get(groupKey);
         if (!group) {
@@ -731,7 +703,9 @@ function normalizeToFixtureShape(doc, input, ctx) {
 
       // ─── Term-total branch (existing behavior) ─────────────────────────────
       if (term      != null) termSet.add(term);
-      if (mileage   != null) mileageSet.add(mileage);
+      // A home has no mileage axis — never let a home row seed the wizard's
+      // mileage slider set.
+      if (!isHome && mileage != null) mileageSet.add(mileage);
       if (deductAmt != null) deductibleSet.add(deductAmt);
 
       const priced = computePlanPrice(
@@ -759,7 +733,7 @@ function normalizeToFixtureShape(doc, input, ctx) {
         billing_model: 'term_total',
         deductible: deductAmt ?? 0,
         coverage_period_months: term ?? 0,
-        mileage: mileage ?? 0,
+        mileage: isHome ? null : (mileage ?? 0),
         base_price: basePrice,
         monthly_price: monthly,
         // Wave 22-fu: surface the breakdown for ApiResponsesModal +
@@ -785,6 +759,22 @@ function normalizeToFixtureShape(doc, input, ctx) {
         // and filter math without re-reading canon at each call site.
         term_basis: termBasis,
         discountable:      planEl  ? numOf(planEl, 'Discountable')    : null,
+        // ADR 30 — home-only fields. `options` carries the RAW <Option> rows
+        // for this term product; filtering by plan code + selected term is
+        // owned by packages/utils/home-addons.js#resolveHomeAddOns, because
+        // it depends on a customer choice the normalizer cannot see.
+        ...(isHome
+          ? {
+              asset_kind: 'home',
+              contract_type: contractType,
+              unlimited_mileage: false,
+              options: findAll(rcm, 'Option').map((opt) => ({
+                OptionId:   textOf(opt, 'OptionId'),
+                OptionDesc: textOf(opt, 'OptionDesc'),
+                RetailRate: numOf(opt, 'RetailRate'),
+              })),
+            }
+          : { asset_kind: 'vehicle' }),
       });
     }
   }
@@ -797,7 +787,9 @@ function normalizeToFixtureShape(doc, input, ctx) {
   // no down-payment/months-to-pay. See project_monthly_pay_vsc_products.md.
   const monthlyProducts = [];
   for (const group of monthlyRowsByGroup.values()) {
-    monthlyProducts.push(buildMonthlyProduct(group, { orgId, state, tpaCodeUsed }));
+    const mp = buildMonthlyProduct(group, { orgId, state, tpaCodeUsed });
+    // ADR 30 — home monthly plans (38/48/49) carry no options at all.
+    monthlyProducts.push(isHome ? { ...mp, asset_kind: 'home', options: [] } : { ...mp, asset_kind: 'vehicle' });
   }
   if (monthlyProducts.length > 0) {
     track('protection.stoneeagle.normalizer.monthly_membership_surfaced', {
@@ -1040,6 +1032,24 @@ export async function getRatesWithVehicleClass(input, ctx) {
   return mergeNewUsed(newResp, usedResp);
 }
 
+/**
+ * Home rating entry point — ADR 30.
+ *
+ * Deliberately does NOT route through getRatesWithVehicleClass: a home has no
+ * new/used axis, so there is no classifyVehicle call and no parallel N+U
+ * fan-out to merge. One call, NewUsed '*'.
+ *
+ * @param {object} input  { state } — no vehicle fields are read
+ * @param {object} ctx    { orgId, credentials, signal }
+ * @returns {Promise<object>} normalized rates; products carry asset_kind 'home'
+ */
+export async function getRatesForHome(input, ctx) {
+  return getRatesSingle(
+    { ...input, asset_kind: 'home', condition: '*', mileage: 0 },
+    ctx,
+  );
+}
+
 // ---------- Public surface -------------------------------------------------
 
 export default {
@@ -1052,8 +1062,14 @@ export default {
   async getRates(input, ctx) {
     return getRatesWithVehicleClass(input, ctx);
   },
+  // ADR 30 — separate entry point; the vehicle-class orchestrator does not
+  // apply to a home.
+  async getRatesForHome(input, ctx) {
+    return getRatesForHome(input, ctx);
+  },
 };
 
 // Exposed for diagnostics only — DO NOT depend on this from app code.
 // (The mode is resolved per call; this is a snapshot for DevPanel display.)
 export { resolveProviderMode as __resolveProviderMode };
+export { buildSoapEnvelope as __buildSoapEnvelope } from './soap-envelope.js';

@@ -11,4 +11,13 @@
 //     "Add new vehicle" path and insurance-portal's LeadOriginationForm
 //     inline vehicle collection. Refi-portal standalone leaves it as false
 //     so VIN-or-YMMT remains valid (per platform locked decision).
+//   - locked (default false): remittance lock. True once the ProductPackage
+//     attached to this vehicle is `remitted`, at which point blinker freezes
+//     the Vehicle record (Vehicle#remittance_locked?) and rejects writes with
+//     RemittedRecordError. Renders VIN + YMMT read-only and suppresses the
+//     VIN-clear and VIN-decode effects, which would otherwise overwrite the
+//     committed values. Also relaxes the Continue gate to VIN-present: the
+//     committed values cannot be edited, so requiring a trim the picker
+//     refuses to open would dead-end the screen. Resolved by AgentView; other
+//     views leave it false.
 export { ScreenVehicleAdd as VehicleAdd } from '../../refinance-v2-prototype';

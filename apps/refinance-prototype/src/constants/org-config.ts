@@ -1,16 +1,10 @@
 // Default org / partner config used by the decision engine. Same shape
-// as the prototype's DEFAULT_ORG_CONFIG; this file OWNS the values so
-// DevControls can import a stable path and (eventually) so per-partner
-// overrides can drop into a sibling file without churning the monolith.
-//
-// Ownership note: this used to re-export the monolith's local const, which
-// created an import cycle (org-config -> refinance-v2-prototype -> lib/refi
-// -> org-config) and blew up at module-eval time with
-// "Cannot access '_RAW' before initialization". The monolith now imports
-// from here instead, making this module a leaf with no runtime imports.
+// as the prototype's DEFAULT_ORG_CONFIG; re-exported here so DevControls
+// can import a stable path and (eventually) so per-partner overrides can
+// drop into a sibling file without churning the monolith.
 //
 // Schema (preserved verbatim from the prototype — DO NOT change keys
-// without updating runDecision() in src/lib/refi.ts):
+// without updating runDecision() in src/lib/refi.js):
 //   maxVehicleAgeYears:                 number
 //   maxMileage:                         number
 //   minPayoff:                          number  (USD)
@@ -20,10 +14,14 @@
 //   restrictedEmploymentTypes:          string[]
 //   restrictedEmploymentCreditBands:    string[]
 //   maxLtv:                             { [creditBand]: number }
+// This file is the leaf source of truth for the default org config. The
+// monolith (refinance-v2-prototype.tsx) imports DEFAULT_ORG_CONFIG FROM
+// here — never the other way around. Re-importing it back from the
+// monolith created a cycle (monolith → lib/refi → org-config → monolith)
+// that surfaced as "Cannot access '_RAW' before initialization" (TDZ) on
+// the agent view's module load order.
 import type { OrgConfig } from '../types';
 
-// Default organization configuration. Each refinance partner can override
-// these at runtime; the dev panel lets us edit them live without a code change.
 export const DEFAULT_ORG_CONFIG: OrgConfig = {
   maxVehicleAgeYears: 15,
   maxMileage: 150000,
@@ -36,10 +34,10 @@ export const DEFAULT_ORG_CONFIG: OrgConfig = {
   // Max LTV (Loan-to-Value) per credit band.
   // LTV = payoff / vehicle_market_value.  If LTV >= threshold → disqualified.
   maxLtv: {
-    '300_579': 1.0,    // Poor — payoff must not exceed vehicle value
-    '580_669': 1.2,    // Fair
-    '670_739': 1.25,   // Good
-    '740_799': 1.4,    // Very Good
-    '800_850': 1.5,    // Exceptional
+    '300_579': 1.0, // Poor — payoff must not exceed vehicle value
+    '580_669': 1.2, // Fair
+    '670_739': 1.25, // Good
+    '740_799': 1.4, // Very Good
+    '800_850': 1.5, // Exceptional
   },
 };

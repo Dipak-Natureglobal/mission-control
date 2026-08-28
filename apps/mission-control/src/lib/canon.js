@@ -16,6 +16,8 @@ export const TYPE_LABELS = {
   refi: 'Refi',
   insurance: 'Insurance',
   payments: 'Payments',
+  // Wave 39 (ADR 30) — home protection.
+  home_protection: 'Home protection',
 };
 
 export const TYPE_BADGE = {
@@ -23,6 +25,10 @@ export const TYPE_BADGE = {
   refi: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   insurance: 'bg-sky-50 text-sky-700 ring-sky-200',
   payments: 'bg-amber-50 text-amber-700 ring-amber-200',
+  // Wave 39 (ADR 30) — teal, deliberately distinct from protection's
+  // indigo. Protection and home protection appear side by side in the
+  // inbox, so the two badges must read apart at a glance.
+  home_protection: 'bg-teal-50 text-teal-700 ring-teal-200',
 };
 
 // Canon types use "vsc" for protection; "refi" stores statuses_summary
@@ -32,6 +38,9 @@ export const TYPE_BADGE = {
 function lookupStage(type, status) {
   if (type === 'protection') return ghlStatus.vsc?.statuses?.[status]?.crm_stage ?? null;
   if (type === 'insurance') return ghlStatus.insurance?.statuses?.[status]?.crm_stage ?? null;
+  // Wave 39 (ADR 30) — home protection has its own canon block (not an
+  // alias of 'vsc'), same shape (statuses map with crm_stage per key).
+  if (type === 'home_protection') return ghlStatus.home_protection?.statuses?.[status]?.crm_stage ?? null;
   return null;
 }
 
@@ -110,6 +119,21 @@ export function getOrgTimezone(orgId) {
   const orgs = Array.isArray(orgRegistry.orgs) ? orgRegistry.orgs : [];
   const org = orgs.find((o) => o.id === orgId);
   return org?.timezone || DEFAULT_ORG_TZ;
+}
+
+// Wave 39 (ADR 30 D9) — home protection capability is DECLARED, not
+// inferred: `opportunities.home_protection.enabled` per org. Today only
+// org 102 (Apex, which carries the OMGA UAT credentials) has it on.
+// Consumers (ContactProfile's Homes section "Start home protection", the
+// StartOpportunityFlow type grid, OpportunityTypeMenu) gate on this
+// before offering the affordance — never infer availability from whether
+// a rate set comes back, which would mean discovering the gap only after
+// an agent has started the wizard.
+export function isHomeProtectionEnabledForOrg(orgId) {
+  if (orgId == null) return false;
+  const orgs = Array.isArray(orgRegistry.orgs) ? orgRegistry.orgs : [];
+  const org = orgs.find((o) => o.id === orgId);
+  return org?.opportunities?.home_protection?.enabled === true;
 }
 
 // Format an ISO timestamp in the active org's timezone — e.g.

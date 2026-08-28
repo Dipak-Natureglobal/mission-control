@@ -62,6 +62,13 @@
 //
 //   Display helper:
 //     - formatPhoneDisplay(s)  → '(###) ###-####' (or partial)
+//     - toNationalPhoneDigits(s) → 10 national digits from an E.164 or
+//                                  formatted value. ALWAYS use this before
+//                                  seeding a stored phone into a display
+//                                  input — formatPhoneDisplay takes the
+//                                  FIRST 10 digits (correct while typing),
+//                                  so a raw '+1…' renders the country code
+//                                  as the area code. (Wave 39)
 //
 //   Vehicle helpers (string|null family):
 //     - formatVehicleLabel(v)  → '{year} {make} {model}[ {trim}]' | null
@@ -133,6 +140,7 @@ export {
   ageYears,
   dobAdult,
   formatPhoneDisplay,
+  toNationalPhoneDigits,
 } from './validators.js';
 
 // Wave 22 — protection-portal v3.0.4 add-on passthrough (PDF tasks 1, 2, 4).
@@ -164,6 +172,50 @@ export {
 // Reads canon/plan-mappings.json#vehicle_class_rule via the caller (canonRule
 // is passed in so this util stays pure).
 export { classifyVehicle } from './vehicle-class.js';
+
+// Wave 39 (ADR 30 D1) — home dwelling-class classifier. Structural twin of
+// vehicle-class.js. Reads canon/plan-mappings.json#home_dwelling_classes via
+// the caller (canonBlock is passed in so this util stays pure). A null result
+// means the home is INELIGIBLE — no dwelling checkbox exists on the Omega
+// agreement for that (home_type, square_feet) pair, so the wizard blocks
+// rather than quoting. Consumed by home-protection-portal HomeAdd,
+// packages/integrations/signing/docuseal.js, and mission-control's Home card.
+export { classifyDwelling, isHomeEligible, listHomeTypes } from './dwelling-class.js';
+
+// Wave 39 (ADR 30 D5/D7) — home optional-coverage parser + resolver. Reads
+// canon/plan-mappings.json#home_add_ons via the caller. Handles the rater's
+// inconsistent OptionDesc spellings, the embedded term suffix, and the
+// standard/P-E variant split (plan 35 → standard, 36/37 → P/E, 38/48/49 →
+// none). revalidateSelections MUST be called on any plan-or-term change:
+// both the OptionId and the price move, so a carried-forward selection
+// mischarges against a signed agreement.
+export {
+  parseOptionDesc,
+  resolveHomeAddOns,
+  sumAddOnPrices,
+  revalidateSelections,
+} from './home-addons.js';
+
+// Wave 39 follow-up (ADR 30) — home pricing: plan markup, per-add-on percentage
+// markup, per-coverage-term months-to-pay, the low/high price band shown on the
+// coverage step, and discount caps.
+//
+// Down payment equals one monthly payment, so monthly = total / (months + 1).
+//
+// COST FLOOR: add-on discounts are capped at markup/(1+markup) — the true
+// break-even — NOT at the markup percent, because the two percentages apply to
+// different bases (a 30% discount on a 30% markup lands at 0.91x cost).
+// applyAddOnDiscount enforces a hard floor at cost regardless of what is passed.
+export {
+  resolveHomePlanPrice,
+  resolveHomeAddOnPrice,
+  getAddOnMarkupPercent,
+  getHomePaymentTermOptions,
+  computeHomePaymentPlan,
+  computeHomePriceRange,
+  getHomeDiscountCaps,
+  applyAddOnDiscount,
+} from './home-pricing.js';
 
 // Wave 25 v3.0.7 Phase B1 — Post-VIN SE GetRates divergence classifier.
 // Pure function; 8 kinds per ADR 17. Consumed by protection-portal VinValidate.jsx.

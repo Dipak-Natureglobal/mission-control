@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Plus, ShieldCheck, Banknote, Umbrella, RefreshCcw } from 'lucide-react';
 
-// OpportunityTypeMenu — a button + dropdown listing the four startable
+// OpportunityTypeMenu — a button + dropdown listing startable
 // opportunity types. Click outside closes; click an item fires
 // onSelect({ type, flowPath }) and closes.
+//
+// NOTE: unlike StartOpportunityFlow's type grid, this menu is NOT
+// org-gated, and its existing consumers (ContactProfile's per-vehicle
+// dropdown and header "+ New opportunity" CTA) route every selection
+// through vehicle-anchored flows (NewOpportunityFlow / a specific vehicle
+// card). Home protection is deliberately NOT listed here (ADR 30 R8):
+// NewOpportunityFlow has zero home_protection/home_id handling, so
+// selecting it from this menu would produce a malformed, vehicle-shaped
+// opportunity. The supported entry points are StartOpportunityFlow's
+// org-gated home card + home-asset step, and ContactProfile's Homes
+// section ("Add home" → home card → "Start home protection").
 //
 // Two visual variants:
 //   - 'compact' (default): used inside vehicle cards.
@@ -44,11 +55,15 @@ const ITEMS = [
   {
     key: 'protection',
     type: 'protection',
-    label: 'Protection plan',
+    label: 'Vehicle protection plan',
     icon: ShieldCheck,
     iconClass: 'text-indigo-600',
     flowPath: undefined,
   },
+  // 'home_protection' intentionally absent — see file header (ADR 30 R8).
+  // NewOpportunityFlow has no home_protection/home_id handling; this menu's
+  // consumers are vehicle-anchored. Use StartOpportunityFlow's home card or
+  // ContactProfile's per-home "Start home protection" button instead.
 ];
 
 export function OpportunityTypeMenu({ variant = 'compact', onSelect, label }) {

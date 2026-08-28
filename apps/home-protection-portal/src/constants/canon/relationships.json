@@ -1,0 +1,32 @@
+{
+  "_comment": "Relationship types for householding. Used by mc ContactProfile household section + future insurance/refi co-applicant flows. Lifted from refi-portal RELATIONSHIP_OPTIONS (refinance-v2-prototype.jsx:79-89) and reshaped from a flat string array into typed records ({id, label, category}) so packages/components/RelationshipPicker can carry both display + machine ids on a single source of truth. As of 2026-05-08-relationships-custom-split (Wave 20), the file splits canon-level `system_types` (immutable) from `custom_types_per_org` (super-admin-mutable, per-org overrides) — was W19 Task 5 _TODO.",
+  "_version": "2026-05-08-relationships-custom-split",
+  "_source": "Lifted from refi-portal RELATIONSHIP_OPTIONS (refinance-v2-prototype.jsx:79-89). Refi's flat list: Spouse, Child, Parent, Sibling, Grandparent, Relative, Domestic Partner, Roommate, Other. Carried 1:1 here with id slugs + a `category` axis so future grouped UIs (household / extended / cohabitant / other) can stay declarative.",
+  "_consumers": [
+    "blinker-platform/packages/components/RelationshipPicker.jsx (default options — reads system_types + merges org's custom_types_per_org[orgId] when org context is provided)",
+    "mission-control/src/personas/agent/ContactProfile.jsx (HouseholdSection picker)",
+    "mission-control/src/personas/super/* (super-admin Manage Relationship Types UI — reads/writes custom_types_per_org via super-admin-storage.js shim until Phase 2 backend)",
+    "future: insurance-portal co-applicant flow",
+    "future: refi-portal co-applicant flow (retrofit ScreenCoAppContact to consume the picker — Wave 20 BL backlog)"
+  ],
+  "_split_principle": "system_types is the immutable canon-shipped seed; custom_types_per_org is super-admin-mutable per-org additions. Resolution: when displaying options for an org, RelationshipPicker computes the union as `[...system_types, ...(custom_types_per_org[orgId] || [])]`, dedupe-by-id (system wins on collision). Phase 1: custom_types_per_org persisted via mc super-admin-storage.js shim (key: blinker.super_admin.relationship_types_custom.v1) seeded from this canon file's empty default. Phase 2: replaced by `await blinkerApi.relationshipTypes.list({ org_id })` returning the merged shape.",
+  "_custom_type_shape": {
+    "id":          "string — snake_case slug, must NOT collide with any system_types.id",
+    "label":       "string — human display label",
+    "category":    "string — one of household | extended | cohabitant | other (mirrors system axis); free-text allowed for future axes",
+    "added_by":    "string? — user_id of the super-admin who created this entry",
+    "added_at":    "string? — ISO 8601 timestamp"
+  },
+  "system_types": [
+    { "id": "spouse",            "label": "Spouse",            "category": "household" },
+    { "id": "child",             "label": "Child",             "category": "household" },
+    { "id": "parent",            "label": "Parent",            "category": "household" },
+    { "id": "sibling",           "label": "Sibling",           "category": "household" },
+    { "id": "grandparent",       "label": "Grandparent",       "category": "extended" },
+    { "id": "relative",          "label": "Relative",          "category": "extended" },
+    { "id": "domestic_partner",  "label": "Domestic Partner",  "category": "household" },
+    { "id": "roommate",          "label": "Roommate",          "category": "cohabitant" },
+    { "id": "other",             "label": "Other",             "category": "other" }
+  ],
+  "custom_types_per_org": {}
+}

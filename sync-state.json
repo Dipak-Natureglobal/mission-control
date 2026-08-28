@@ -4,37 +4,43 @@
       "repo": "https://github.com/BlinkerGit/customer-portal",
       "branch": "main",
       "dir": "apps/customer-portal",
-      "sha": "1d34ee2b4fc39b257a114416f90eddeea0a8bd97"
+      "sha": "45cdbb08b84ae5b4581c20fb030619e820523bee"
     },
     "insurance": {
       "repo": "https://github.com/BlinkerGit/insurance-portal",
       "branch": "main",
       "dir": "apps/insurance-portal",
-      "sha": "5281405d212d9c0365ee5bcc8ceadd27eb108ad5"
+      "sha": "a4abfd8621cb55ee6e25d3facb50a1611fbfc8d4"
     },
     "mission": {
       "repo": "https://github.com/BlinkerGit/mission-control",
       "branch": "main",
       "dir": "apps/mission-control",
-      "sha": "db17e6181ef7775dcf7e2403d9fac24e85dd3087"
+      "sha": "003af186c98bb6ba6a4dfdd4b26a0d0b4c6f8545"
     },
     "protection": {
       "repo": "https://github.com/BlinkerGit/protection-portal",
       "branch": "main",
       "dir": "apps/protection-portal",
-      "sha": "515f699ca858f8b3d5ee43721047251289b8a556"
+      "sha": "0d08c1be6503519dd0ed0ee0a55c22949fdbb80e"
     },
     "refinance": {
       "repo": "https://github.com/BlinkerGit/refinance-prototype",
       "branch": "main",
       "dir": "apps/refinance-prototype",
-      "sha": "d8e3e5e6f9b373948e4371212960d6d03a864311"
+      "sha": "de7736c2ffab30303d38be7fa7b0696fab89326b"
     },
     "platform": {
       "repo": "https://github.com/BlinkerGit/blinker-platform",
       "branch": "main",
       "dir": "packages/blinker-platform",
-      "sha": "f943efa22f30f4bfe59b466ae4a6bde5c067de46"
+      "sha": "932356ce3cf4407e48245dc53e6a93fb2b5c4f0a"
+    },
+    "home": {
+      "repo": "https://github.com/BlinkerGit/home-protection-portal",
+      "branch": "main",
+      "dir": "apps/home-protection-portal",
+      "sha": "f9434af6b09d3e8efd5032ee930657b2fd3aaaef"
     }
   }
 }

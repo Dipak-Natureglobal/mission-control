@@ -5,6 +5,7 @@ import {
   Car,
   CheckCircle,
   ChevronLeft,
+  House,
   Lock,
   Mail,
   MapPin,
@@ -21,7 +22,10 @@ import {
 } from 'lucide-react';
 import { TagPicker } from 'blinker-platform/components';
 import systemTagsJson from 'blinker-platform/canon/system-tags.json';
+import { classifyDwelling } from 'blinker-platform/utils';
+import planMappings from '../../constants/canon/plan-mappings.json' with { type: 'json' };
 import { AddVehicleModal } from '../../components/AddVehicleModal.jsx';
+import { AddHomeModal } from '../../components/AddHomeModal.jsx';
 import { OpportunityTypeMenu } from '../../components/OpportunityTypeMenu.jsx';
 import { NewOpportunityFlow } from '../../components/NewOpportunityFlow.jsx';
 import { buildNewOpp } from '../../lib/session-data.js';
@@ -31,8 +35,10 @@ import { HouseholdSection } from './HouseholdSection.jsx';
 const TYPE_LABEL_MAP = {
   refi: 'Refi',
   insurance: 'Insurance',
-  protection: 'Protection plan',
+  protection: 'Vehicle protection plan',
   payments: 'Payments',
+  // Wave 39 (ADR 30) — home protection.
+  home_protection: 'Home protection',
 };
 import {
   TYPE_LABELS,
@@ -41,6 +47,7 @@ import {
   ageLabel,
   ageDays,
   relativeTime,
+  isHomeProtectionEnabledForOrg,
 } from '../../lib/canon.js';
 import { track } from 'blinker-platform/telemetry';
 import { blinkerApi } from 'blinker-platform/api';
@@ -73,6 +80,9 @@ export function ContactProfile({
   patchContact,
   appendContact,
   appendHouseholdRelationship,
+  // Wave 39 (ADR 30) — home analogs of the vehicle props above.
+  homes,
+  appendHomeToContact,
   persona = 'agent',
   onClose,
   onOpenInCoPilot,
@@ -128,6 +138,8 @@ export function ContactProfile({
   // ─────────────────────────────────────────────────────────────────────
   const [draft, setDraft] = useState('');
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
+  // Wave 39 (ADR 30) — home analog of addVehicleOpen.
+  const [addHomeOpen, setAddHomeOpen] = useState(false);
   const [newOppFlow, setNewOppFlow] = useState(null); // null | { type, flowPath }
 
   if (!contact) {
@@ -150,6 +162,17 @@ export function ContactProfile({
   const opportunities = allOpportunities.filter(
     (o) => o.contact_id === contactId,
   );
+
+  // Wave 39 (ADR 30 D2) — homes this contact holds. Membership is via
+  // contact_ids inclusion, NOT a stored contact.homes[] — a home can
+  // carry a second agreement holder (home_alvarez_cypress has two), so
+  // this must surface on BOTH holders' profiles.
+  const contactHomes = homes
+    ? Object.values(homes).filter(
+        (h) => Array.isArray(h.contact_ids) && h.contact_ids.includes(contactId),
+      )
+    : [];
+  const homeProtectionEnabled = isHomeProtectionEnabledForOrg(contact?.org_id);
 
   function addNote() {
     const body = draft.trim();
@@ -341,6 +364,38 @@ export function ContactProfile({
     if (onOpenInCoPilot) onOpenInCoPilot(opp.id);
   }
 
+  // Wave 39 (ADR 30) — home analogs of the three vehicle handlers above.
+  function openAddHome() {
+    track('mission_control.contact_profile.add_home_opened', {
+      contact_id: contactId,
+    });
+    setAddHomeOpen(true);
+  }
+
+  function handleHomeAdded(home) {
+    const homeId = appendHomeToContact ? appendHomeToContact(contactId, home) : null;
+    track('mission_control.contact_profile.add_home_saved', {
+      contact_id: contactId,
+      home_id: homeId,
+      home_type: home.home_type,
+    });
+    setAddHomeOpen(false);
+  }
+
+  // No type/flowPath payload — unlike vehicles, home protection is a
+  // single opportunity type with no flowPath variant, so this skips the
+  // OpportunityTypeMenu entirely and starts the opp directly.
+  function startHomeProtectionFrom(home) {
+    const opp = buildNewOpp({ type: 'home_protection', contact, home });
+    if (appendOpportunity) appendOpportunity(opp);
+    track('mission_control.contact_profile.start_opportunity_from_home', {
+      contact_id: contactId,
+      home_id: home.id,
+      opp_type: 'home_protection',
+    });
+    if (onOpenInCoPilot) onOpenInCoPilot(opp.id);
+  }
+
   function openNewOppFlow({ type, flowPath }) {
     track('mission_control.contact_profile.new_opportunity_opened', {
       contact_id: contactId,
@@ -442,6 +497,13 @@ export function ContactProfile({
             onStartOpportunityFromVehicle={startOpportunityFromVehicle}
           />
 
+          <HomesSection
+            homes={contactHomes}
+            homeProtectionEnabled={homeProtectionEnabled}
+            onAddHomeClick={openAddHome}
+            onStartHomeProtection={startHomeProtectionFrom}
+          />
+
           <OpportunitiesSection
             opportunities={opportunities}
             onOpenInCoPilot={onOpenInCoPilot}
@@ -462,6 +524,12 @@ export function ContactProfile({
         open={addVehicleOpen}
         onClose={() => setAddVehicleOpen(false)}
         onAdd={handleVehicleAdded}
+      />
+
+      <AddHomeModal
+        open={addHomeOpen}
+        onClose={() => setAddHomeOpen(false)}
+        onAdd={handleHomeAdded}
       />
 
       <NewOpportunityFlow
@@ -766,6 +834,100 @@ function SourceBadge({ source }) {
     >
       {source}
     </span>
+  );
+}
+
+const DWELLING_CANON = planMappings.home_dwelling_classes;
+
+// ─── 4b. Homes ──────────────────────────────────────────────────────────
+// Wave 39 (ADR 30 C3) — structural twin of VehiclesSection above. Two
+// deliberate differences from the vehicle card:
+//   - "Start home protection" is a single dedicated button, not the
+//     multi-type OpportunityTypeMenu — home protection has no flowPath
+//     variant, so there is nothing to pick from.
+//   - The button only renders when the org has the capability enabled
+//     (ADR 30 D9 — declared, not inferred). A disabled org still SEES the
+//     home card (the record exists regardless of capability), it just
+//     can't start a workflow from it.
+function HomesSection({
+  homes,
+  homeProtectionEnabled,
+  onAddHomeClick,
+  onStartHomeProtection,
+}) {
+  const addButton = onAddHomeClick ? (
+    <button
+      onClick={onAddHomeClick}
+      className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-white"
+    >
+      <Plus className="w-3 h-3" />
+      Add home
+    </button>
+  ) : null;
+
+  if (homes.length === 0) {
+    return (
+      <Section icon={House} title="Homes" right={addButton}>
+        <div className="text-xs text-slate-400">No homes on file.</div>
+      </Section>
+    );
+  }
+  return (
+    <Section icon={House} title={`Homes (${homes.length})`} right={addButton}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        {homes.map((h) => {
+          let dwellingLabel = 'Ineligible (over size limit)';
+          try {
+            dwellingLabel = classifyDwelling(h, DWELLING_CANON)?.label ?? dwellingLabel;
+          } catch {
+            dwellingLabel = '—';
+          }
+          return (
+            <div
+              key={h.id}
+              className="bg-slate-50 ring-1 ring-slate-200 rounded-md p-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-sm font-semibold text-slate-900 truncate">
+                  {h.address?.address1}
+                  {h.address?.city && h.address?.state
+                    ? `, ${h.address.city}, ${h.address.state}`
+                    : ''}
+                </div>
+                <SourceBadge source={h.source} />
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1">{dwellingLabel}</div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {h.year_built != null && (
+                  <Pill className="bg-white text-slate-700">Built {h.year_built}</Pill>
+                )}
+                {h.square_feet != null && (
+                  <Pill className="bg-white text-slate-700">
+                    {Number(h.square_feet).toLocaleString()} sq ft
+                  </Pill>
+                )}
+                {h.purchase_price != null && (
+                  <Pill className="bg-white text-slate-700">
+                    ${Number(h.purchase_price).toLocaleString()}
+                  </Pill>
+                )}
+              </div>
+              {onStartHomeProtection && homeProtectionEnabled && (
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => onStartHomeProtection(h)}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-md bg-white ring-1 ring-slate-300 hover:bg-slate-50 text-slate-700"
+                  >
+                    <House className="w-3 h-3" />
+                    Start home protection
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Section>
   );
 }
 

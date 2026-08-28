@@ -8,6 +8,12 @@
       "repo": "https://github.com/BlinkerGit/customer-portal"
     },
     {
+      "remote": "home",
+      "branch": "main",
+      "dir": "apps/home-protection-portal",
+      "repo": "https://github.com/BlinkerGit/home-protection-portal"
+    },
+    {
       "remote": "insurance",
       "branch": "main",
       "dir": "apps/insurance-portal",

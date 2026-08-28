@@ -72,6 +72,10 @@ export function AgentHome({ session, onJumpToInbox, onHomeFilter }) {
     appendVehicleToContact,
     appendHouseholdRelationship,
     patchContact,
+    // ADR 30 R8 — threaded into StartOpportunityFlow's 'home' asset step
+    // the same way contacts/vehicles are.
+    homes,
+    appendHomeToContact,
   } = session || localSession;
 
   const [addContactOpen, setAddContactOpen] = useState(false);
@@ -258,6 +262,8 @@ export function AgentHome({ session, onJumpToInbox, onHomeFilter }) {
         appendOpportunity={appendOpportunity}
         appendVehicleToContact={appendVehicleToContact}
         appendHouseholdRelationship={appendHouseholdRelationship}
+        homes={homes}
+        appendHomeToContact={appendHomeToContact}
         seededContact={seededContact}
         onClose={() => {
           setStartOppOpen(false);

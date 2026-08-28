@@ -2,6 +2,102 @@
 
 > Live tracker of what's done, what's in flight, what's blocked, and what's next across all child apps. The coordinator session (this repo) reads it first to answer "what should I work on next?"
 
+## Wave 39 — Home Protection Plan (ADR 30, 2026-08-25 → 08-26)
+
+> **HANDOFF STATE (2026-08-26):** feature-complete and browser-verified; being handed to engineering to fold into their prototype. **Two blockers before push — see "Handoff blockers" at the end of this section.**
+
+### Day 2 (2026-08-26) — pricing redesign + live-smoke fixes
+
+canon `_version` → `2026-08-26-v3018-home-pricing`.
+
+- **`packages/utils/home-pricing.js` (NEW, 16 tests)** — plan markup, per-add-on percentage markup, the low/high price band, per-coverage-term months-to-pay, discount caps. **Monthly payment is the dominant figure** on the coverage step; down payment = one monthly payment, so `monthly = total / (months + 1)`.
+- **canon `home_protection_billing`** gained `markup.add_on_percent`, a SEPARATE `discount.add_on.max_percent`, and `payment_term.by_coverage_term` (options AND default per coverage term — some payment terms don't qualify for a given coverage term).
+- **COST FLOOR** — capping add-on discounts at the markup % does NOT prevent below-cost sales (different bases: 30% off a 30% markup = 0.91x cost). Break-even is `markup/(1+markup)` = 23.08%. `getHomeDiscountCaps` clamps to it, `applyAddOnDiscount` hard-floors at cost, a regression test asserts the naive rule fails, and the admin editor warns live.
+- **Portal steps 3/4/5** — monthly-dominant cards with the range as helper/hover, `+$/mo` per add-on with full price on hover, preselected months-to-pay + one-payment down, separate plan/add-on discount controls.
+- **mission-control admin** — editor + read-only mirror for all three new fields, with the live break-even warning.
+
+**Live-smoke fixes (every one passed build, lint AND unit tests):** parallel form stores made dev-control seeding inert; consumer phone rendered `(191) 241-4627` vs the contact's `(912) 414-6274` (E.164 seeded into a display input — fixed at 3 sites by the new `toNationalPhoneDigits`); `_prefill` was stamped but never threaded into the portal seed; "Start the quote here" jumped to step 3 because `status: 'Quoted'` doubles as a resume marker; add-on pre-check was gated on a flag an upstream screen also writes; `optional_coverages` lost its timestamp to a stale `useMemo` (sibling context consumers — React finishes the render phase before any effect runs). Also fixed: DocuSeal `ProductPrice` used list retail, so a discount would have put a different number on the **signed agreement** than on the card.
+
+### Handoff blockers (need a decision before push)
+
+1. **ADR number collision — RESOLVED 2026-08-26.** `origin/main` already carried `architecture/29-legacy-2.0-sync-boundary.md` (teammate, PR #4). Ours was renumbered **29 → 30**: `architecture/30-home-protection-plan.md`, with every reference rewritten across 90 files in blinker-platform / home-protection-portal / mission-control and canon re-synced. Zero residual `ADR 29` references outside `node_modules`.
+2. **`blinker-platform` is 2 commits BEHIND `origin/main`** — push would be non-fast-forward. Per standing policy this is a hard stop; do not rebase/merge/force without an explicit call.
+3. **`home-protection-portal` has NO git remote.** It is a brand-new local repo (13 commits). Engineering cannot receive it until a GitHub repo exists.
+4. **`refi-portal` is 21 behind** — the known PINNED pre-migration divergence. Its canon-sync commit cannot push without resolving that; leave pinned.
+
+Clean to push right now (ahead only, behind 0): `mission-control` (13), `protection-portal` (2), `insurance-portal` (2), `customer-portal` (2).
+
+### Follow-ups carried out of Day 2
+
+- `down_payment.min_percent: 10` conflicts with one-payment-down (7.69% at 12 payments). The portal treats one payment as an always-allowed floor; canon still says 10.
+- **Org gating mismatch** — the Home card is gated on the ACTIVE org but rating uses the CONTACT's org, so an org-103 contact returns `no_provider` and reads as broken rating.
+- **`RelatedProtectionProgress.jsx` shares the stale-`useMemo` defect** (same `[oppId, contactId, currentStepIdx]` deps, four conditional steps). Not fixed — separate duplicated block.
+
+
+**Trigger:** User asked for a new opportunity type: a **Home** Protection Plan modeled on the auto protection workflow, quoting OMEGA's Omega-J Home 2024 line through the same StoneEagle `GetRates` service. Sources: Basecamp TODO "Home Warranty support - AutoGuard - OMEGA" (`https://3.basecamp.com/4898365/buckets/41487717/todos/10224643560`) and DocuSeal templates 182/184/185/186/187/188.
+
+**Spec:** `docs/superpowers/specs/2026-08-25-home-protection-plan-design.md`
+**Plan:** `docs/superpowers/plans/2026-08-25-home-protection-plan.md`
+**ADR:** `architecture/30-home-protection-plan.md`
+
+**Product facts (verified):** Six plans, all `OMGA::VSC::*`. Fixed-term `ContractType 39` — **35** Deluxe (12/24/36/48 mo, $525/$970/$1,175/$1,425), **36** Deluxe Plus (24/36/48, $990/$1,325/$1,570), **37** Deluxe Enhanced (24/36/48, $1,040/$1,425/$1,670). Month-to-month `ContractType 40` — **38/48/49** at $40/$44/$48 per month over 1–23 months. Flat $75 deductible, preprinted $75 service call fee. Tier ladder in both structures: Deluxe → good, Deluxe Plus → better, Deluxe Enhanced → best. Request uses HOME sentinels: `NewUsed *`, `VehicleYear 2025`, `VehicleMake/Model HOME`, `Trim`/`AssetType` empty, `VehicleOdometer 0`. **Square footage and year built are NOT rating inputs** — they drive the agreement PDF and eligibility only. `AUG2` and `AMR2` are seller codes for two OMEGA seller orgs; AUG2 carries home rates, AMR2 does not — so `dealer_no` stays a single per-org value.
+
+**Locked decisions (ADR 30 D1–D9):** (1) `home` is a first-class canon entity, not an opportunity payload and not a generalized `asset`; (2) it attaches to a household and to MULTIPLE contacts — the agreement has two holder slots; (3) the wizard lives in a NEW sibling repo `home-protection-portal/`; (4) workflow-agnostic mechanics lift into `packages/`, screens do not, portal→portal deps forbidden; (5) add-on selection is its own post-plan-selection step; (6) the "does the home have X" questions are a separate earlier step; (7) **add-on dollars ARE in `paymentSchedule` and the charge** — unlike auto, where passthrough totals are display-only; (8) DocuSeal is built once in `packages/integrations/signing/`; (9) home capability is a declared per-org toggle, not inferred from the rate set.
+
+**Phase A — coordinator (LANDED):**
+- `architecture/30-home-protection-plan.md` — new ADR (D1–D9 + R1–R6); registered in CLAUDE.md index.
+- `canon/plan-mappings.json` — six home `plan_catalog` entries (35→182, 36→184, 37→185, 38→186, 48→187, 49→188); **`asset_kind` + `program_code` added to ALL 23 catalog entries** (17 auto backfilled `vehicle`); new `home_dwelling_classes` (5 buckets, inclusive bounds); new `home_add_ons` (12 categories + alias table + term-suffix map + P/E markers + `plan_variant_rule`); `monthly_membership.contract_type_allowlist: [40]`.
+- `canon/blinker-domain.json` — new `home` entity block; `opportunity` gains `home_id` + `home_protection` workflow type; `activity.status_change` union extended.
+- `canon/ghl-status.json` — new `home_protection` block, 20 statuses cloned from `vsc` with `actor` stamped per ADR 27. `vsc` untouched (asserted).
+- `canon/org-registry.json` — `home_protection_billing` + `opportunities.home_protection.enabled` on all 7 orgs; enabled only for org 102 (Apex, the OMGA UAT org). No credentials change.
+- `canon/_version` → `2026-08-25-v3017-home-protection`. Synced to all 5 child apps.
+- `packages/utils/dwelling-class.js` + tests (9) — `classifyDwelling` / `isHomeEligible` / `listHomeTypes`. **null = INELIGIBLE, not unknown.**
+- `packages/utils/home-addons.js` + tests (18) — `parseOptionDesc` / `resolveHomeAddOns` / `sumAddOnPrices` / `revalidateSelections`. Longest-alias-first matching; term + variant filters; unknown plan code yields nothing rather than defaulting a variant.
+- `packages/integrations/product_admin/soap-envelope.js` — NEW. `escapeXml` + `buildSoapEnvelope` extracted from `stoneeagle.js` so the request contract is unit-testable. Pure move, re-exported; no behavior change.
+- `packages/integrations/product_admin/stoneeagle.js` — home SOAP branch (a BRANCH because the vehicle path coerces `NewUsed` to N|U and defaults `AssetType` to 'P'); `getRatesForHome` (one call, no vehicle-class fan-out); normalizer home path (`asset_kind`, `mileage: null`, per-product raw `options[]`, no mileage-slider pollution); **co-authoritative monthly detection** — sentinel OR `ContractType 40`, with divergence telemetry.
+- `packages/integrations/product_admin/_fixtures/stone-eagle-get-rates-home.json` — SYNTHETIC, 13 products.
+- `packages/integrations/signing/` — NEW category. `docuseal.js` + tests (21): `resolveTemplateId` (delegates to `resolvePlanPresentation`), `buildHomeSubmissionFields` (all 12 add-on + all 5 dwelling checkboxes ALWAYS emitted explicitly; holder vs covered-property addresses under distinct names), `createSubmission` (fixture/live fork), `addMonthsIso` (UTC, clamps day overflow).
+- `packages/api/homes.js` + `_fixtures/homes.json` (3 homes covering 3 of the 5 buckets, one two-holder) + 3 `home_protection` opportunities + `homes[]` on 4 contacts; `registerHomeWriter` boot wiring.
+- **84 platform tests pass.**
+
+**Phase B — `home-protection-portal/` (LANDED, 10 commits, not pushed):** new sibling repo. Nine steps `home_add → home_features → recommended_coverage → [customize] → optional_coverages → confirm → billing_payment → docuseal → thank_you`. `npm run build` clean, `eslint src` clean, 15/15 lib tests pass (selector tests drive the real `getRatesForHome` fixture producer, not synthetic products, per `feedback_fixture_shape_mismatch`).
+
+- **Export contract for mc:** `views/agent/index.js` → `AgentView`, `buildInitialFormSeed`, `HomeProtectionDevControls`. `views/customer/CustomerView.jsx` → `INITIAL_FORM`, `BASE_STEPS`, `buildSteps`, `HomeWizard`, `CustomerView`, `shouldRunCustomize`, `shouldRunOptionalCoverages`. `lib/status-step-map.js` → `STATUS_TO_STEP` (all 20), `stepFromStatus(status, fallback='home_add')`.
+- **`AgentView` props:** `persona`, `opportunity`, `contact`, `home`, `form`, `update`, `stepIdx`, `setStepIdx`, `onFormChange`, `onHomeCommitted`, `availableStatuses`, `personaLocked`, `seedMultiContactHousehold`. `onHomeCommitted` payload carries a deterministic `id` so mc dedupes/patches in place. `home` seeds the covered property; `contact` seeds the holder's mailing address — deliberately separate (R5).
+- **Deviation 1 (accepted):** `customize` anchors before `optional_coverages`, not before `confirm`. The plan's literal wording contradicted ADR 30 D5; anchoring on `confirm` would let a plan change in Customize silently invalidate an add-on selection. Falls back to the confirm anchor when `optional_coverages` is absent (monthly).
+- **Deviation 2 (accepted):** `revalidateSelections` runs on the plan/term/mode flip itself via a shared `src/lib/addon-sync.js` consumed by RecommendedCoverage, Customize AND OptionalCoverages — not only on the picker's mount. Without this a consumer can flip the term and walk straight to Confirm without re-rendering the picker.
+- **Deviation 3:** canon `plan_level_defaults` copy is the AUTO line's ("Core powertrain coverage…", "exclusionary") and is wrong for home, so `src/components/homePlanCopy.js` supplies home tier copy and defers to `resolvePlanPresentation` only for authored org overrides. `PlanCoverageModal` renders no HTML and takes no DOMPurify dep — all six home catalog entries have `plan_coverage_html: null`.
+- **Verified end-to-end against the real fixture:** plan 35 @36mo Plumbing $152 / Pool $360 → switch to plan 37 re-prices to **$186 / $415** with new option ids, 0 dropped; term flip 36→12 → $57 / $127; monthly flip drops both. `buildHomeSubmissionFields` returns template **185**, `Deluxe: true`, exactly 2 of 12 add-on boxes true, exactly one dwelling box, `ProductPrice "2026.00"`.
+- **NOT verified:** no browser smoke test. Every "verify in the dev server" step was checked at the logic level against the real fixture instead. The DocuSeal fixture-mode field inspector exists to make that checkable on first smoke.
+
+**Phase C — mission-control (LANDED, 5 commits, not pushed):** `npm run build` clean. New: `RelatedHomeProtectionProgress.jsx`, `AddHomeModal.jsx`, `OrgConfigSections/HomeProtection.jsx`. Modified 20 files across registries, personas, shell and admin.
+
+- Lazy embed uses refi's `makeRefiAgentEmbed` **factory** pattern rather than a bare `lazy(AgentView)` — a naive split (lazy AgentView + static `buildInitialFormSeed` from the same barrel) tripped Vite's "ineffective dynamic import" and would have kept the whole wizard eager. One `import()` resolves both; a real code-split chunk was confirmed in the build output.
+- `homeProtectionForm` / `homeProtectionStepIdx` lifted onto `ActiveWorkflowContext` — `OpportunityContextPane` is a sibling of the embed, not a descendant, and needs the live step index for the active-opp timeline.
+- Teal `TYPE_BADGE` (distinct from protection's indigo), `home_protection` status routing, step write-through to `home_protection_progress`, timeline at both mounts, Home card + Homes section, org-gated start, admin/super config with the canon `_TODO` → "Unconfirmed" banner in both the editor and the read-only mirror.
+- **`HomeProtectionDevControls` is NOT wired into the consolidated DevPanel** — no `HomeProtectionSection` mirroring `ProtectionDevControls`. Follow-up.
+- **AdvancedFilter home-level field (`home_square_feet`) added to `AgentContacts` only**, not `AgentInbox`/`GlobalSearch` — those don't expose vehicle-level per-row fields either, so parity was kept rather than invented.
+- **Browser-verified 2026-08-25:** Start-opportunity → Home protection → contact → existing home → opportunity created with the right shape; CoPilot Home card, 8-step timeline with Agent badge, and the lazy portal embed all render. No console errors. Build-verified and traced against `opp_home_001/002/003` + the two-holder `home_alvarez_cypress` case only.
+
+ new sibling repo; nine steps `home_add → home_features → recommended_coverage → [customize] → optional_coverages → confirm → billing_payment → docuseal → thank_you`; `optional_coverages` is conditional (dropped for monthly plans); add-on-inclusive Confirm totals; first real DocuSeal wiring. Produces the mission-control embed contract: `AgentView`, `INITIAL_FORM`, `buildSteps`, `stepFromStatus`.
+
+**Phase C — mission-control (QUEUED behind B):** new type through `resolveEmbedKind` + `HomeProtectionEmbed` (lazy), `TYPE_LABELS`/`TYPE_BADGE`/`TYPE_TILE_ICON`, `lookupStage`, inbox/search/contacts enums, `buildNewOpp`, `AdvancedFilter` `'home'` level, `PlanCatalog` asset-kind column, new `OrgConfigSections/HomeProtection.jsx`, left-rail Home card, ContactProfile Homes section, `AddHomeModal`, and `RelatedHomeProtectionProgress.jsx` (plus the duplicate step-label map at `CoPilotPane.jsx:1586`).
+
+**Open loose ends (ADR 30 R1–R6):**
+- **R1 — no real AUG2 `GetRates` capture.** Unverified: whether the M2M plans carry the 999999 sentinel, the real `<Option>` payload shape, where `ContractType` sits, and whether `ProductEffectiveDate` is returned. One live `/se-rating` proxy call closes all four; the regression fixture must then be that exact response.
+- **R2 — dwelling eligibility is INFERRED** from the PDF's printed bucket list, not stated by Omega. Confirm with product.
+- **R3 — two-holder relationship has no Phase-1 persistence target** (same gap as ADR 27's `buildHouseholdRelationship`).
+- **R4 — `ProductAgreementNumber`** comes from eContracting, which is unbuilt. Emits `''`.
+- **R8 — RESOLVED 2026-08-25 (user request): Home protection added to the Start-opportunity dialog.** `StartOpportunityFlow` gains an org-gated card + a home asset step (pick existing / add via `AddHomeModal` / skip). Opportunity carries `home_id`. Browser-verified end to end. `OpportunityTypeMenu` stays deliberately without it — its consumers route through `NewOpportunityFlow`, which has no home handling; making it asset-aware is a separate, larger change.
+- **R7 — RESOLVED 2026-08-25 (user decision): new org `200` "AutoGuard" carries `dealer_no` AUG2.** AUG2 returns both auto and home rates; Apex's AMR2 is auto-only. Org 200 is `home_protection.enabled: true` and is the org to run any live or proxy-mode home `GetRates` capture from. Apex 102 KEEPS home enabled so the three seeded home opportunities still demo in fixture mode, and its `home_protection_billing` now carries a `_dealer_no_warning` explaining that a real home call from Apex returns an empty product set. Note `getRatesProxy` reads `credentials.test` unconditionally (`stoneeagle.js#resolveTestCredentialsForOrg`, NOT gated on `test_mode`), so the test block is what a proxy call actually sends.
+- **R5 — ACCEPTED AS-IS 2026-08-25 (user decision):** the DocuSeal duplicate-field-name defect is deferred to engineering at prototype handoff. The signing payload is already written against the corrected `Property*` names, so it is inert until someone enables live mode — at which point it would write one address into both slots. Must be fixed before any live submission.
+- **R6 — seeded `home_protection_billing` markup/EFS values are placeholders** flagged `_TODO` in canon; mission-control must surface them as a warning, not as confirmed config.
+- **Home `plan_level_defaults` / `covered_components` / `plan_coverage_html` are unfilled** (all six entries `null`), so "See what's covered" shows a placeholder. Needs Omega home coverage copy.
+- **`home_protection_billing` has no `monthly_membership` sub-block**, so monthly and term share one discount cap. One line in the portal's `Confirm.jsx` changes if canon later splits them.
+- **Org records have no `legal_name` / `address` / `phone`**, so DocuSeal `SellerNameLegal` falls back to `name` and the seller address fields emit empty strings.
+- **`ProductTermMonths` on a monthly agreement emits `1`.** There is no elected-months control in monthly mode per ADR 28 D6, so there is nothing better to send yet.
+- Synced canon copies are committed here but remain UNcommitted in the five child repos' `src/constants/canon/`.
+
 ## Wave 38 — v3.0.16 Monthly-membership VSC plans (ADR 28, 2026-06-01)
 
 **Trigger:** User asked to support monthly-membership VSC products (M2M / "Residual" / RAP) in the protection workflow. StoneEagle GetRates returns these (OMEGA TPA) with `RateClassMoney.TermMile.Mileage == 999999` and month-by-month terms; they were previously **silently dropped** (Wave-24 filter). They're billed as a recurring monthly charge — no down-payment, no finite months-to-pay, unlimited term + miles.
@@ -33,6 +129,8 @@
 - Confirm R6's true `<DeductAmt>` in the API-responses modal ($0 expected per prior UAT).
 
 **LANDED + PUSHED 2026-06-01** — `blinker-platform` (canon + packages + ADR 28 + CLAUDE.md), `protection-portal` (Phase C + synced canon), `mission-control` (Phase D + synced canon), synced-canon-only commits in `insurance-portal` / `customer-portal` / `refinance-prototype`.
+
+> ⚠️ **refinance-prototype divergence (2026-06-02):** the canon push to `refinance-prototype` was non-fast-forward because GitHub main carries a `JSX→TSX migration (#1)` the local ecosystem doesn't consume (mission-control imports refi-portal `.js`). A `pull --rebase` pulled the migration local and broke mission-control's cross-repo imports; recovered with `git reset --hard 84e705d`. **Local refinance-prototype is now PINNED to the pre-migration `.js` line (`84e705d`, with v3016 canon); GitHub main keeps the migration. Do NOT `git pull` refinance-prototype.** See memory `project_refi_portal_quirks.md` quirk #3.
 
 ## Wave 37 — v3.0.15 PDF (Contact-details gate + timeline actor attribution, 2026-05-16)
 

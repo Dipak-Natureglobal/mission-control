@@ -75,7 +75,9 @@ export interface OrgConfig {
   maxVehicleAgeYears: number;
   maxMileage: number;
   minPayoff: number;
+  maxPayoff?: number;
   minAnnualIncome: number;
+  maxAnnualIncome?: number;
   eligibleOwnership: string[];
   minCreditBandWithoutCoApp: CreditBand;
   restrictedEmploymentTypes: string[];

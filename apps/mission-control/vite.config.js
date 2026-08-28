@@ -34,6 +34,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // These two aliases force every `file:` portal dependency (protection,
+      // refi, insurance, and — Wave 39 / ADR 30 — home-protection-portal) to
+      // resolve react/react-dom against MISSION-CONTROL's own copy rather
+      // than whatever copy sits in the portal's own node_modules. Without
+      // this, two React instances mount in the same tree and hooks break
+      // with "Invalid hook call". Applies package-wide, so a newly added
+      // portal dep needs no alias entry of its own.
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
     },

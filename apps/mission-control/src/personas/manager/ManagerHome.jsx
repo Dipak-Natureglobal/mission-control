@@ -5,6 +5,7 @@ import {
   BarChart3,
   Calendar as CalendarIcon,
   Clock,
+  House,
   Inbox,
   RefreshCcw,
   ShieldCheck,
@@ -285,7 +286,7 @@ export function ManagerHome({ session, onHomeFilter, onNavigate }) {
 
   // By-type counts (open subset, scoped by lens for the cards' totals).
   const byType = useMemo(() => {
-    const counts = { protection: 0, refi: 0, insurance: 0, payments: 0 };
+    const counts = { protection: 0, refi: 0, insurance: 0, payments: 0, home_protection: 0 };
     for (const o of enrichedOpen) {
       // Lens-narrow only when not 'all' — by-type is a "current open"
       // surface but the brief calls it lens-scoped. Use lensOpps filter
@@ -302,7 +303,13 @@ export function ManagerHome({ session, onHomeFilter, onNavigate }) {
   // By-type → by-status pill rollup (mirrors AgentHome's pattern). Used
   // by the per-type cards.
   const byStatusByType = useMemo(() => {
-    const groups = { protection: new Map(), refi: new Map(), insurance: new Map(), payments: new Map() };
+    const groups = {
+      protection: new Map(),
+      refi: new Map(),
+      insurance: new Map(),
+      payments: new Map(),
+      home_protection: new Map(),
+    };
     for (const o of enrichedOpen) {
       if (cutoff != null) {
         const t = Date.parse(o.updated_at || '');
@@ -619,14 +626,16 @@ const TYPE_TILE_ICON = {
   refi: RefreshCcw,
   insurance: Umbrella,
   payments: Banknote,
+  // Wave 39 (ADR 30) — home protection.
+  home_protection: House,
 };
 
 const PILLS_PER_CARD_VISIBLE = 4;
 
 function ByTypeRow({ byType, byStatusByType, onClick }) {
-  const items = ['protection', 'refi', 'insurance', 'payments'];
+  const items = ['protection', 'refi', 'insurance', 'payments', 'home_protection'];
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
       {items.map((t) => (
         <TypeCard
           key={t}

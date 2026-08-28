@@ -46,6 +46,9 @@ function digitsOnly(s) {
 const PROTECTION_STATUSES = Object.keys(ghlStatus.vsc?.statuses || {});
 const INSURANCE_STATUSES = Object.keys(ghlStatus.insurance?.statuses || {});
 const REFI_STATUSES = Array.from(ghlStatus.refi?.statuses_summary || []);
+// Wave 39 (ADR 30) — home protection's canon block has the same
+// `statuses` map shape as vsc/insurance.
+const HOME_PROTECTION_STATUSES = Object.keys(ghlStatus.home_protection?.statuses || {});
 
 // Wave 26a fu3: Organization enum is restricted to orgs the logged-in
 // agent has an association with (stub returns all canon-active orgs
@@ -60,6 +63,7 @@ const TYPE_ENUM = [
   { value: 'insurance', label: 'Insurance' },
   { value: 'protection', label: 'Protection (VSC)' },
   { value: 'payments', label: 'Payments' },
+  { value: 'home_protection', label: 'Home Protection' },
 ];
 
 export function GlobalSearch({ onContactClick, session }) {
@@ -185,6 +189,7 @@ export function GlobalSearch({ onContactClick, session }) {
       { groupLabel: 'Protection (VSC)', values: PROTECTION_STATUSES },
       { groupLabel: 'Refi', values: REFI_STATUSES },
       { groupLabel: 'Insurance', values: INSURANCE_STATUSES },
+      { groupLabel: 'Home Protection', values: HOME_PROTECTION_STATUSES },
     ];
     if (paymentsStatuses.length > 0) {
       statusGroups.push({ groupLabel: 'Payments', values: paymentsStatuses });
@@ -213,6 +218,7 @@ export function GlobalSearch({ onContactClick, session }) {
             refi: 'Refi',
             insurance: 'Insurance',
             payments: 'Payments',
+            home_protection: 'Home Protection',
           };
           const wanted = new Set(
             selectedTypes.map((t) => TYPE_TO_GROUP_LABEL[t]).filter(Boolean),

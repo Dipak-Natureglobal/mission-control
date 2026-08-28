@@ -47,6 +47,11 @@
 //   blinkerApi.opportunities.get(id)
 //   blinkerApi.opportunities.create({ type, contact_id, vehicle_id?, status?, owner?, _prefill?, ... })
 //   blinkerApi.opportunities.registerOpportunityWriter(fn)  // host-app boot wiring
+//   blinkerApi.homes.list({ org_id?, contact_id?, household_id? })
+//   blinkerApi.homes.get(id)
+//   blinkerApi.homes.asMap()
+//   blinkerApi.homes.create({ org_id, primary_contact_id, home_type, address, square_feet, ... })
+//   blinkerApi.homes.registerHomeWriter(fn)                 // host-app boot wiring
 //   blinkerApi.addNote({ contact_id, opportunity_id, body, author_id, author_persona })
 //
 //   // Or named imports for tree-shake friendliness:
@@ -80,6 +85,7 @@ import * as opportunities from './opportunities.js';
 import * as agents from './agents.js';
 import * as tags from './tags.js';
 import * as leaderboard from './leaderboard.js';
+import * as homes from './homes.js';
 
 /**
  * Atomic dual-write: create a note record AND a `type: 'note'` activity
@@ -117,18 +123,22 @@ export function addNote({
   return { note, activity };
 }
 
-export { notes, activities, contacts, opportunities, agents, tags, leaderboard };
+export { notes, activities, contacts, opportunities, agents, tags, leaderboard, homes };
 
 // Wave 31 — host-app boot wiring for opportunity mutations. Re-exported
 // at the top level so mission-control can call it once at mount without
 // reaching into `opportunities.registerOpportunityWriter`.
 export { registerOpportunityWriter } from './opportunities.js';
 
+// Wave 39 (ADR 30) — same boot wiring for home mutations.
+export { registerHomeWriter } from './homes.js';
+
 export const blinkerApi = {
   notes,
   activities,
   contacts,
   opportunities,
+  homes,
   agents,
   tags,
   leaderboard,

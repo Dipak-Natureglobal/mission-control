@@ -68,6 +68,7 @@ blinker-platform/
 │   ├── 27-contact-details-gate-and-timeline-actors.md  # Wave 37 — insurance contact-details gate + CoPilot timeline actor attribution
 │   ├── 28-monthly-membership-vsc.md               # Wave 38 — monthly-membership VSC plans (999999 sentinel) in protection workflow
 │   ├── 29-legacy-2.0-sync-boundary.md             # Legacy ↔ 2.0 data boundary — no two-way sync, one-time cutover migration
+│   ├── 30-home-protection-plan.md                 # Wave 39 — home protection workflow (Omega-J Home 2024)
 │   └── integration-partners/  # per-partner integration notes
 ├── canon/                     # versioned shared JSON copied into each child app
 │   ├── blinker-domain.json    # canonical entity shapes (contact, opportunity, vehicle, ...)

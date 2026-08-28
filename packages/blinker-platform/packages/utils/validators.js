@@ -267,6 +267,37 @@ export function dobAdult(v) {
  * Format a phone string for display: keep up to 10 digits, render as
  * `(###) ###-####`. Returns `''` for empty input.
  */
+/**
+ * Reduce a stored phone value to its 10 national digits.
+ *
+ * Phones persist as E.164 (`+19125550142`). `formatPhoneDisplay` deliberately
+ * takes the FIRST 10 digits so as-you-type formatting works while someone is
+ * still typing — which means feeding it a stored E.164 value formats the
+ * country code as the area code and silently drops the last digit:
+ *
+ *   '+19124146274' -> formatPhoneDisplay -> '(191) 241-4627'   WRONG
+ *   '+19124146274' -> toNationalPhoneDigits -> '9124146274'
+ *                  -> formatPhoneDisplay -> '(912) 414-6274'   right
+ *
+ * ALWAYS run a stored phone through this before seeding a display input.
+ * Established Wave 39 — the home-protection CaptureLinkForm seeded
+ * `contact.phones[0].number` straight into a PhoneField and showed the agent
+ * a different number than the contact record beside it.
+ *
+ * @param {string} value  E.164, formatted, or raw digits
+ * @returns {string} exactly 10 digits, or '' when the input cannot yield them
+ */
+export function toNationalPhoneDigits(value) {
+  const d = String(value ?? '').replace(/\D/g, '');
+  if (d.length === 0) return '';
+  // 11 digits beginning with the US country code -> drop it.
+  if (d.length === 11 && d.startsWith('1')) return d.slice(1);
+  if (d.length === 10) return d;
+  // Longer (an international or malformed value): the national number is the
+  // trailing 10. Shorter: a partial the caller is still assembling — pass through.
+  return d.length > 10 ? d.slice(-10) : d;
+}
+
 export function formatPhoneDisplay(digits) {
   const d = String(digits || '').replace(/\D/g, '').slice(0, 10);
   if (d.length === 0) return '';

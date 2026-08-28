@@ -49,6 +49,7 @@ import { ContactsSection } from './OrgConfigSections/Contacts.jsx';
 import { RefinanceSection } from './OrgConfigSections/Refinance.jsx';
 import { InsuranceSection } from './OrgConfigSections/Insurance.jsx';
 import { ProtectionSection } from './OrgConfigSections/Protection.jsx';
+import { HomeProtectionSection } from './OrgConfigSections/HomeProtection.jsx';
 import { PaymentsSection } from './OrgConfigSections/Payments.jsx';
 import { IntegrationsSection } from './OrgConfigSections/Integrations.jsx';
 import { RelationshipTypesSection } from './OrgConfigSections/RelationshipTypes.jsx';
@@ -63,6 +64,8 @@ const SECTIONS = [
   { key: 'opp_refinance', parent: 'opportunities', label: 'Refinance' },
   { key: 'opp_insurance', parent: 'opportunities', label: 'Insurance' },
   { key: 'opp_protection', parent: 'opportunities', label: 'Protection' },
+  // Wave 39 (ADR 30).
+  { key: 'opp_home_protection', parent: 'opportunities', label: 'Home Protection' },
   { key: 'payments', label: 'Payments' },
   { key: 'integrations', label: 'Integrations' },
   { key: 'relationship_types', label: 'Relationship types' },
@@ -507,6 +510,12 @@ function OrgEditDialog({ mode, org, orgs, onSave, onClose, onJumpToOrg }) {
               <ProtectionSection
                 form={form}
                 set={(p) => setSectioned('opp_protection', p)}
+              />
+            )}
+            {activeSection === 'opp_home_protection' && (
+              <HomeProtectionSection
+                form={form}
+                set={(p) => setSectioned('opp_home_protection', p)}
               />
             )}
             {activeSection === 'payments' && (

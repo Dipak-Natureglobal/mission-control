@@ -17,6 +17,7 @@ PROJECTS_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
 APPS=(
   "protection-portal"
+  "home-protection-portal"
   "insurance-portal"
   "mission-control"
   "customer-portal"

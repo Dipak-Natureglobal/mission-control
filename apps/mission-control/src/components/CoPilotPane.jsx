@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   ExternalLink,
   Car,
+  House,
   MessageSquare,
   UserCog,
 } from 'lucide-react';
@@ -33,6 +34,24 @@ import {
 import { stepFromStatus } from 'protection-portal/src/lib/status-step-map.js';
 import { stepFromStatus as refiStepFromStatus } from 'refi-portal/src/lib/status-step-map.js';
 import { stepFromStatus as insuranceStepFromStatus, stepFromMachineId as insuranceStepFromMachineId } from 'insurance-portal/src/lib/status-step-map.js';
+// Wave 39 (ADR 30) — home-protection step resolution. Deep-import so we
+// don't pull in AgentView (that arrives via the lazy chunk below) just to
+// get the step map. `buildInitialFormSeed` is NOT imported here — it lives
+// in the SAME module as `AgentView` (home-protection-portal's
+// `views/agent` barrel), and a static top-level import of it would defeat
+// the lazy split (Vite's ineffective-dynamic-import warning) exactly the
+// way refi avoids by resolving both from one Promise via the lazy()
+// factory below (see `makeHomeProtectionAgentEmbed`). `buildSteps` DOES
+// still get a static top-level import despite living in the same file as
+// the (also lazy, also heavy) `CustomerView`/`HomeWizard` components —
+// this mirrors the accepted RelatedProtectionProgress precedent (that
+// component statically imports protection's buildSteps too), and
+// RelatedHomeProtectionProgress.jsx needs it synchronously for its
+// related-opp step list, which cannot wait on an async import().
+import { stepFromStatus as homeProtectionStepFromStatus } from 'home-protection-portal/src/lib/status-step-map.js';
+import { buildSteps as buildHomeProtectionSteps } from 'home-protection-portal/src/views/customer/CustomerView.jsx';
+import { classifyDwelling } from 'blinker-platform/utils';
+import homeDwellingCanon from '../constants/canon/plan-mappings.json';
 import { getSequence } from 'refi-portal/src/lib/refi';
 import { track } from 'blinker-platform/telemetry';
 import { formatVehicleLabel } from 'blinker-platform/utils';
@@ -45,6 +64,7 @@ import { InsuranceSavingsCard } from './InsuranceSavingsCard.jsx';
 import { RelatedInsuranceProgress } from './RelatedInsuranceProgress.jsx';
 import { RelatedProtectionProgress } from './RelatedProtectionProgress.jsx';
 import { RelatedRefiProgress } from './RelatedRefiProgress.jsx';
+import { RelatedHomeProtectionProgress } from './RelatedHomeProtectionProgress.jsx';
 import {
   availableStatusesForWorkflow,
   loadMapping,
@@ -119,11 +139,16 @@ import {
 const PROTECTION_TYPES = ['protection', 'vsc'];
 const REFI_TYPES = ['refi'];
 const INSURANCE_TYPES = ['insurance'];
+// Wave 39 (ADR 30) — home protection has no legacy alias (protection's
+// 'vsc' alias exists for a legacy status-taxonomy reason home never had),
+// so this is a single-member list purely for symmetry with the others.
+const HOME_PROTECTION_TYPES = ['home_protection'];
 
 function resolveEmbedKind(type) {
   if (PROTECTION_TYPES.includes(type)) return 'protection';
   if (REFI_TYPES.includes(type)) return 'refi';
   if (INSURANCE_TYPES.includes(type)) return 'insurance';
+  if (HOME_PROTECTION_TYPES.includes(type)) return 'home_protection';
   return null;
 }
 
@@ -440,6 +465,22 @@ const InsuranceAgentView = lazy(() =>
   import('insurance-portal/src/views/agent').then((m) => ({ default: m.AgentView })),
 );
 
+// Wave 39 (ADR 30 D3) — home-protection AgentView is lazy-loaded, matching
+// refi and insurance (protection is the only eager import — it is the
+// dominant workflow). Mirrors refi's `RefiAgentEmbed` shape: `AgentView`
+// AND `buildInitialFormSeed` both live in the SAME module
+// (`home-protection-portal/src/views/agent`'s barrel — see that file's
+// header comment), so both are resolved from the ONE dynamic import()
+// and threaded into the factory below. A separate top-level static
+// import of `buildInitialFormSeed` would defeat the lazy split (Vite
+// flags this as an "ineffective dynamic import" — the exact problem
+// refi's Promise.all pattern exists to avoid for INITIAL_FORM).
+const HomeProtectionAgentEmbed = lazy(() =>
+  import('home-protection-portal/src/views/agent').then((m) => ({
+    default: makeHomeProtectionAgentEmbed(m.AgentView, m.buildInitialFormSeed),
+  })),
+);
+
 export function CoPilotPane({
   opportunity,
   persona,
@@ -467,6 +508,15 @@ export function CoPilotPane({
   appendVehicleToContact,
   updateContactVehicle,
   dedupAndUpsertVehicle,
+  // Wave 39 (ADR 30) — home analog of the vehicle appender/dedup pair
+  // above. `homes` is the session home map (id → home, mirrors `contacts`
+  // shape); `dedupAndUpsertHome` is the id-keyed upsert AgentView's
+  // `onHomeCommitted` wire-back uses (a home only needs id-dedup — no
+  // VIN/YMMT-equivalent multi-tier match per the AgentView contract).
+  // Both optional so legacy callers that don't thread them still work —
+  // the embed just won't wire the home card / write-back in that case.
+  homes,
+  dedupAndUpsertHome,
   updateOpportunity,
   onClose,
   onOpenContactProfile,
@@ -505,6 +555,10 @@ export function CoPilotPane({
     // over the value, which would require adding insuranceWorkflow to the
     // callback deps and cause unnecessary re-binding on every workflow update.
     insuranceWorkflow: insuranceWorkflowForRef,
+    // Wave 39 (ADR 30) — home protection form/stepIdx setters, for the
+    // unmount cleanup effect below (mirrors protection/refi/insurance).
+    setHomeProtectionForm,
+    setHomeProtectionStepIdx,
   } = useActiveWorkflow();
 
   // Keep the ref in sync with the latest context value so the callback below
@@ -552,6 +606,25 @@ export function CoPilotPane({
     if (vehicles.length === 1) return vehicles[0];
     return null;
   }, [contactWithMembers, opportunity.vehicle_id, opportunity.vehicle]);
+
+  // Wave 39 (ADR 30) — resolve the chosen home from the session `homes`
+  // map. A home is not stored on the contact record (unlike vehicles —
+  // ADR 30 D2, a home can carry TWO contact_ids) so this filters `homes`
+  // by membership rather than reading `contact.homes`. Priority: home_id
+  // exact match → sole home the contact holds (unambiguous) → null.
+  const home = useMemo(() => {
+    if (!homes || !opportunity.contact_id) return null;
+    const held = Object.values(homes).filter(
+      (h) => Array.isArray(h.contact_ids) && h.contact_ids.includes(opportunity.contact_id),
+    );
+    if (held.length === 0) return null;
+    if (opportunity.home_id) {
+      const hit = held.find((h) => h.id === opportunity.home_id);
+      if (hit) return hit;
+    }
+    if (held.length === 1) return held[0];
+    return null;
+  }, [homes, opportunity.contact_id, opportunity.home_id]);
 
   const relatedOpps = useMemo(
     () =>
@@ -664,6 +737,12 @@ export function CoPilotPane({
     () => availableStatusesForWorkflow(mapping, 'insurance'),
     [mapping],
   );
+  // Wave 39 (ADR 30) — home protection's operator mapping key is
+  // 'home_protection' (its own canon block, not an alias of 'vsc').
+  const homeProtectionAvailableStatuses = useMemo(
+    () => availableStatusesForWorkflow(mapping, 'home_protection'),
+    [mapping],
+  );
 
   // Publish inbound payload (kind / opportunity / contact / vehicle) to
   // ActiveWorkflowContext on mount + whenever any of those change. The
@@ -723,6 +802,10 @@ export function CoPilotPane({
       setRefiForm(null);
       setRefiStepIdx(0);
       setInsuranceWorkflow(null);
+      // Wave 39 (ADR 30) — home protection form/stepIdx reset, mirrors
+      // protection above.
+      setHomeProtectionForm(null);
+      setHomeProtectionStepIdx(0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opportunity.id]);
@@ -797,6 +880,8 @@ export function CoPilotPane({
   const appendVehicleToContactRef = useRef(appendVehicleToContact);
   const updateContactVehicleRef = useRef(updateContactVehicle);
   const updateOpportunityRef = useRef(updateOpportunity);
+  // Wave 39 (ADR 30) — same ref-stability pattern for the home wire-back.
+  const dedupAndUpsertHomeRef = useRef(dedupAndUpsertHome);
   useEffect(() => {
     opportunityRef.current = opportunity;
     contactsRef.current = contacts;
@@ -804,6 +889,7 @@ export function CoPilotPane({
     appendVehicleToContactRef.current = appendVehicleToContact;
     updateContactVehicleRef.current = updateContactVehicle;
     updateOpportunityRef.current = updateOpportunity;
+    dedupAndUpsertHomeRef.current = dedupAndUpsertHome;
   });
 
   const handleEmbedVehicleCommitted = useCallback((vehicle, workflowType) => {
@@ -916,6 +1002,37 @@ export function CoPilotPane({
     // refs above. See the long-form comment for why.
   }, []);
 
+  // Wave 39 (ADR 30) — home analog of handleEmbedVehicleCommitted. Much
+  // simpler: a home only needs id-keyed dedup (AgentView's
+  // onHomeCommitted contract computes a deterministic id from the
+  // property address, so match-or-append is a single equality check,
+  // not the vehicle's three-tier id/VIN/YMMT ladder). Same ref-stable
+  // pattern so the wizard's onHomeCommitted observer's deps don't churn
+  // on parent re-render.
+  const handleEmbedHomeCommitted = useCallback((home) => {
+    const opp = opportunityRef.current;
+    if (!home || !opp) return;
+    const dedupAndUpsert = dedupAndUpsertHomeRef.current;
+    const patchOpportunity = updateOpportunityRef.current;
+    if (typeof dedupAndUpsert !== 'function') return;
+
+    const persisted = dedupAndUpsert(home);
+    const homeId = persisted?.id || home.id || null;
+    if (!homeId) return;
+
+    if (typeof patchOpportunity === 'function' && opp.home_id !== homeId) {
+      patchOpportunity(opp.id, { home_id: homeId });
+    }
+
+    track('mission_control.copilot.home_committed_from_embed', {
+      opp_id: opp.id,
+      contact_id: opp.contact_id,
+      home_id: homeId,
+    });
+    // Empty deps — handler is intentionally stable for the lifetime of
+    // the pane, mirroring handleEmbedVehicleCommitted above.
+  }, []);
+
   // Fire copilot_opened on each new opportunity selection; copilot_closed on unmount.
   useEffect(() => {
     track('mission_control.copilot.copilot_opened', {
@@ -1018,6 +1135,7 @@ export function CoPilotPane({
           contact={contactWithMembers}
           contacts={contacts}
           vehicle={vehicle}
+          home={home}
           relatedOpps={relatedOpps}
           onOpenContactProfile={onOpenContactProfile}
           onOpenOpportunity={onOpenOpportunity}
@@ -1034,10 +1152,13 @@ export function CoPilotPane({
             contacts={contacts}
             relatedOpps={relatedOpps}
             vehicle={vehicle}
+            home={home}
             onFormChange={onEmbedFormChange}
             onEmbedVehicleCommitted={handleEmbedVehicleCommitted}
+            onEmbedHomeCommitted={handleEmbedHomeCommitted}
             protectionAvailableStatuses={protectionAvailableStatuses}
             insuranceAvailableStatuses={insuranceAvailableStatuses}
+            homeProtectionAvailableStatuses={homeProtectionAvailableStatuses}
             onFindCoverageSpawn={handleFindCoverageSpawn}
             updateOpportunity={updateOpportunity}
           />
@@ -1073,6 +1194,9 @@ function EmbedSlot({
   contacts,
   relatedOpps,
   vehicle,
+  // Wave 39 (ADR 30) — home analog of `vehicle`, threaded to
+  // HomeProtectionEmbed only.
+  home,
   onFormChange,
   // Wave 16 F2-fu11/fu12 — workflow-agnostic callback, fired by any
   // embedded wizard when it commits a canonical vehicle record (Step 1
@@ -1080,12 +1204,18 @@ function EmbedSlot({
   // closure over session-data appenders; EmbedSlot routes typed shims
   // to each embed so the telemetry event carries workflow_type.
   onEmbedVehicleCommitted,
+  // Wave 39 (ADR 30) — home analog. Passed straight through to
+  // HomeProtectionEmbed's `onHomeCommitted` (no typed-shim ladder needed
+  // — only one embed kind ever fires it).
+  onEmbedHomeCommitted,
   // Wave 14-fu — per-workflow availableStatuses overrides derived
   // upstream in CoPilotPane from the operator's local status mapping.
   // `undefined` here means the AgentView falls back to canon (today's
   // behavior); a populated array overrides the canon-derived list.
   protectionAvailableStatuses,
   insuranceAvailableStatuses,
+  // Wave 39 (ADR 30) — home protection analog.
+  homeProtectionAvailableStatuses,
   // Wave 31 v3.0.11 — Find Coverage spawn handler. Closure over
   // CoPilotPane's spawn helper. Passed only to InsuranceEmbed; other
   // embed kinds receive `undefined` and ignore it.
@@ -1241,6 +1371,34 @@ function EmbedSlot({
           onVehicleCommitted={insuranceCommittedProp}
           availableStatuses={insuranceAvailableStatuses}
           onFindCoverageSpawn={onFindCoverageSpawn}
+          updateOpportunity={updateOpportunity}
+        />
+      </Suspense>
+    );
+  }
+  if (embedKind === 'home_protection') {
+    // Wave 39 (ADR 30) — home protection mirrors ProtectionEmbed's
+    // lifted-form pattern: form/stepIdx live on ActiveWorkflowContext
+    // (homeProtectionForm / homeProtectionStepIdx) so (a) the step-
+    // persistence write-through can observe transitions and (b)
+    // OpportunityContextPane — a SIBLING of this embed, not a
+    // descendant — can read the live step index for its active-opp
+    // RelatedHomeProtectionProgress mount. No consolidated DevPanel
+    // section exists for home protection yet (HomeProtectionDevControls
+    // is exported by the portal but not wired into mc's DevPanel in this
+    // wave), so nothing else reads this state — but it still needs to be
+    // lifted for reason (b).
+    return (
+      <Suspense fallback={<EmbedLoading label="Loading home protection agent view…" />}>
+        <HomeProtectionAgentEmbed
+          key={`${persona}:${opportunity.id}`}
+          persona={persona}
+          opportunity={opportunity}
+          contact={contact}
+          home={home}
+          onFormChange={onFormChange}
+          onHomeCommitted={onEmbedHomeCommitted}
+          availableStatuses={homeProtectionAvailableStatuses}
           updateOpportunity={updateOpportunity}
         />
       </Suspense>
@@ -1563,6 +1721,219 @@ function ProtectionEmbed({
   );
 }
 
+// Wave 39 (ADR 30) — HomeProtectionEmbed. Structural twin of
+// ProtectionEmbed above (same seed effect / resume effect / step-
+// persistence write-through shape). Two deliberate differences:
+//
+//   1. The write-through persists `home_protection_progress` (not
+//      `protection_progress`) and stamps `workflow_type: 'home_protection'`
+//      on each `step_change` activity — everything else about the
+//      write-through is a verbatim clone of the Wave 34 v3.0.14 (ADR 24
+//      D4) protection write-through.
+//   2. There is no `dev` / `setHomeProtectionDev` slice threaded in —
+//      `HomeProtectionDevControls` (exported by the portal) is not wired
+//      into mc's consolidated DevPanel in this wave. form/stepIdx ARE
+//      still lifted onto ActiveWorkflowContext exactly like protection's,
+//      because OpportunityContextPane (a SIBLING of this component, not a
+//      descendant) needs the live homeProtectionStepIdx for the active-opp
+//      RelatedHomeProtectionProgress mount — see active-workflow.js's doc
+//      comment on the home protection slots.
+//
+// Factory shape (`makeHomeProtectionAgentEmbed`) mirrors refi's
+// `makeRefiAgentEmbed`: `AgentView` and `buildInitialFormSeed` are
+// resolved together from the ONE lazy import() of the agent barrel (see
+// `HomeProtectionAgentEmbed` above) and closed over here, rather than
+// referenced as module-level static imports — the whole reason for the
+// factory indirection is keeping that import lazy.
+function makeHomeProtectionAgentEmbed(AgentView, buildInitialFormSeed) {
+  return function HomeProtectionEmbedInner({
+    persona,
+    // Forwarded so AgentView's own internal stepFromStatus resume effect
+    // can also fire (dual-path, same rationale as ProtectionEmbed's
+    // opportunity prop — Wave 18-fu3).
+    opportunity,
+    contact,
+    home,
+    onFormChange,
+    // AgentView's onHomeCommitted contract (ADR 30) — the home analog of
+    // protection-portal's onVehicleCommitted.
+    onHomeCommitted,
+    availableStatuses,
+    // Wave 39 (ADR 30) — session-data opportunity patcher, used by the
+    // step write-through to persist `home_protection_progress` onto the
+    // opp record (mirrors ProtectionEmbed's updateOpportunity use).
+    updateOpportunity,
+  }) {
+  const {
+    homeProtectionForm,
+    setHomeProtectionForm,
+    homeProtectionStepIdx,
+    setHomeProtectionStepIdx,
+    setResetHomeProtectionForm,
+  } = useActiveWorkflow();
+
+  // Seed effect — mirrors ProtectionEmbed. Runs once per mount (the
+  // parent EmbedSlot supplies key={`${persona}:${opportunity.id}`} so
+  // this wrapper remounts on opportunity change; CoPilotPane's unmount
+  // cleanup effect resets homeProtectionForm to null on the PREVIOUS
+  // opp's teardown, so this effect re-fires for the new one).
+  useEffect(() => {
+    if (homeProtectionForm === null) {
+      // Wave 39 follow-up (ADR 30) — `_prefill.home.address` is the
+      // covered-property seed carried from StartOpportunityFlow when the
+      // contact had an address on file and no home yet; portal treats it
+      // as assumed-not-confirmed.
+      const seededForm = buildInitialFormSeed(contact, home, opportunity?._prefill);
+      setHomeProtectionForm(seededForm);
+      const stepList = buildHomeProtectionSteps(seededForm);
+      const directStepIdx =
+        opportunity?.status && stepList.includes(opportunity.status)
+          ? stepList.indexOf(opportunity.status)
+          : -1;
+      let targetIdx;
+      if (directStepIdx >= 0) {
+        targetIdx = directStepIdx;
+      } else {
+        const stepKey = homeProtectionStepFromStatus(opportunity?.status, 'home_add');
+        targetIdx = Math.max(0, stepList.indexOf(stepKey));
+      }
+      setHomeProtectionStepIdx(targetIdx);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeProtectionForm]);
+
+  // Re-seed homeProtectionStepIdx when opportunity.status changes post-
+  // mount (e.g. force-status picker). Mirrors ProtectionEmbed's Wave
+  // 18-fu3 effect.
+  useEffect(() => {
+    if (!homeProtectionForm) return;
+    const stepList = buildHomeProtectionSteps(homeProtectionForm);
+    const directStepIdx =
+      opportunity?.status && stepList.includes(opportunity.status)
+        ? stepList.indexOf(opportunity.status)
+        : -1;
+    let targetIdx;
+    if (directStepIdx >= 0) {
+      targetIdx = directStepIdx;
+    } else {
+      const stepKey = homeProtectionStepFromStatus(opportunity?.status, 'home_add');
+      targetIdx = Math.max(0, stepList.indexOf(stepKey));
+    }
+    setHomeProtectionStepIdx(targetIdx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opportunity?.status]);
+
+  // Register resetHomeProtectionForm for symmetry with protection/refi.
+  // Currently unused (no reset button anywhere reads it) but published.
+  useEffect(() => {
+    const fn = () => {
+      setHomeProtectionForm(buildInitialFormSeed(contact, home));
+      setHomeProtectionStepIdx(0);
+    };
+    setResetHomeProtectionForm(() => fn);
+    return () => setResetHomeProtectionForm(() => null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contact?.id, home?.id, opportunity?.id]);
+
+  // Step-persistence write-through — see file header comment above this
+  // component for how it differs from ProtectionEmbed's.
+  const previousStepRef = useRef(
+    typeof homeProtectionStepIdx === 'number' ? homeProtectionStepIdx : 0,
+  );
+  useEffect(() => {
+    const j = typeof homeProtectionStepIdx === 'number' ? homeProtectionStepIdx : 0;
+    const i = previousStepRef.current;
+    if (j === i) return;
+    previousStepRef.current = j;
+    if (j <= i) return;
+    if (!opportunity?.id || !opportunity?.contact_id) return;
+
+    let stepList;
+    try {
+      stepList = buildHomeProtectionSteps(homeProtectionForm || {});
+    } catch {
+      stepList = [];
+    }
+
+    for (let k = i; k < j; k++) {
+      const completedKey = stepList[k] || null;
+      const toKey = stepList[k + 1] || null;
+      const label = HOME_PROTECTION_STEP_LABEL[completedKey] || completedKey || `step ${k}`;
+      try {
+        activitiesApi.create({
+          contact_id: opportunity.contact_id,
+          opportunity_id: opportunity.id,
+          type: 'step_change',
+          // Phase 1 reality — the agent drives the whole home protection
+          // wizard inside the CoPilot embed, same as protection.
+          source: 'agent',
+          payload: {
+            from_step: completedKey,
+            to_step: toKey,
+            completed_step: completedKey,
+            step_idx: k,
+            workflow_type: 'home_protection',
+          },
+          summary_text: `Home protection step: ${label}`,
+        });
+      } catch (err) {
+        console.warn('[mc] activities.create(step_change) failed:', err);
+      }
+    }
+
+    // Persist home_protection_progress on the opp record — additive,
+    // does NOT touch opportunity.status. Distinct field name from
+    // protection's `protection_progress` per the dispatch brief.
+    if (typeof updateOpportunity === 'function') {
+      const furthestKey = stepList[j] || stepList[stepList.length - 1] || null;
+      updateOpportunity(opportunity.id, {
+        home_protection_progress: {
+          furthest_step_idx: j,
+          furthest_step_key: furthestKey,
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
+
+    const fromKeyTele = stepList[i] || null;
+    const toKeyTele = stepList[j] || null;
+    track('mc.copilot.home_protection_progress.step_persisted', {
+      opp_id: opportunity.id,
+      from_step: fromKeyTele,
+      to_step: toKeyTele,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeProtectionStepIdx, opportunity?.id, opportunity?.contact_id]);
+
+  const update = (patch) =>
+    setHomeProtectionForm((prev) => ({
+      ...(prev || {}),
+      ...(typeof patch === 'function' ? patch(prev || {}) : patch),
+    }));
+
+  // Render with an empty form for the one tick before the seed effect
+  // commits, mirroring ProtectionEmbed's safeForm.
+  const safeForm = homeProtectionForm || {};
+
+  return (
+    <AgentView
+      persona={persona}
+      personaLocked={false}
+      opportunity={opportunity}
+      contact={contact}
+      home={home}
+      onFormChange={onFormChange}
+      onHomeCommitted={onHomeCommitted}
+      form={safeForm}
+      update={update}
+      stepIdx={homeProtectionStepIdx}
+      setStepIdx={setHomeProtectionStepIdx}
+      availableStatuses={availableStatuses}
+    />
+  );
+  };
+}
+
 // Wave 31 v3.0.11 (ADR 21 D5) — protection statuses ≤ step 5
 // (coverage_recommendation). When a related protection/vsc opp sits at
 // one of these statuses, the insurance CoPilot right pane cross-shows
@@ -1604,6 +1975,28 @@ const PROTECTION_STEP_LABEL = {
   billing_payment: 'Billing & payment',
   vin_validate: 'VIN validation',
   rates_changed: 'Rates changed',
+  docuseal: 'Sign agreements',
+  thank_you: 'Complete',
+};
+
+// Wave 39 (ADR 30) — home protection wizard step-key → human label, used
+// for the `summary_text` on `step_change` activities emitted by
+// HomeProtectionEmbed's step write-through (see that component's header
+// comment). Structural twin of PROTECTION_STEP_LABEL directly above —
+// kept in sync with the STEP_LABEL map in RelatedHomeProtectionProgress.jsx
+// (same cross-file-duplication rationale as PROTECTION_STEP_LABEL: the
+// step KEYS are the contract, the LABELS are display-only; the portal
+// exports no step-label map). Update BOTH this map and
+// RelatedHomeProtectionProgress.jsx's STEP_LABEL when a wizard step is
+// added or renamed.
+const HOME_PROTECTION_STEP_LABEL = {
+  home_add: 'Add home',
+  home_features: 'Home features',
+  recommended_coverage: 'Recommended coverage',
+  customize: 'Customize',
+  optional_coverages: 'Optional coverages',
+  confirm: 'Review & confirm',
+  billing_payment: 'Billing & payment',
   docuseal: 'Sign agreements',
   thank_you: 'Complete',
 };
@@ -2259,6 +2652,8 @@ function OpportunityContextPane({
   contact,
   contacts,
   vehicle,
+  // Wave 39 (ADR 30) — home analog of `vehicle`.
+  home,
   relatedOpps,
   onOpenContactProfile,
   // Wave 31 v3.0.11 (ADR 21 D4) — row click on a related opp switches
@@ -2299,8 +2694,22 @@ function OpportunityContextPane({
   // `refiForm` from ActiveWorkflowContext (owned + seeded by the sibling
   // RefiAgentEmbedInner).
   const isActiveRefi = opportunity?.type === 'refi';
-  const { insuranceWorkflow, protectionForm, protectionStepIdx, refiForm, refiStepIdx } =
-    useActiveWorkflow();
+  // Wave 39 (ADR 30 C4) — when the ACTIVE opp is home protection, surface
+  // the compact step-progress timeline directly in the ctx pane (same
+  // altitude as the other three active-opp timelines). Driven by the
+  // live `homeProtectionStepIdx` + `homeProtectionForm` from
+  // ActiveWorkflowContext (owned + seeded by the sibling
+  // HomeProtectionEmbed).
+  const isActiveHomeProtection = opportunity?.type === 'home_protection';
+  const {
+    insuranceWorkflow,
+    protectionForm,
+    protectionStepIdx,
+    refiForm,
+    refiStepIdx,
+    homeProtectionForm,
+    homeProtectionStepIdx,
+  } = useActiveWorkflow();
   const primaryPhone = contact?.phones.find((p) => p.is_primary) || contact?.phones[0];
   const primaryEmail = contact?.emails.find((e) => e.is_primary) || contact?.emails[0];
   const primaryAddress =
@@ -2397,51 +2806,143 @@ function OpportunityContextPane({
         )}
       </div>
 
-      <div className="px-5 py-4 border-b border-slate-200">
-        <SectionLabel>Vehicle</SectionLabel>
-        {vehicle ? (
-          <div className="space-y-1.5 text-sm">
-            <div className="flex items-start gap-2">
-              <Car className="w-3.5 h-3.5 mt-0.5 text-slate-400 shrink-0" />
-              <div className="text-slate-900 font-medium truncate">
-                {formatVehicleLabel(vehicle) || '—'}
+      {/* Wave 39 (ADR 30 C3) — the Vehicle card is meaningless for a home
+          protection opp (no vehicle is ever collected), so it's hidden
+          for that type and the Home card below takes its place. */}
+      {opportunity.type !== 'home_protection' && (
+        <div className="px-5 py-4 border-b border-slate-200">
+          <SectionLabel>Vehicle</SectionLabel>
+          {vehicle ? (
+            <div className="space-y-1.5 text-sm">
+              <div className="flex items-start gap-2">
+                <Car className="w-3.5 h-3.5 mt-0.5 text-slate-400 shrink-0" />
+                <div className="text-slate-900 font-medium truncate">
+                  {formatVehicleLabel(vehicle) || '—'}
+                </div>
+              </div>
+              <VehicleStat label="Mileage" value={
+                vehicle.mileage != null
+                  ? `${Number(vehicle.mileage).toLocaleString()} mi`
+                  : null
+              } />
+              <VehicleStat label="VIN" value={vehicle.vin || null} mono />
+              <VehicleStat label="Est. annual mileage" value={
+                vehicle.annual_mileage_estimate != null
+                  ? `${Number(vehicle.annual_mileage_estimate).toLocaleString()} mi/yr`
+                  : null
+              } />
+              <VehicleStat label="Est. value" value={
+                vehicle.value != null
+                  ? `$${Number(vehicle.value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                  : null
+              } />
+              <VehicleStat label="Condition" value={
+                vehicle.condition
+                  ? String(vehicle.condition).charAt(0).toUpperCase() +
+                    String(vehicle.condition).slice(1).toLowerCase()
+                  : null
+              } />
+            </div>
+          ) : (
+            <div className="text-xs text-slate-400">
+              No vehicle yet — collected in the workflow's first step.
+            </div>
+          )}
+          {isManagerOverlay && managerOverlay.onNoteForAgent && (
+            <ManagerNoteForAgentControl
+              opportunity={opportunity}
+              onNoteForAgent={managerOverlay.onNoteForAgent}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Wave 39 (ADR 30 C3) — Home card, the home_protection analog of
+          the Vehicle card above. Shows the covered-property address,
+          year built, square footage, and the dwelling-class label
+          (classifyDwelling — never re-implemented locally per the
+          dispatch brief). `home` is resolved upstream in CoPilotPane
+          from the session `homes` map (see the `home` useMemo). */}
+      {opportunity.type === 'home_protection' && (
+        <div className="px-5 py-4 border-b border-slate-200">
+          <SectionLabel>Home</SectionLabel>
+          {home ? (
+            <div className="space-y-1.5 text-sm">
+              <div className="flex items-start gap-2">
+                <House className="w-3.5 h-3.5 mt-0.5 text-slate-400 shrink-0" />
+                <div className="text-slate-900 font-medium truncate">
+                  {[home.address?.address1, home.address?.city, home.address?.state]
+                    .filter(Boolean)
+                    .join(', ') || '—'}
+                </div>
+              </div>
+              <VehicleStat
+                label="Dwelling class"
+                value={(() => {
+                  try {
+                    const canonBlock = homeDwellingCanon?.home_dwelling_classes;
+                    return classifyDwelling(home, canonBlock)?.label ?? 'Ineligible (over size limit)';
+                  } catch {
+                    return null;
+                  }
+                })()}
+              />
+              <VehicleStat label="Year built" value={home.year_built ?? null} />
+              <VehicleStat
+                label="Square feet"
+                value={
+                  home.square_feet != null
+                    ? `${Number(home.square_feet).toLocaleString()} sq ft`
+                    : null
+                }
+              />
+              <VehicleStat
+                label="Est. purchase price"
+                value={
+                  home.purchase_price != null
+                    ? `$${Number(home.purchase_price).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                    : null
+                }
+              />
+            </div>
+          ) : opportunity._prefill?.home?.address ? (
+            // Wave 39-fu — no real `home` record yet, but StartOpportunityFlow
+            // carried the contact's mailing address forward as an assumed
+            // covered-property seed (ADR 30 R8 follow-up). Show the address
+            // so the agent isn't staring at "No home yet" for data that's
+            // already on file, but mark it plainly as unconfirmed — no
+            // dwelling class here, there's no square footage yet to
+            // classify (classifyDwelling would return null).
+            <div className="space-y-1.5 text-sm">
+              <div className="flex items-start gap-2">
+                <House className="w-3.5 h-3.5 mt-0.5 text-slate-400 shrink-0" />
+                <div className="text-slate-900 font-medium truncate">
+                  {[
+                    opportunity._prefill.home.address.address1,
+                    opportunity._prefill.home.address.city,
+                    opportunity._prefill.home.address.state,
+                  ]
+                    .filter(Boolean)
+                    .join(', ') || '—'}
+                </div>
+              </div>
+              <div className="text-[11px] text-slate-400">
+                From contact address · confirm in the wizard
               </div>
             </div>
-            <VehicleStat label="Mileage" value={
-              vehicle.mileage != null
-                ? `${Number(vehicle.mileage).toLocaleString()} mi`
-                : null
-            } />
-            <VehicleStat label="VIN" value={vehicle.vin || null} mono />
-            <VehicleStat label="Est. annual mileage" value={
-              vehicle.annual_mileage_estimate != null
-                ? `${Number(vehicle.annual_mileage_estimate).toLocaleString()} mi/yr`
-                : null
-            } />
-            <VehicleStat label="Est. value" value={
-              vehicle.value != null
-                ? `$${Number(vehicle.value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-                : null
-            } />
-            <VehicleStat label="Condition" value={
-              vehicle.condition
-                ? String(vehicle.condition).charAt(0).toUpperCase() +
-                  String(vehicle.condition).slice(1).toLowerCase()
-                : null
-            } />
-          </div>
-        ) : (
-          <div className="text-xs text-slate-400">
-            No vehicle yet — collected in the workflow's first step.
-          </div>
-        )}
-        {isManagerOverlay && managerOverlay.onNoteForAgent && (
-          <ManagerNoteForAgentControl
-            opportunity={opportunity}
-            onNoteForAgent={managerOverlay.onNoteForAgent}
-          />
-        )}
-      </div>
+          ) : (
+            <div className="text-xs text-slate-400">
+              No home yet — collected in the workflow's first step.
+            </div>
+          )}
+          {isManagerOverlay && managerOverlay.onNoteForAgent && (
+            <ManagerNoteForAgentControl
+              opportunity={opportunity}
+              onNoteForAgent={managerOverlay.onNoteForAgent}
+            />
+          )}
+        </div>
+      )}
 
       {/* Wave 33 v3.0.13 (ADR 23 D2) — active-opp insurance timeline.
           Mounts between Vehicle and Related opportunities so the agent's
@@ -2498,6 +2999,26 @@ function OpportunityContextPane({
             context="active_opp"
             currentStepIdx={refiStepIdx}
             refiForm={refiForm}
+            orgId={contact?.org_id ?? null}
+          />
+        </div>
+      )}
+
+      {/* Wave 39 (ADR 30 C4) — active-opp home protection step timeline.
+          Mounts between Home and Related opportunities — same altitude
+          as the other three active-opp timelines. For the active mount
+          we OMIT `onOpenInCoPilot` (agent is already on the opp) and
+          THREAD `currentStepIdx` (the live homeProtectionStepIdx) +
+          `homeProtectionForm` (so buildHomeProtectionSteps reflects
+          conditional steps) + `orgId` (date-separator TZ). */}
+      {isActiveHomeProtection && (
+        <div className="px-5 py-4 border-b border-slate-200">
+          <SectionLabel>Workflow progress</SectionLabel>
+          <RelatedHomeProtectionProgress
+            opportunity={opportunity}
+            context="active_opp"
+            currentStepIdx={homeProtectionStepIdx}
+            homeProtectionForm={homeProtectionForm}
             orgId={contact?.org_id ?? null}
           />
         </div>
@@ -2654,6 +3175,25 @@ function RelatedOppRow({ relatedOpp, onOpenOpportunity, orgId }) {
           opportunity={relatedOpp}
           context="related_opp"
           refiProgress={relatedOpp.refi_progress || null}
+          orgId={orgId ?? null}
+          onOpenInCoPilot={
+            clickable ? (oppId) => handleProgressClick(oppId) : undefined
+          }
+        />
+      )}
+      {/* Wave 39 (ADR 30 C4) — related-opp home protection step timeline.
+          Mirrors the protection + refi related-opp mounts above. No live
+          form/index — RelatedHomeProtectionProgress derives the current
+          step from `relatedOpp.status` via stepFromStatus and reads
+          `step_change` activity timestamps, with
+          `home_protection_progress` as the furthest-step fallback.
+          `onOpenInCoPilot` routes through the same distinct handler so
+          the wrapping row's click doesn't double-emit. */}
+      {relatedOpp.type === 'home_protection' && (
+        <RelatedHomeProtectionProgress
+          opportunity={relatedOpp}
+          context="related_opp"
+          homeProtectionProgress={relatedOpp.home_protection_progress || null}
           orgId={orgId ?? null}
           onOpenInCoPilot={
             clickable ? (oppId) => handleProgressClick(oppId) : undefined

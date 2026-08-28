@@ -30,6 +30,7 @@ const PORTS = {
     'mission-control': 30003,
     'customer-portal': 30004,
     'refinance-prototype': 30005,
+    'home-protection-portal': 30006,
 };
 
 /** Scripts that take a `--port` flag. `build` and `lint` are left alone. */

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Banknote,
   Clock,
+  House,
   Inbox,
   RefreshCcw,
   ShieldCheck,
@@ -63,6 +64,8 @@ const TYPE_TILE_ICON = {
   refi: RefreshCcw,
   insurance: Umbrella,
   payments: Banknote,
+  // Wave 39 (ADR 30) — home protection.
+  home_protection: House,
 };
 
 const PILLS_PER_CARD_VISIBLE = 4;
@@ -116,7 +119,7 @@ export function AgentMetricsGrid({
   const openOpps = useMemo(() => lensScopedOpps.filter(isOpen), [lensScopedOpps]);
 
   const byType = useMemo(() => {
-    const counts = { protection: 0, refi: 0, insurance: 0, payments: 0 };
+    const counts = { protection: 0, refi: 0, insurance: 0, payments: 0, home_protection: 0 };
     for (const o of openOpps) {
       if (counts[o.type] !== undefined) counts[o.type] += 1;
     }
@@ -149,6 +152,7 @@ export function AgentMetricsGrid({
       refi: new Map(),
       insurance: new Map(),
       payments: new Map(),
+      home_protection: new Map(),
     };
     for (const o of openOpps) {
       if (!groups[o.type]) continue;
@@ -168,7 +172,8 @@ export function AgentMetricsGrid({
     if (onPillClick) onPillClick(payload);
   }
 
-  const totalByType = byType.protection + byType.refi + byType.insurance + byType.payments;
+  const totalByType =
+    byType.protection + byType.refi + byType.insurance + byType.payments + byType.home_protection;
 
   return (
     <div>
@@ -215,9 +220,10 @@ export function AgentMetricsGrid({
         />
       </div>
 
-      {/* By-type cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        {['protection', 'refi', 'insurance', 'payments'].map((t) => (
+      {/* By-type cards. Wave 39 (ADR 30) bumped lg:grid-cols-4 → 5 to fit
+          the new home_protection card in one row on large screens. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+        {['protection', 'refi', 'insurance', 'payments', 'home_protection'].map((t) => (
           <TypeCard
             key={t}
             type={t}

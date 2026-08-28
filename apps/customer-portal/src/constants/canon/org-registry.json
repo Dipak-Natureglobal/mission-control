@@ -1,6 +1,6 @@
 {
   "_comment": "Canonical Org IDs. Mirrors Blinker Agreements API. Confirmed 2026-05-02 via legacy MissionControl + EFS prototype Settings → Organizations cross-reference. As of 2026-05-05 (admin-console init) extended with `parent_org_id` (explicit hierarchy: Blinker → Parent → Child) and `integrations` (per-org enabled providers + credential ref). See canon/integrations.json for the per-provider field schema and architecture/10-admin-console.md for the credential-storage policy. v3.0.10 Task 1 (2026-05-13): adds `cross_org_assignment` per-org block. Wave 30 (2026-05-13): adds `sales_goals` per-org block (ADR 20).",
-  "_version": "2026-06-01-v3016-monthly-membership-vsc",
+  "_version": "2026-08-26-v3018-home-pricing",
   "_demo_user_email": "jimmy@aautoalliance.com",
   "_source": "blinker.organizations table; mirrored to payment-processing-platform/orchestrator org table",
 
@@ -99,6 +99,36 @@
       "vehicle_defaults": { "annual_mileage_estimate": 12000 },
       "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
       "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "opportunities": { "home_protection": { "enabled": false } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": false,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -115,6 +145,36 @@
       "vehicle_defaults": { "annual_mileage_estimate": 12000 },
       "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
       "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "opportunities": { "home_protection": { "enabled": false } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": false,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -175,6 +235,37 @@
       },
       "cross_org_assignment": { "enabled": true, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
       "sales_goals": { "weekly_wins": 10, "monthly_wins": 40, "monthly_revenue": 30000, "fast_start_threshold_pct": 30, "fast_close_hours": 24, "streak_milestones": [3, 5, 10, 15, 20] },
+      "opportunities": { "home_protection": { "enabled": true } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "_dealer_no_warning": "ADR 30 R7 — this org's StoneEagle dealer_no is AMR2, which carries AUTO rates only. Home rating works here in FIXTURE mode (the seeded home opportunities live on this org), but a real /se-rating home call from Apex returns an empty product set. Use org 200 (AutoGuard, dealer_no AUG2) for any live or proxy-mode home capture.",
+        "enabled": true,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -217,6 +308,36 @@
       "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
       "cross_org_assignment": { "enabled": true, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
       "sales_goals": { "weekly_wins": 6, "monthly_wins": 24, "monthly_revenue": 18000, "fast_start_threshold_pct": 30, "fast_close_hours": 24, "streak_milestones": [3, 5, 10, 15, 20] },
+      "opportunities": { "home_protection": { "enabled": false } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": false,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -237,6 +358,36 @@
       "vehicle_defaults": { "annual_mileage_estimate": 12000 },
       "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
       "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "opportunities": { "home_protection": { "enabled": false } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": false,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -254,6 +405,36 @@
       "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
       "cross_org_assignment": { "enabled": true, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
       "sales_goals": { "weekly_wins": 4, "monthly_wins": 16, "monthly_revenue": 12000, "fast_start_threshold_pct": 30, "fast_close_hours": 24, "streak_milestones": [3, 5, 10, 15, 20] },
+      "opportunities": { "home_protection": { "enabled": false } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": false,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -290,6 +471,36 @@
       "vehicle_defaults": { "annual_mileage_estimate": 12000 },
       "cross_sell": { "insurance_enabled": false, "refi_enabled": false },
       "cross_org_assignment": { "enabled": false, "contact_mode": "copy", "opportunity_mode": "copy", "mark_opportunity_readonly_on_copy": true, "mark_contact_readonly_on_copy": true },
+      "opportunities": { "home_protection": { "enabled": false } },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": false,
+        "markup":              { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount":            {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
+        "payment_term":        {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date":  { "default_strategy": "first_of_next_month", "min_days_from_today": 31, "max_days_from_today": 45 }
+      },
       "protection_billing": {
         "discount":            { "max_percent": 20, "max_dollars": 540.00, "disabled_in_states": ["FL"] },
         "down_payment":        { "default_percent": 10, "min_percent": 10, "max_percent_of_total": 75 },
@@ -301,7 +512,250 @@
         "max_plan_price":          4000.00,
         "monthly_membership":      { "enabled": true, "default": { "term_to_use": 1, "markup_dollars": 25.00, "florida_markup_dollars": 22.00 }, "by_plan_code": {}, "discount": { "max_percent": 15, "max_dollars": 10.00, "disabled_in_states": ["FL"] } },
         "vin_validate":            { "allow_down_payment_bypass": false, "margin_tolerance_pct": 5, "auto_refund_on_decline": true, "allow_over_tolerance_proceed": false }
-      } }
+      } },
+    {
+      "id": 200,
+      "name": "AutoGuard",
+      "type": "child",
+      "status": "active",
+      "ghl_location_id": null,
+      "configurations": [
+        "AutoGuard"
+      ],
+      "timezone": "America/Chicago",
+      "parent_org_id": null,
+      "users_count": 0,
+      "test_mode": false,
+      "_home_rating_note": "ADR 30 R7 — AutoGuard is the seller organization whose OMEGA seller code (AUG2) carries the Omega-J Home 2024 rate set. AUG2 returns BOTH auto and home rates; Apex's AMR2 returns auto only. This org exists so a real /se-rating home GetRates capture has somewhere to run: a home call made as Apex goes out with AMR2 and comes back empty, which reads as a broken rating path rather than a config gap. getRatesProxy uses credentials.test unconditionally (stoneeagle.js resolveTestCredentialsForOrg — NOT gated on test_mode), so the test block below is what a proxy-mode call actually sends.",
+      "integrations": {
+        "ghl": {
+          "enabled": false,
+          "status": "missing"
+        },
+        "fluidpay": {
+          "enabled": true,
+          "status": "configured",
+          "credentials": {
+            "test": {
+              "merchant_id": "apex-test-merchant",
+              "api_key": "<fp-test-fixture>",
+              "public_key": "pk_test_apex"
+            },
+            "live": {
+              "merchant_id": "apex-live-merchant",
+              "api_key": "<fp-live-fixture>",
+              "public_key": "pk_live_apex"
+            }
+          }
+        },
+        "ensurety": {
+          "enabled": true,
+          "status": "configured",
+          "credentials": {
+            "test": {
+              "app_id": "BLINKERTESTAPP",
+              "account_code": "APEX-TEST",
+              "processor": "fluidpay",
+              "efs_token": "<ens-test-token>",
+              "default_term_months": 12,
+              "down_payment_mode": "same_as_monthly",
+              "down_payment_value": 0
+            },
+            "live": {
+              "app_id": "APEXAPP",
+              "account_code": "APEX-LIVE",
+              "processor": "fluidpay",
+              "efs_token": "<ens-live-token>",
+              "default_term_months": 12,
+              "down_payment_mode": "same_as_monthly",
+              "down_payment_value": 0
+            }
+          }
+        },
+        "flopay": {
+          "enabled": true,
+          "status": "configured",
+          "credentials": {
+            "test": {
+              "api_url": "https://test.flopay.com",
+              "api_key": "<flopay-test>",
+              "merchant_id": "apex-test"
+            },
+            "live": {
+              "api_url": "https://api.flopay.com",
+              "api_key": "<flopay-live>",
+              "merchant_id": "apex-live"
+            }
+          }
+        },
+        "stoneeagle": {
+          "enabled": true,
+          "status": "configured",
+          "_test_environment_note": "Same OMGA UAT endpoint and BLINKER user as Apex 102, but dealer_no AUG2 — the seller code that carries home rates. Supplied via the Basecamp 'Home Warranty support - AutoGuard - OMEGA' TODO 2026-08-25.",
+          "credentials": {
+            "test": {
+              "web_service_base_url": "https://staging.fiadmin.com/scs.webservice/",
+              "tpa_code": "OMGA",
+              "user_id": "BLINKER",
+              "password": "zGg8SRDV2b",
+              "dealer_no": "AUG2",
+              "recipient_id": "",
+              "products_filter": []
+            },
+            "live": {
+              "web_service_base_url": "http://www.natinc.com/SCSAutoService/",
+              "tpa_code": "OMGA",
+              "user_id": "<se-live-user>",
+              "password": "<se-live-pw>",
+              "dealer_no": "AUG2",
+              "recipient_id": "",
+              "products_filter": []
+            }
+          }
+        },
+        "express_aftermarket": {
+          "enabled": false,
+          "status": "missing"
+        },
+        "docuseal": {
+          "enabled": true,
+          "status": "configured",
+          "credentials": {
+            "api_url": "https://docuseal.blinker.com",
+            "api_token": "<ds-token>",
+            "webhook_token": "<ds-webhook>",
+            "template_overrides": [],
+            "template_id_by_plan": {}
+          }
+        }
+      },
+      "vehicle_defaults": {
+        "annual_mileage_estimate": 12000
+      },
+      "cross_sell": {
+        "insurance_enabled": false,
+        "refi_enabled": false
+      },
+      "cross_org_assignment": {
+        "enabled": false,
+        "contact_mode": "copy",
+        "opportunity_mode": "copy",
+        "mark_opportunity_readonly_on_copy": true,
+        "mark_contact_readonly_on_copy": true
+      },
+      "opportunities": {
+        "home_protection": {
+          "enabled": true
+        }
+      },
+      "home_protection_billing": {
+        "_comment": "ADR 30 D9 — Omega-J Home 2024 margins and EFS terms. SEPARATE from protection_billing: different product line, different margins, different allowable EFS terms. Home capability is DECLARED via opportunities.home_protection.enabled, never inferred from whether a rate set comes back.",
+        "_TODO": "Seed markup / discount / down-payment / payment-term values below are EDUCATED GUESSES pending product confirmation. Per feedback_canon_todo_defaults, do NOT treat these as authoritative in downstream code or admin copy — mission-control surfaces this as a visible warning banner on the Home Protection org-config section.",
+        "enabled": true,
+        "markup": { "fixed_term_dollars": 300.00, "florida_fixed_term_dollars": 285.00, "monthly_dollars": 10.00, "florida_monthly_dollars": 9.00, "add_on_percent": 0.30 },
+        "discount": {
+          "_comment": "PLAN discount caps. The add_on sub-block is a SEPARATE cap set for optional coverages (user, 2026-08-26).",
+          "max_percent": 15,
+          "max_dollars": 150.00,
+          "disabled_in_states": ["FL"],
+          "add_on": {
+            "_principle": "Add-on discounts must never sell an optional coverage below Omega's cost. A naive 'discount % <= markup %' rule does NOT achieve that: the two percentages apply to different bases, so at a 30% markup a 30% discount lands at 0.91x cost (1.30 x 0.70). The true break-even is markup_pct / (1 + markup_pct) — 23.08% at a 30% markup. packages/utils/home-pricing.js#getHomeDiscountCaps CLAMPS max_percent to that ceiling AND enforces a hard floor at cost, so a mis-set config can never price below cost.",
+            "max_percent": 15
+          }
+        },
+        "down_payment": {
+          "default_percent": 10,
+          "min_percent": 10,
+          "max_percent_of_total": 75
+        },
+        "payment_term": {
+          "_comment": "ADR 30 — months-to-pay options are PER COVERAGE TERM: some payment terms do not qualify for a given coverage term (user, 2026-08-26). by_coverage_term is authoritative; options_months/default_months remain the fallback for a coverage term with no entry. Read by packages/utils/home-pricing.js#getHomePaymentTermOptions.",
+          "by_coverage_term": {
+            "12": { "options_months": [1, 6],     "default_months": 6  },
+            "24": { "options_months": [1, 6, 12], "default_months": 12 },
+            "36": { "options_months": [1, 6, 12], "default_months": 12 },
+            "48": { "options_months": [1, 6, 12], "default_months": 12 }
+          },
+          "options_months": [1, 6, 12],
+          "default_months": 12
+        },
+        "first_payment_date": {
+          "default_strategy": "first_of_next_month",
+          "min_days_from_today": 31,
+          "max_days_from_today": 45
+        }
+      },
+      "protection_billing": {
+        "discount": {
+          "max_percent": 20,
+          "max_dollars": 540.0,
+          "disabled_in_states": [
+            "FL"
+          ]
+        },
+        "down_payment": {
+          "default_percent": 10,
+          "min_percent": 10,
+          "max_percent_of_total": 75
+        },
+        "first_payment_date": {
+          "default_strategy": "first_of_next_month",
+          "min_days_from_today": 31,
+          "max_days_from_today": 45
+        },
+        "payment_term": {
+          "options_months": [
+            1,
+            6,
+            12,
+            18,
+            24
+          ],
+          "default_months": 12
+        },
+        "markup": {
+          "default_dollars": 2700.0,
+          "florida_dollars": 2550.0
+        },
+        "coverage_term_defaults": {
+          "min": 48,
+          "max": 60
+        },
+        "coverage_miles_defaults": {
+          "min": 50000,
+          "max": 75000
+        },
+        "max_plan_price": 4000.0,
+        "monthly_membership": {
+          "enabled": true,
+          "default": {
+            "term_to_use": 1,
+            "markup_dollars": 25.0,
+            "florida_markup_dollars": 22.0
+          },
+          "by_plan_code": {},
+          "discount": {
+            "max_percent": 15,
+            "max_dollars": 10.0,
+            "disabled_in_states": [
+              "FL"
+            ]
+          }
+        },
+        "vin_validate": {
+          "allow_down_payment_bypass": false,
+          "margin_tolerance_pct": 5,
+          "auto_refund_on_decline": true,
+          "allow_over_tolerance_proceed": false
+        }
+      },
+      "se_getrates": {
+        "error_handling": {
+          "default_strategy": "show_friendly_message",
+          "known_errors": []
+        }
+      }
+    }
   ],
   "_TODO": [
     "Verify ghl_location_id for orgs other than Apex 102 + Rewardsco 106 (both confirmed 2026-05-09 via v3.0.5 spec PDF)",

@@ -1,0 +1,1974 @@
+{
+  "_comment": "SYNTHETIC fixture for the Omega-J Home 2024 line (ADR 30). Built from the Basecamp AUG2 screenshots — this is NOT a captured response. Per ADR 30 R1 the real <Option> payload shape, the placement of ContractType, and whether the M2M plans also carry the 999999 mileage sentinel are all UNVERIFIED. Capture a real AUG2 GetRates through the /se-rating proxy and add a regression test in that exact shape before Phase 2. Per ADR 30 R6 the prices here are ILLUSTRATIVE: plan base prices come from the published table, add-on prices are transcribed from a screenshot, and the 12-month P/E add-on rows are derived (no plan offers a P/E variant at 12 months, so they are never resolved).",
+  "request": {
+    "DealerNo": "AUG2",
+    "NewUsed": "*",
+    "VehicleYear": 2025,
+    "VehicleMake": "HOME",
+    "VehicleModel": "HOME",
+    "Trim": "",
+    "AssetType": "",
+    "VehicleOdometer": 0
+  },
+  "filters": {
+    "terms": [
+      12,
+      24,
+      36,
+      48
+    ],
+    "deductibles": [
+      75
+    ],
+    "mileages": [],
+    "_note": "Home has no mileage axis. The term list is the union across plans — 36 and 37 have no 12-month option."
+  },
+  "add_ons": [],
+  "_add_ons_note": "Home add-ons are per-product `options[]`, not a flat catalog: identity and price depend on plan code AND term. See packages/utils/home-addons.js.",
+  "products": [
+    {
+      "id": "OMGA_HOME_35_12",
+      "name": "Home Deluxe",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "35",
+      "plan_description": "OHC-J Term Deluxe",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 12,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 525,
+      "monthly_price": 43.75,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "good",
+      "options": [
+        {
+          "OptionId": "additional_ac_1yr_std",
+          "OptionDesc": "Additional AC unit 1yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "additional_ac_1yr_pe",
+          "OptionDesc": "Additional AC unit 1yr (P/E)",
+          "RetailRate": 75
+        },
+        {
+          "OptionId": "freestanding_freezer_1yr_std",
+          "OptionDesc": "Free-standing freezer 1yr",
+          "RetailRate": 36
+        },
+        {
+          "OptionId": "freestanding_freezer_1yr_pe",
+          "OptionDesc": "Free-standing freezer 1yr (P/E)",
+          "RetailRate": 43
+        },
+        {
+          "OptionId": "garage_door_opener_1yr_std",
+          "OptionDesc": "Garage door opener 1yr",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "garage_door_opener_1yr_pe",
+          "OptionDesc": "Garage door opener 1yr (P/E)",
+          "RetailRate": 16
+        },
+        {
+          "OptionId": "ice_maker_1yr_std",
+          "OptionDesc": "Ice maker 1yr",
+          "RetailRate": 10
+        },
+        {
+          "OptionId": "ice_maker_1yr_pe",
+          "OptionDesc": "Ice maker 1yr (P/E)",
+          "RetailRate": 12
+        },
+        {
+          "OptionId": "internal_plumbing_1yr_std",
+          "OptionDesc": "Plumbing system 1yr",
+          "RetailRate": 57
+        },
+        {
+          "OptionId": "internal_plumbing_1yr_pe",
+          "OptionDesc": "Plumbing system 1yr (P/E)",
+          "RetailRate": 69
+        },
+        {
+          "OptionId": "programmable_thermostat_1yr_std",
+          "OptionDesc": "Programmable thermostat 1yr",
+          "RetailRate": 32
+        },
+        {
+          "OptionId": "programmable_thermostat_1yr_pe",
+          "OptionDesc": "Programmable thermostat 1yr (P/E)",
+          "RetailRate": 39
+        },
+        {
+          "OptionId": "secondary_refrigerator_1yr_std",
+          "OptionDesc": "Secondary refrigerator 1yr",
+          "RetailRate": 23
+        },
+        {
+          "OptionId": "secondary_refrigerator_1yr_pe",
+          "OptionDesc": "Secondary refrigerator 1yr (P/E)",
+          "RetailRate": 28
+        },
+        {
+          "OptionId": "septic_1yr_std",
+          "OptionDesc": "SEPTIC 1yr",
+          "RetailRate": 6
+        },
+        {
+          "OptionId": "septic_1yr_pe",
+          "OptionDesc": "SEPTIC 1yr (P/E)",
+          "RetailRate": 7
+        },
+        {
+          "OptionId": "spa_1yr_std",
+          "OptionDesc": "Spa 1yr",
+          "RetailRate": 127
+        },
+        {
+          "OptionId": "spa_1yr_pe",
+          "OptionDesc": "Spa 1yr (P/E)",
+          "RetailRate": 153
+        },
+        {
+          "OptionId": "swimming_pool_1yr_std",
+          "OptionDesc": "Swimming pool 1yr",
+          "RetailRate": 127
+        },
+        {
+          "OptionId": "swimming_pool_1yr_pe",
+          "OptionDesc": "Swimming pool 1yr (P/E)",
+          "RetailRate": 153
+        },
+        {
+          "OptionId": "well_pump_1yr_std",
+          "OptionDesc": "Well pump 1yr",
+          "RetailRate": 88
+        },
+        {
+          "OptionId": "well_pump_1yr_pe",
+          "OptionDesc": "Well pump 1yr (P/E)",
+          "RetailRate": 106
+        },
+        {
+          "OptionId": "wine_cooler_1yr_std",
+          "OptionDesc": "Wine cooler 1yr",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "wine_cooler_1yr_pe",
+          "OptionDesc": "Wine cooler 1yr (P/E)",
+          "RetailRate": 16
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_35_24",
+      "name": "Home Deluxe",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "35",
+      "plan_description": "OHC-J Term Deluxe",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 24,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 970,
+      "monthly_price": 40.42,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "good",
+      "options": [
+        {
+          "OptionId": "additional_ac_2yr_std",
+          "OptionDesc": "Additional AC unit 2yr",
+          "RetailRate": 112
+        },
+        {
+          "OptionId": "additional_ac_2yr_pe",
+          "OptionDesc": "Additional AC unit 2yr (P/E)",
+          "RetailRate": 134
+        },
+        {
+          "OptionId": "freestanding_freezer_2yr_std",
+          "OptionDesc": "Free-standing freezer 2yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "freestanding_freezer_2yr_pe",
+          "OptionDesc": "Free-standing freezer 2yr (P/E)",
+          "RetailRate": 77
+        },
+        {
+          "OptionId": "garage_door_opener_2yr_std",
+          "OptionDesc": "Garage door opener 2yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "garage_door_opener_2yr_pe",
+          "OptionDesc": "Garage door opener 2yr (P/E)",
+          "RetailRate": 28
+        },
+        {
+          "OptionId": "ice_maker_2yr_std",
+          "OptionDesc": "Ice maker 2yr",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "ice_maker_2yr_pe",
+          "OptionDesc": "Ice maker 2yr (P/E)",
+          "RetailRate": 16
+        },
+        {
+          "OptionId": "internal_plumbing_2yr_std",
+          "OptionDesc": "Plumbing system 2yr",
+          "RetailRate": 101
+        },
+        {
+          "OptionId": "internal_plumbing_2yr_pe",
+          "OptionDesc": "Plumbing system 2yr (P/E)",
+          "RetailRate": 122
+        },
+        {
+          "OptionId": "programmable_thermostat_2yr_std",
+          "OptionDesc": "Programmable thermostat 2yr",
+          "RetailRate": 54
+        },
+        {
+          "OptionId": "programmable_thermostat_2yr_pe",
+          "OptionDesc": "Programmable thermostat 2yr (P/E)",
+          "RetailRate": 68
+        },
+        {
+          "OptionId": "secondary_refrigerator_2yr_std",
+          "OptionDesc": "Secondary refrigerator 2yr",
+          "RetailRate": 39
+        },
+        {
+          "OptionId": "secondary_refrigerator_2yr_pe",
+          "OptionDesc": "Secondary refrigerator 2yr (P/E)",
+          "RetailRate": 42
+        },
+        {
+          "OptionId": "septic_2yr_std",
+          "OptionDesc": "SEPTIC 2yr",
+          "RetailRate": 7
+        },
+        {
+          "OptionId": "septic_2yr_pe",
+          "OptionDesc": "SEPTIC 2yr (P/E)",
+          "RetailRate": 10
+        },
+        {
+          "OptionId": "spa_2yr_std",
+          "OptionDesc": "Spa 2yr",
+          "RetailRate": 235
+        },
+        {
+          "OptionId": "spa_2yr_pe",
+          "OptionDesc": "Spa 2yr (P/E)",
+          "RetailRate": 276
+        },
+        {
+          "OptionId": "swimming_pool_2yr_std",
+          "OptionDesc": "Swimming pool 2yr",
+          "RetailRate": 235
+        },
+        {
+          "OptionId": "swimming_pool_2yr_pe",
+          "OptionDesc": "Swimming pool 2yr (P/E)",
+          "RetailRate": 276
+        },
+        {
+          "OptionId": "well_pump_2yr_std",
+          "OptionDesc": "Well pump 2yr",
+          "RetailRate": 159
+        },
+        {
+          "OptionId": "well_pump_2yr_pe",
+          "OptionDesc": "Well pump 2yr (P/E)",
+          "RetailRate": 193
+        },
+        {
+          "OptionId": "wine_cooler_2yr_std",
+          "OptionDesc": "Wine cooler 2yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "wine_cooler_2yr_pe",
+          "OptionDesc": "Wine cooler 2yr (P/E)",
+          "RetailRate": 24
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_35_36",
+      "name": "Home Deluxe",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "35",
+      "plan_description": "OHC-J Term Deluxe",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 36,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1175,
+      "monthly_price": 32.64,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "good",
+      "options": [
+        {
+          "OptionId": "additional_ac_3yr_std",
+          "OptionDesc": "Additional AC unit 3yr",
+          "RetailRate": 168
+        },
+        {
+          "OptionId": "additional_ac_3yr_pe",
+          "OptionDesc": "Additional AC unit 3yr (P/E)",
+          "RetailRate": 192
+        },
+        {
+          "OptionId": "freestanding_freezer_3yr_std",
+          "OptionDesc": "Free-standing freezer 3yr",
+          "RetailRate": 93
+        },
+        {
+          "OptionId": "freestanding_freezer_3yr_pe",
+          "OptionDesc": "Free-standing freezer 3yr (P/E)",
+          "RetailRate": 112
+        },
+        {
+          "OptionId": "garage_door_opener_3yr_std",
+          "OptionDesc": "Garage door opener 3yr",
+          "RetailRate": 26
+        },
+        {
+          "OptionId": "garage_door_opener_3yr_pe",
+          "OptionDesc": "Garage door opener 3yr (P/E)",
+          "RetailRate": 32
+        },
+        {
+          "OptionId": "ice_maker_3yr_std",
+          "OptionDesc": "Ice maker 3yr",
+          "RetailRate": 17
+        },
+        {
+          "OptionId": "ice_maker_3yr_pe",
+          "OptionDesc": "Ice maker 3yr (P/E)",
+          "RetailRate": 21
+        },
+        {
+          "OptionId": "internal_plumbing_3yr_std",
+          "OptionDesc": "Plumbing system 3yr",
+          "RetailRate": 152
+        },
+        {
+          "OptionId": "internal_plumbing_3yr_pe",
+          "OptionDesc": "Plumbing system 3yr (P/E)",
+          "RetailRate": 186
+        },
+        {
+          "OptionId": "programmable_thermostat_3yr_std",
+          "OptionDesc": "Programmable thermostat 3yr",
+          "RetailRate": 80
+        },
+        {
+          "OptionId": "programmable_thermostat_3yr_pe",
+          "OptionDesc": "Programmable thermostat 3yr (P/E)",
+          "RetailRate": 99
+        },
+        {
+          "OptionId": "secondary_refrigerator_3yr_std",
+          "OptionDesc": "Secondary refrigerator 3yr",
+          "RetailRate": 56
+        },
+        {
+          "OptionId": "secondary_refrigerator_3yr_pe",
+          "OptionDesc": "Secondary refrigerator 3yr (P/E)",
+          "RetailRate": 66
+        },
+        {
+          "OptionId": "septic_3yr_std",
+          "OptionDesc": "SEPTIC 3yr",
+          "RetailRate": 8
+        },
+        {
+          "OptionId": "septic_3yr_pe",
+          "OptionDesc": "SEPTIC 3yr (P/E)",
+          "RetailRate": 12
+        },
+        {
+          "OptionId": "spa_3yr_std",
+          "OptionDesc": "Spa 3yr",
+          "RetailRate": 360
+        },
+        {
+          "OptionId": "spa_3yr_pe",
+          "OptionDesc": "Spa 3yr (P/E)",
+          "RetailRate": 415
+        },
+        {
+          "OptionId": "swimming_pool_3yr_std",
+          "OptionDesc": "Swimming pool 3yr",
+          "RetailRate": 360
+        },
+        {
+          "OptionId": "swimming_pool_3yr_pe",
+          "OptionDesc": "Swimming pool 3yr (P/E)",
+          "RetailRate": 415
+        },
+        {
+          "OptionId": "well_pump_3yr_std",
+          "OptionDesc": "Well pump 3yr",
+          "RetailRate": 245
+        },
+        {
+          "OptionId": "well_pump_3yr_pe",
+          "OptionDesc": "Well pump 3yr (P/E)",
+          "RetailRate": 287
+        },
+        {
+          "OptionId": "wine_cooler_3yr_std",
+          "OptionDesc": "Wine cooler 3yr",
+          "RetailRate": 27
+        },
+        {
+          "OptionId": "wine_cooler_3yr_pe",
+          "OptionDesc": "Wine cooler 3yr (P/E)",
+          "RetailRate": 33
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_35_48",
+      "name": "Home Deluxe",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "35",
+      "plan_description": "OHC-J Term Deluxe",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 48,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1425,
+      "monthly_price": 29.69,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "good",
+      "options": [
+        {
+          "OptionId": "additional_ac_4yr_std",
+          "OptionDesc": "Additional AC unit 4yr",
+          "RetailRate": 185
+        },
+        {
+          "OptionId": "additional_ac_4yr_pe",
+          "OptionDesc": "Additional AC unit 4yr (P/E)",
+          "RetailRate": 210
+        },
+        {
+          "OptionId": "freestanding_freezer_4yr_std",
+          "OptionDesc": "Free-standing freezer 4yr",
+          "RetailRate": 102
+        },
+        {
+          "OptionId": "freestanding_freezer_4yr_pe",
+          "OptionDesc": "Free-standing freezer 4yr (P/E)",
+          "RetailRate": 122
+        },
+        {
+          "OptionId": "garage_door_opener_4yr_std",
+          "OptionDesc": "Garage door opener 4yr",
+          "RetailRate": 29
+        },
+        {
+          "OptionId": "garage_door_opener_4yr_pe",
+          "OptionDesc": "Garage door opener 4yr (P/E)",
+          "RetailRate": 35
+        },
+        {
+          "OptionId": "ice_maker_4yr_std",
+          "OptionDesc": "Ice maker 4yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "ice_maker_4yr_pe",
+          "OptionDesc": "Ice maker 4yr (P/E)",
+          "RetailRate": 23
+        },
+        {
+          "OptionId": "internal_plumbing_4yr_std",
+          "OptionDesc": "Plumbing system 4yr",
+          "RetailRate": 167
+        },
+        {
+          "OptionId": "internal_plumbing_4yr_pe",
+          "OptionDesc": "Plumbing system 4yr (P/E)",
+          "RetailRate": 203
+        },
+        {
+          "OptionId": "programmable_thermostat_4yr_std",
+          "OptionDesc": "Programmable thermostat 4yr",
+          "RetailRate": 88
+        },
+        {
+          "OptionId": "programmable_thermostat_4yr_pe",
+          "OptionDesc": "Programmable thermostat 4yr (P/E)",
+          "RetailRate": 108
+        },
+        {
+          "OptionId": "secondary_refrigerator_4yr_std",
+          "OptionDesc": "Secondary refrigerator 4yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "secondary_refrigerator_4yr_pe",
+          "OptionDesc": "Secondary refrigerator 4yr (P/E)",
+          "RetailRate": 72
+        },
+        {
+          "OptionId": "septic_4yr_std",
+          "OptionDesc": "SEPTIC 4yr",
+          "RetailRate": 9
+        },
+        {
+          "OptionId": "septic_4yr_pe",
+          "OptionDesc": "SEPTIC 4yr (P/E)",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "spa_4yr_std",
+          "OptionDesc": "Spa 4yr",
+          "RetailRate": 395
+        },
+        {
+          "OptionId": "spa_4yr_pe",
+          "OptionDesc": "Spa 4yr (P/E)",
+          "RetailRate": 454
+        },
+        {
+          "OptionId": "swimming_pool_4yr_std",
+          "OptionDesc": "Swimming pool 4yr",
+          "RetailRate": 395
+        },
+        {
+          "OptionId": "swimming_pool_4yr_pe",
+          "OptionDesc": "Swimming pool 4yr (P/E)",
+          "RetailRate": 454
+        },
+        {
+          "OptionId": "well_pump_4yr_std",
+          "OptionDesc": "Well pump 4yr",
+          "RetailRate": 269
+        },
+        {
+          "OptionId": "well_pump_4yr_pe",
+          "OptionDesc": "Well pump 4yr (P/E)",
+          "RetailRate": 315
+        },
+        {
+          "OptionId": "wine_cooler_4yr_std",
+          "OptionDesc": "Wine cooler 4yr",
+          "RetailRate": 30
+        },
+        {
+          "OptionId": "wine_cooler_4yr_pe",
+          "OptionDesc": "Wine cooler 4yr (P/E)",
+          "RetailRate": 36
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_36_24",
+      "name": "Home Deluxe Plus",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "36",
+      "plan_description": "OHC-J Term Deluxe Plus",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 24,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 990,
+      "monthly_price": 41.25,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "better",
+      "options": [
+        {
+          "OptionId": "additional_ac_2yr_std",
+          "OptionDesc": "Additional AC unit 2yr",
+          "RetailRate": 112
+        },
+        {
+          "OptionId": "additional_ac_2yr_pe",
+          "OptionDesc": "Additional AC unit 2yr (P/E)",
+          "RetailRate": 134
+        },
+        {
+          "OptionId": "freestanding_freezer_2yr_std",
+          "OptionDesc": "Free-standing freezer 2yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "freestanding_freezer_2yr_pe",
+          "OptionDesc": "Free-standing freezer 2yr (P/E)",
+          "RetailRate": 77
+        },
+        {
+          "OptionId": "garage_door_opener_2yr_std",
+          "OptionDesc": "Garage door opener 2yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "garage_door_opener_2yr_pe",
+          "OptionDesc": "Garage door opener 2yr (P/E)",
+          "RetailRate": 28
+        },
+        {
+          "OptionId": "ice_maker_2yr_std",
+          "OptionDesc": "Ice maker 2yr",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "ice_maker_2yr_pe",
+          "OptionDesc": "Ice maker 2yr (P/E)",
+          "RetailRate": 16
+        },
+        {
+          "OptionId": "internal_plumbing_2yr_std",
+          "OptionDesc": "Plumbing system 2yr",
+          "RetailRate": 101
+        },
+        {
+          "OptionId": "internal_plumbing_2yr_pe",
+          "OptionDesc": "Plumbing system 2yr (P/E)",
+          "RetailRate": 122
+        },
+        {
+          "OptionId": "programmable_thermostat_2yr_std",
+          "OptionDesc": "Programmable thermostat 2yr",
+          "RetailRate": 54
+        },
+        {
+          "OptionId": "programmable_thermostat_2yr_pe",
+          "OptionDesc": "Programmable thermostat 2yr (P/E)",
+          "RetailRate": 68
+        },
+        {
+          "OptionId": "secondary_refrigerator_2yr_std",
+          "OptionDesc": "Secondary refrigerator 2yr",
+          "RetailRate": 39
+        },
+        {
+          "OptionId": "secondary_refrigerator_2yr_pe",
+          "OptionDesc": "Secondary refrigerator 2yr (P/E)",
+          "RetailRate": 42
+        },
+        {
+          "OptionId": "septic_2yr_std",
+          "OptionDesc": "SEPTIC 2yr",
+          "RetailRate": 7
+        },
+        {
+          "OptionId": "septic_2yr_pe",
+          "OptionDesc": "SEPTIC 2yr (P/E)",
+          "RetailRate": 10
+        },
+        {
+          "OptionId": "spa_2yr_std",
+          "OptionDesc": "Spa 2yr",
+          "RetailRate": 235
+        },
+        {
+          "OptionId": "spa_2yr_pe",
+          "OptionDesc": "Spa 2yr (P/E)",
+          "RetailRate": 276
+        },
+        {
+          "OptionId": "swimming_pool_2yr_std",
+          "OptionDesc": "Swimming pool 2yr",
+          "RetailRate": 235
+        },
+        {
+          "OptionId": "swimming_pool_2yr_pe",
+          "OptionDesc": "Swimming pool 2yr (P/E)",
+          "RetailRate": 276
+        },
+        {
+          "OptionId": "well_pump_2yr_std",
+          "OptionDesc": "Well pump 2yr",
+          "RetailRate": 159
+        },
+        {
+          "OptionId": "well_pump_2yr_pe",
+          "OptionDesc": "Well pump 2yr (P/E)",
+          "RetailRate": 193
+        },
+        {
+          "OptionId": "wine_cooler_2yr_std",
+          "OptionDesc": "Wine cooler 2yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "wine_cooler_2yr_pe",
+          "OptionDesc": "Wine cooler 2yr (P/E)",
+          "RetailRate": 24
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_36_36",
+      "name": "Home Deluxe Plus",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "36",
+      "plan_description": "OHC-J Term Deluxe Plus",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 36,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1325,
+      "monthly_price": 36.81,
+      "default_selected": true,
+      "add_ons_included": [],
+      "tier_hint": "better",
+      "options": [
+        {
+          "OptionId": "additional_ac_3yr_std",
+          "OptionDesc": "Additional AC unit 3yr",
+          "RetailRate": 168
+        },
+        {
+          "OptionId": "additional_ac_3yr_pe",
+          "OptionDesc": "Additional AC unit 3yr (P/E)",
+          "RetailRate": 192
+        },
+        {
+          "OptionId": "freestanding_freezer_3yr_std",
+          "OptionDesc": "Free-standing freezer 3yr",
+          "RetailRate": 93
+        },
+        {
+          "OptionId": "freestanding_freezer_3yr_pe",
+          "OptionDesc": "Free-standing freezer 3yr (P/E)",
+          "RetailRate": 112
+        },
+        {
+          "OptionId": "garage_door_opener_3yr_std",
+          "OptionDesc": "Garage door opener 3yr",
+          "RetailRate": 26
+        },
+        {
+          "OptionId": "garage_door_opener_3yr_pe",
+          "OptionDesc": "Garage door opener 3yr (P/E)",
+          "RetailRate": 32
+        },
+        {
+          "OptionId": "ice_maker_3yr_std",
+          "OptionDesc": "Ice maker 3yr",
+          "RetailRate": 17
+        },
+        {
+          "OptionId": "ice_maker_3yr_pe",
+          "OptionDesc": "Ice maker 3yr (P/E)",
+          "RetailRate": 21
+        },
+        {
+          "OptionId": "internal_plumbing_3yr_std",
+          "OptionDesc": "Plumbing system 3yr",
+          "RetailRate": 152
+        },
+        {
+          "OptionId": "internal_plumbing_3yr_pe",
+          "OptionDesc": "Plumbing system 3yr (P/E)",
+          "RetailRate": 186
+        },
+        {
+          "OptionId": "programmable_thermostat_3yr_std",
+          "OptionDesc": "Programmable thermostat 3yr",
+          "RetailRate": 80
+        },
+        {
+          "OptionId": "programmable_thermostat_3yr_pe",
+          "OptionDesc": "Programmable thermostat 3yr (P/E)",
+          "RetailRate": 99
+        },
+        {
+          "OptionId": "secondary_refrigerator_3yr_std",
+          "OptionDesc": "Secondary refrigerator 3yr",
+          "RetailRate": 56
+        },
+        {
+          "OptionId": "secondary_refrigerator_3yr_pe",
+          "OptionDesc": "Secondary refrigerator 3yr (P/E)",
+          "RetailRate": 66
+        },
+        {
+          "OptionId": "septic_3yr_std",
+          "OptionDesc": "SEPTIC 3yr",
+          "RetailRate": 8
+        },
+        {
+          "OptionId": "septic_3yr_pe",
+          "OptionDesc": "SEPTIC 3yr (P/E)",
+          "RetailRate": 12
+        },
+        {
+          "OptionId": "spa_3yr_std",
+          "OptionDesc": "Spa 3yr",
+          "RetailRate": 360
+        },
+        {
+          "OptionId": "spa_3yr_pe",
+          "OptionDesc": "Spa 3yr (P/E)",
+          "RetailRate": 415
+        },
+        {
+          "OptionId": "swimming_pool_3yr_std",
+          "OptionDesc": "Swimming pool 3yr",
+          "RetailRate": 360
+        },
+        {
+          "OptionId": "swimming_pool_3yr_pe",
+          "OptionDesc": "Swimming pool 3yr (P/E)",
+          "RetailRate": 415
+        },
+        {
+          "OptionId": "well_pump_3yr_std",
+          "OptionDesc": "Well pump 3yr",
+          "RetailRate": 245
+        },
+        {
+          "OptionId": "well_pump_3yr_pe",
+          "OptionDesc": "Well pump 3yr (P/E)",
+          "RetailRate": 287
+        },
+        {
+          "OptionId": "wine_cooler_3yr_std",
+          "OptionDesc": "Wine cooler 3yr",
+          "RetailRate": 27
+        },
+        {
+          "OptionId": "wine_cooler_3yr_pe",
+          "OptionDesc": "Wine cooler 3yr (P/E)",
+          "RetailRate": 33
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_36_48",
+      "name": "Home Deluxe Plus",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "36",
+      "plan_description": "OHC-J Term Deluxe Plus",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 48,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1570,
+      "monthly_price": 32.71,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "better",
+      "options": [
+        {
+          "OptionId": "additional_ac_4yr_std",
+          "OptionDesc": "Additional AC unit 4yr",
+          "RetailRate": 185
+        },
+        {
+          "OptionId": "additional_ac_4yr_pe",
+          "OptionDesc": "Additional AC unit 4yr (P/E)",
+          "RetailRate": 210
+        },
+        {
+          "OptionId": "freestanding_freezer_4yr_std",
+          "OptionDesc": "Free-standing freezer 4yr",
+          "RetailRate": 102
+        },
+        {
+          "OptionId": "freestanding_freezer_4yr_pe",
+          "OptionDesc": "Free-standing freezer 4yr (P/E)",
+          "RetailRate": 122
+        },
+        {
+          "OptionId": "garage_door_opener_4yr_std",
+          "OptionDesc": "Garage door opener 4yr",
+          "RetailRate": 29
+        },
+        {
+          "OptionId": "garage_door_opener_4yr_pe",
+          "OptionDesc": "Garage door opener 4yr (P/E)",
+          "RetailRate": 35
+        },
+        {
+          "OptionId": "ice_maker_4yr_std",
+          "OptionDesc": "Ice maker 4yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "ice_maker_4yr_pe",
+          "OptionDesc": "Ice maker 4yr (P/E)",
+          "RetailRate": 23
+        },
+        {
+          "OptionId": "internal_plumbing_4yr_std",
+          "OptionDesc": "Plumbing system 4yr",
+          "RetailRate": 167
+        },
+        {
+          "OptionId": "internal_plumbing_4yr_pe",
+          "OptionDesc": "Plumbing system 4yr (P/E)",
+          "RetailRate": 203
+        },
+        {
+          "OptionId": "programmable_thermostat_4yr_std",
+          "OptionDesc": "Programmable thermostat 4yr",
+          "RetailRate": 88
+        },
+        {
+          "OptionId": "programmable_thermostat_4yr_pe",
+          "OptionDesc": "Programmable thermostat 4yr (P/E)",
+          "RetailRate": 108
+        },
+        {
+          "OptionId": "secondary_refrigerator_4yr_std",
+          "OptionDesc": "Secondary refrigerator 4yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "secondary_refrigerator_4yr_pe",
+          "OptionDesc": "Secondary refrigerator 4yr (P/E)",
+          "RetailRate": 72
+        },
+        {
+          "OptionId": "septic_4yr_std",
+          "OptionDesc": "SEPTIC 4yr",
+          "RetailRate": 9
+        },
+        {
+          "OptionId": "septic_4yr_pe",
+          "OptionDesc": "SEPTIC 4yr (P/E)",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "spa_4yr_std",
+          "OptionDesc": "Spa 4yr",
+          "RetailRate": 395
+        },
+        {
+          "OptionId": "spa_4yr_pe",
+          "OptionDesc": "Spa 4yr (P/E)",
+          "RetailRate": 454
+        },
+        {
+          "OptionId": "swimming_pool_4yr_std",
+          "OptionDesc": "Swimming pool 4yr",
+          "RetailRate": 395
+        },
+        {
+          "OptionId": "swimming_pool_4yr_pe",
+          "OptionDesc": "Swimming pool 4yr (P/E)",
+          "RetailRate": 454
+        },
+        {
+          "OptionId": "well_pump_4yr_std",
+          "OptionDesc": "Well pump 4yr",
+          "RetailRate": 269
+        },
+        {
+          "OptionId": "well_pump_4yr_pe",
+          "OptionDesc": "Well pump 4yr (P/E)",
+          "RetailRate": 315
+        },
+        {
+          "OptionId": "wine_cooler_4yr_std",
+          "OptionDesc": "Wine cooler 4yr",
+          "RetailRate": 30
+        },
+        {
+          "OptionId": "wine_cooler_4yr_pe",
+          "OptionDesc": "Wine cooler 4yr (P/E)",
+          "RetailRate": 36
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_37_24",
+      "name": "Home Deluxe Enhanced",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "37",
+      "plan_description": "OHC-J Term Deluxe Enhanced",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 24,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1040,
+      "monthly_price": 43.33,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "best",
+      "options": [
+        {
+          "OptionId": "additional_ac_2yr_std",
+          "OptionDesc": "Additional AC unit 2yr",
+          "RetailRate": 112
+        },
+        {
+          "OptionId": "additional_ac_2yr_pe",
+          "OptionDesc": "Additional AC unit 2yr (P/E)",
+          "RetailRate": 134
+        },
+        {
+          "OptionId": "freestanding_freezer_2yr_std",
+          "OptionDesc": "Free-standing freezer 2yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "freestanding_freezer_2yr_pe",
+          "OptionDesc": "Free-standing freezer 2yr (P/E)",
+          "RetailRate": 77
+        },
+        {
+          "OptionId": "garage_door_opener_2yr_std",
+          "OptionDesc": "Garage door opener 2yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "garage_door_opener_2yr_pe",
+          "OptionDesc": "Garage door opener 2yr (P/E)",
+          "RetailRate": 28
+        },
+        {
+          "OptionId": "ice_maker_2yr_std",
+          "OptionDesc": "Ice maker 2yr",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "ice_maker_2yr_pe",
+          "OptionDesc": "Ice maker 2yr (P/E)",
+          "RetailRate": 16
+        },
+        {
+          "OptionId": "internal_plumbing_2yr_std",
+          "OptionDesc": "Plumbing system 2yr",
+          "RetailRate": 101
+        },
+        {
+          "OptionId": "internal_plumbing_2yr_pe",
+          "OptionDesc": "Plumbing system 2yr (P/E)",
+          "RetailRate": 122
+        },
+        {
+          "OptionId": "programmable_thermostat_2yr_std",
+          "OptionDesc": "Programmable thermostat 2yr",
+          "RetailRate": 54
+        },
+        {
+          "OptionId": "programmable_thermostat_2yr_pe",
+          "OptionDesc": "Programmable thermostat 2yr (P/E)",
+          "RetailRate": 68
+        },
+        {
+          "OptionId": "secondary_refrigerator_2yr_std",
+          "OptionDesc": "Secondary refrigerator 2yr",
+          "RetailRate": 39
+        },
+        {
+          "OptionId": "secondary_refrigerator_2yr_pe",
+          "OptionDesc": "Secondary refrigerator 2yr (P/E)",
+          "RetailRate": 42
+        },
+        {
+          "OptionId": "septic_2yr_std",
+          "OptionDesc": "SEPTIC 2yr",
+          "RetailRate": 7
+        },
+        {
+          "OptionId": "septic_2yr_pe",
+          "OptionDesc": "SEPTIC 2yr (P/E)",
+          "RetailRate": 10
+        },
+        {
+          "OptionId": "spa_2yr_std",
+          "OptionDesc": "Spa 2yr",
+          "RetailRate": 235
+        },
+        {
+          "OptionId": "spa_2yr_pe",
+          "OptionDesc": "Spa 2yr (P/E)",
+          "RetailRate": 276
+        },
+        {
+          "OptionId": "swimming_pool_2yr_std",
+          "OptionDesc": "Swimming pool 2yr",
+          "RetailRate": 235
+        },
+        {
+          "OptionId": "swimming_pool_2yr_pe",
+          "OptionDesc": "Swimming pool 2yr (P/E)",
+          "RetailRate": 276
+        },
+        {
+          "OptionId": "well_pump_2yr_std",
+          "OptionDesc": "Well pump 2yr",
+          "RetailRate": 159
+        },
+        {
+          "OptionId": "well_pump_2yr_pe",
+          "OptionDesc": "Well pump 2yr (P/E)",
+          "RetailRate": 193
+        },
+        {
+          "OptionId": "wine_cooler_2yr_std",
+          "OptionDesc": "Wine cooler 2yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "wine_cooler_2yr_pe",
+          "OptionDesc": "Wine cooler 2yr (P/E)",
+          "RetailRate": 24
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_37_36",
+      "name": "Home Deluxe Enhanced",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "37",
+      "plan_description": "OHC-J Term Deluxe Enhanced",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 36,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1425,
+      "monthly_price": 39.58,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "best",
+      "options": [
+        {
+          "OptionId": "additional_ac_3yr_std",
+          "OptionDesc": "Additional AC unit 3yr",
+          "RetailRate": 168
+        },
+        {
+          "OptionId": "additional_ac_3yr_pe",
+          "OptionDesc": "Additional AC unit 3yr (P/E)",
+          "RetailRate": 192
+        },
+        {
+          "OptionId": "freestanding_freezer_3yr_std",
+          "OptionDesc": "Free-standing freezer 3yr",
+          "RetailRate": 93
+        },
+        {
+          "OptionId": "freestanding_freezer_3yr_pe",
+          "OptionDesc": "Free-standing freezer 3yr (P/E)",
+          "RetailRate": 112
+        },
+        {
+          "OptionId": "garage_door_opener_3yr_std",
+          "OptionDesc": "Garage door opener 3yr",
+          "RetailRate": 26
+        },
+        {
+          "OptionId": "garage_door_opener_3yr_pe",
+          "OptionDesc": "Garage door opener 3yr (P/E)",
+          "RetailRate": 32
+        },
+        {
+          "OptionId": "ice_maker_3yr_std",
+          "OptionDesc": "Ice maker 3yr",
+          "RetailRate": 17
+        },
+        {
+          "OptionId": "ice_maker_3yr_pe",
+          "OptionDesc": "Ice maker 3yr (P/E)",
+          "RetailRate": 21
+        },
+        {
+          "OptionId": "internal_plumbing_3yr_std",
+          "OptionDesc": "Plumbing system 3yr",
+          "RetailRate": 152
+        },
+        {
+          "OptionId": "internal_plumbing_3yr_pe",
+          "OptionDesc": "Plumbing system 3yr (P/E)",
+          "RetailRate": 186
+        },
+        {
+          "OptionId": "programmable_thermostat_3yr_std",
+          "OptionDesc": "Programmable thermostat 3yr",
+          "RetailRate": 80
+        },
+        {
+          "OptionId": "programmable_thermostat_3yr_pe",
+          "OptionDesc": "Programmable thermostat 3yr (P/E)",
+          "RetailRate": 99
+        },
+        {
+          "OptionId": "secondary_refrigerator_3yr_std",
+          "OptionDesc": "Secondary refrigerator 3yr",
+          "RetailRate": 56
+        },
+        {
+          "OptionId": "secondary_refrigerator_3yr_pe",
+          "OptionDesc": "Secondary refrigerator 3yr (P/E)",
+          "RetailRate": 66
+        },
+        {
+          "OptionId": "septic_3yr_std",
+          "OptionDesc": "SEPTIC 3yr",
+          "RetailRate": 8
+        },
+        {
+          "OptionId": "septic_3yr_pe",
+          "OptionDesc": "SEPTIC 3yr (P/E)",
+          "RetailRate": 12
+        },
+        {
+          "OptionId": "spa_3yr_std",
+          "OptionDesc": "Spa 3yr",
+          "RetailRate": 360
+        },
+        {
+          "OptionId": "spa_3yr_pe",
+          "OptionDesc": "Spa 3yr (P/E)",
+          "RetailRate": 415
+        },
+        {
+          "OptionId": "swimming_pool_3yr_std",
+          "OptionDesc": "Swimming pool 3yr",
+          "RetailRate": 360
+        },
+        {
+          "OptionId": "swimming_pool_3yr_pe",
+          "OptionDesc": "Swimming pool 3yr (P/E)",
+          "RetailRate": 415
+        },
+        {
+          "OptionId": "well_pump_3yr_std",
+          "OptionDesc": "Well pump 3yr",
+          "RetailRate": 245
+        },
+        {
+          "OptionId": "well_pump_3yr_pe",
+          "OptionDesc": "Well pump 3yr (P/E)",
+          "RetailRate": 287
+        },
+        {
+          "OptionId": "wine_cooler_3yr_std",
+          "OptionDesc": "Wine cooler 3yr",
+          "RetailRate": 27
+        },
+        {
+          "OptionId": "wine_cooler_3yr_pe",
+          "OptionDesc": "Wine cooler 3yr (P/E)",
+          "RetailRate": 33
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_37_48",
+      "name": "Home Deluxe Enhanced",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "37",
+      "plan_description": "OHC-J Term Deluxe Enhanced",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 39,
+      "billing_model": "term_total",
+      "deductible": 75,
+      "coverage_period_months": 48,
+      "mileage": null,
+      "unlimited_mileage": false,
+      "base_price": 1670,
+      "monthly_price": 34.79,
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "best",
+      "options": [
+        {
+          "OptionId": "additional_ac_4yr_std",
+          "OptionDesc": "Additional AC unit 4yr",
+          "RetailRate": 185
+        },
+        {
+          "OptionId": "additional_ac_4yr_pe",
+          "OptionDesc": "Additional AC unit 4yr (P/E)",
+          "RetailRate": 210
+        },
+        {
+          "OptionId": "freestanding_freezer_4yr_std",
+          "OptionDesc": "Free-standing freezer 4yr",
+          "RetailRate": 102
+        },
+        {
+          "OptionId": "freestanding_freezer_4yr_pe",
+          "OptionDesc": "Free-standing freezer 4yr (P/E)",
+          "RetailRate": 122
+        },
+        {
+          "OptionId": "garage_door_opener_4yr_std",
+          "OptionDesc": "Garage door opener 4yr",
+          "RetailRate": 29
+        },
+        {
+          "OptionId": "garage_door_opener_4yr_pe",
+          "OptionDesc": "Garage door opener 4yr (P/E)",
+          "RetailRate": 35
+        },
+        {
+          "OptionId": "ice_maker_4yr_std",
+          "OptionDesc": "Ice maker 4yr",
+          "RetailRate": 19
+        },
+        {
+          "OptionId": "ice_maker_4yr_pe",
+          "OptionDesc": "Ice maker 4yr (P/E)",
+          "RetailRate": 23
+        },
+        {
+          "OptionId": "internal_plumbing_4yr_std",
+          "OptionDesc": "Plumbing system 4yr",
+          "RetailRate": 167
+        },
+        {
+          "OptionId": "internal_plumbing_4yr_pe",
+          "OptionDesc": "Plumbing system 4yr (P/E)",
+          "RetailRate": 203
+        },
+        {
+          "OptionId": "programmable_thermostat_4yr_std",
+          "OptionDesc": "Programmable thermostat 4yr",
+          "RetailRate": 88
+        },
+        {
+          "OptionId": "programmable_thermostat_4yr_pe",
+          "OptionDesc": "Programmable thermostat 4yr (P/E)",
+          "RetailRate": 108
+        },
+        {
+          "OptionId": "secondary_refrigerator_4yr_std",
+          "OptionDesc": "Secondary refrigerator 4yr",
+          "RetailRate": 62
+        },
+        {
+          "OptionId": "secondary_refrigerator_4yr_pe",
+          "OptionDesc": "Secondary refrigerator 4yr (P/E)",
+          "RetailRate": 72
+        },
+        {
+          "OptionId": "septic_4yr_std",
+          "OptionDesc": "SEPTIC 4yr",
+          "RetailRate": 9
+        },
+        {
+          "OptionId": "septic_4yr_pe",
+          "OptionDesc": "SEPTIC 4yr (P/E)",
+          "RetailRate": 13
+        },
+        {
+          "OptionId": "spa_4yr_std",
+          "OptionDesc": "Spa 4yr",
+          "RetailRate": 395
+        },
+        {
+          "OptionId": "spa_4yr_pe",
+          "OptionDesc": "Spa 4yr (P/E)",
+          "RetailRate": 454
+        },
+        {
+          "OptionId": "swimming_pool_4yr_std",
+          "OptionDesc": "Swimming pool 4yr",
+          "RetailRate": 395
+        },
+        {
+          "OptionId": "swimming_pool_4yr_pe",
+          "OptionDesc": "Swimming pool 4yr (P/E)",
+          "RetailRate": 454
+        },
+        {
+          "OptionId": "well_pump_4yr_std",
+          "OptionDesc": "Well pump 4yr",
+          "RetailRate": 269
+        },
+        {
+          "OptionId": "well_pump_4yr_pe",
+          "OptionDesc": "Well pump 4yr (P/E)",
+          "RetailRate": 315
+        },
+        {
+          "OptionId": "wine_cooler_4yr_std",
+          "OptionDesc": "Wine cooler 4yr",
+          "RetailRate": 30
+        },
+        {
+          "OptionId": "wine_cooler_4yr_pe",
+          "OptionDesc": "Wine cooler 4yr (P/E)",
+          "RetailRate": 36
+        }
+      ]
+    },
+    {
+      "id": "OMGA_HOME_38_M2M",
+      "name": "Home Deluxe Monthly",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "38",
+      "plan_description": "OHC-J M2M Deluxe",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 40,
+      "billing_model": "monthly_subscription",
+      "deductible": 75,
+      "coverage_period_months": 1,
+      "mileage": null,
+      "unlimited_mileage": true,
+      "base_price": 40,
+      "monthly_price": 40,
+      "monthly_charge": 40,
+      "monthly_terms": [
+        {
+          "term": 1,
+          "cost": 40,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 2,
+          "cost": 80,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 3,
+          "cost": 120,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 4,
+          "cost": 160,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 5,
+          "cost": 200,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 6,
+          "cost": 240,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 7,
+          "cost": 280,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 8,
+          "cost": 320,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 9,
+          "cost": 360,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 10,
+          "cost": 400,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 11,
+          "cost": 440,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 12,
+          "cost": 480,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 13,
+          "cost": 520,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 14,
+          "cost": 560,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 15,
+          "cost": 600,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 16,
+          "cost": 640,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 17,
+          "cost": 680,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 18,
+          "cost": 720,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 19,
+          "cost": 760,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 20,
+          "cost": 800,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 21,
+          "cost": 840,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 22,
+          "cost": 880,
+          "rate": 40,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 23,
+          "cost": 920,
+          "rate": 40,
+          "regulated_rule_id": 0
+        }
+      ],
+      "monthly_signals": {
+        "contract_type_match": true,
+        "sentinel_match": false
+      },
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "good",
+      "options": []
+    },
+    {
+      "id": "OMGA_HOME_48_M2M",
+      "name": "Home Deluxe Plus Monthly",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "48",
+      "plan_description": "OHC-J M2M Deluxe Plus",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 40,
+      "billing_model": "monthly_subscription",
+      "deductible": 75,
+      "coverage_period_months": 1,
+      "mileage": null,
+      "unlimited_mileage": true,
+      "base_price": 44,
+      "monthly_price": 44,
+      "monthly_charge": 44,
+      "monthly_terms": [
+        {
+          "term": 1,
+          "cost": 44,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 2,
+          "cost": 88,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 3,
+          "cost": 132,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 4,
+          "cost": 176,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 5,
+          "cost": 220,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 6,
+          "cost": 264,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 7,
+          "cost": 308,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 8,
+          "cost": 352,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 9,
+          "cost": 396,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 10,
+          "cost": 440,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 11,
+          "cost": 484,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 12,
+          "cost": 528,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 13,
+          "cost": 572,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 14,
+          "cost": 616,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 15,
+          "cost": 660,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 16,
+          "cost": 704,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 17,
+          "cost": 748,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 18,
+          "cost": 792,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 19,
+          "cost": 836,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 20,
+          "cost": 880,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 21,
+          "cost": 924,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 22,
+          "cost": 968,
+          "rate": 44,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 23,
+          "cost": 1012,
+          "rate": 44,
+          "regulated_rule_id": 0
+        }
+      ],
+      "monthly_signals": {
+        "contract_type_match": true,
+        "sentinel_match": false
+      },
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "better",
+      "options": []
+    },
+    {
+      "id": "OMGA_HOME_49_M2M",
+      "name": "Home Deluxe Enhanced Monthly",
+      "provider": "OMEGA",
+      "tpa_code": "OMGA",
+      "product_type_code": "VSC",
+      "plan_code": "49",
+      "plan_description": "OHC-J M2M Deluxe Enhanced",
+      "asset_kind": "home",
+      "program_code": "OHC-J",
+      "contract_type": 40,
+      "billing_model": "monthly_subscription",
+      "deductible": 75,
+      "coverage_period_months": 1,
+      "mileage": null,
+      "unlimited_mileage": true,
+      "base_price": 48,
+      "monthly_price": 48,
+      "monthly_charge": 48,
+      "monthly_terms": [
+        {
+          "term": 1,
+          "cost": 48,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 2,
+          "cost": 96,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 3,
+          "cost": 144,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 4,
+          "cost": 192,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 5,
+          "cost": 240,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 6,
+          "cost": 288,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 7,
+          "cost": 336,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 8,
+          "cost": 384,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 9,
+          "cost": 432,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 10,
+          "cost": 480,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 11,
+          "cost": 528,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 12,
+          "cost": 576,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 13,
+          "cost": 624,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 14,
+          "cost": 672,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 15,
+          "cost": 720,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 16,
+          "cost": 768,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 17,
+          "cost": 816,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 18,
+          "cost": 864,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 19,
+          "cost": 912,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 20,
+          "cost": 960,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 21,
+          "cost": 1008,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 22,
+          "cost": 1056,
+          "rate": 48,
+          "regulated_rule_id": 0
+        },
+        {
+          "term": 23,
+          "cost": 1104,
+          "rate": 48,
+          "regulated_rule_id": 0
+        }
+      ],
+      "monthly_signals": {
+        "contract_type_match": true,
+        "sentinel_match": false
+      },
+      "default_selected": false,
+      "add_ons_included": [],
+      "tier_hint": "best",
+      "options": []
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "_comment": "Tag library seed. Phase 1 stand-in for GHL tag sync — Phase 2 replaces by_org with a `await blinkerApi.tags.list({ org_id })` call returning the same shape. system_tags are read-only across all orgs (Blinker-managed taxonomy); by_org are user-created tags that round-trip through GHL.",
+  "_version": "2026-05-04-tag-permissions",
+  "_source": "Curated for Phase 1 prototype. Real GHL tag inventory pulls from each org's GHL location once the sync is wired (per architecture/07-data-layer.md).",
+
+  "_principle": "Tag permissions are role-gated (canon/personas.json): any org role can `add_tags` (apply an existing tag to a contact); only manager+ roles can `create_tags` (mint a new tag). Agents must search-existing-only. The split prevents the GHL tag namespace from sprawling under agent activity. Tags belong on Contacts (per canon/blinker-domain.json `tag` block) — opportunity-scoped tags do not exist; tag the contact instead.",
+
+  "_shape": {
+    "id":          "string — stable identifier (slug-form for system tags, uuid for user tags).",
+    "name":        "string — display label. Free-form for user tags; canonical for system tags.",
+    "color":       "string — hex color (#RRGGBB) for tag pill rendering. System tags carry a curated palette; user tags inherit GHL-stored hex.",
+    "category":    "string? — optional grouping label (e.g. 'priority', 'language', 'compliance'). Used for picker section headers when present.",
+    "system":      "boolean — true = Blinker-managed, false = user-created (org or agent).",
+    "created_by":  "string? — persona slug (manager_<org_id>_<ts>) or 'system'. Audit field.",
+    "created_at":  "string — ISO timestamp."
+  },
+
+  "system_tags": [
+    { "id": "do-not-contact",     "name": "Do Not Contact",     "color": "#dc2626", "category": "compliance", "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "tcpa-revoked",       "name": "TCPA Revoked",       "color": "#b91c1c", "category": "compliance", "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "high-value",         "name": "High Value",         "color": "#f59e0b", "category": "priority",   "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "vip",                "name": "VIP",                "color": "#a855f7", "category": "priority",   "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "returning-customer", "name": "Returning Customer", "color": "#0ea5e9", "category": "lifecycle",  "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "first-time",         "name": "First-time Buyer",   "color": "#06b6d4", "category": "lifecycle",  "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "language-spanish",   "name": "Language: Spanish",  "color": "#84cc16", "category": "language",   "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "language-other",     "name": "Language: Other",    "color": "#65a30d", "category": "language",   "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "followup-3-day",     "name": "Follow-up 3 Day",    "color": "#3b82f6", "category": "followup",   "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "followup-1-week",    "name": "Follow-up 1 Week",   "color": "#2563eb", "category": "followup",   "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "complaint-pending",  "name": "Complaint Pending",  "color": "#f97316", "category": "compliance", "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" },
+    { "id": "fraud-flag",         "name": "Fraud Flag",         "color": "#7f1d1d", "category": "compliance", "system": true, "created_by": "system", "created_at": "2026-05-04T00:00:00Z" }
+  ],
+
+  "by_org": {
+    "102": [
+      { "id": "tag_apex_demo_referral",  "name": "Demo Referral",  "color": "#10b981", "category": "lifecycle", "system": false, "created_by": "manager_102_seed", "created_at": "2026-05-04T00:00:00Z" },
+      { "id": "tag_apex_demo_dealer_employee", "name": "Dealer Employee", "color": "#8b5cf6", "category": "lifecycle", "system": false, "created_by": "manager_102_seed", "created_at": "2026-05-04T00:00:00Z" }
+    ],
+    "103": [
+      { "id": "tag_kingsdr_repeat_buyer",  "name": "Repeat Buyer",  "color": "#0ea5e9", "category": "lifecycle", "system": false, "created_by": "manager_103_seed", "created_at": "2026-05-04T00:00:00Z" },
+      { "id": "tag_kingsdr_service_partner", "name": "Service Partner", "color": "#14b8a6", "category": "lifecycle", "system": false, "created_by": "manager_103_seed", "created_at": "2026-05-04T00:00:00Z" }
+    ],
+    "106": [
+      { "id": "tag_rewardsco_pilot",       "name": "Pilot",         "color": "#f59e0b", "category": "lifecycle", "system": false, "created_by": "manager_106_seed", "created_at": "2026-05-04T00:00:00Z" },
+      { "id": "tag_rewardsco_loyalty_tier", "name": "Loyalty Tier",  "color": "#a855f7", "category": "priority",  "system": false, "created_by": "manager_106_seed", "created_at": "2026-05-04T00:00:00Z" }
+    ]
+  },
+
+  "_TODO": [
+    "Replace by_org with a real `await blinkerApi.tags.list({ org_id })` endpoint per architecture/07-data-layer.md Phase 2 swap.",
+    "Document the tag-create audit trail shape — when manager+ creates a tag, the consumer (mission-control or *-portal AgentView) should write a `tag_created` activity record to canon/blinker-domain.json `activity` _payload_shapes.",
+    "Decide tag-category UX: today the picker can group by `category` for section headers, but the data may not always carry one. Consider whether un-categorized tags get a 'Other' bucket or render flat alongside categorized ones.",
+    "Sort + dedupe rules for the picker when system_tags + by_org tags overlap on `name` (case-insensitive). Today rule of precedence is: system_tags wins, by_org filtered out at picker time. Codify in the consumer's read helper."
+  ]
+}

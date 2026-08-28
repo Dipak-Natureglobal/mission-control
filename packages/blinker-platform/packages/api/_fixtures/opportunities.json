@@ -1448,6 +1448,72 @@
         "furthest_step_key": "recommended_coverage",
         "updated_at": "2026-05-04T15:00:00Z"
       }
+    },
+    {
+      "id": "opp_home_001",
+      "_test_case": "home-quoted-awaiting-selection",
+      "type": "home_protection",
+      "contact_id": "ct_alvarez",
+      "contact_name": "Maria Alvarez",
+      "household": "Alvarez Household",
+      "home_id": "home_alvarez_cypress",
+      "home": "2,400 sq ft Single Family · Austin, TX",
+      "status": "Quoted",
+      "owner": "Jordan Reese",
+      "created_at": "2026-08-18T14:02:00Z",
+      "updated_at": "2026-08-18T15:20:00Z",
+      "value": 1325,
+      "next_action": "Review recommended coverage with customer",
+      "deadline": "2026-08-27T23:59:59Z",
+      "home_protection_progress": {
+        "furthest_step_idx": 2,
+        "furthest_step_key": "recommended_coverage",
+        "updated_at": "2026-08-18T15:20:00Z"
+      }
+    },
+    {
+      "id": "opp_home_002",
+      "_test_case": "home-booked-add-ons-selected",
+      "type": "home_protection",
+      "contact_id": "ct_okafor",
+      "contact_name": "Chidi Okafor",
+      "household": null,
+      "home_id": "home_okafor_verdugo",
+      "home": "6,200 sq ft Single Family · Burbank, CA",
+      "status": "Booked",
+      "owner": "Jordan Reese",
+      "created_at": "2026-08-20T17:40:00Z",
+      "updated_at": "2026-08-23T09:05:00Z",
+      "value": 2026,
+      "next_action": "Collect billing details",
+      "deadline": "2026-08-26T23:59:59Z",
+      "home_protection_progress": {
+        "furthest_step_idx": 5,
+        "furthest_step_key": "confirm",
+        "updated_at": "2026-08-23T09:05:00Z"
+      }
+    },
+    {
+      "id": "opp_home_003",
+      "_test_case": "home-monthly-membership-signed",
+      "type": "home_protection",
+      "contact_id": "ct_chen",
+      "contact_name": "Wei Chen",
+      "household": null,
+      "home_id": "home_chen_meridian",
+      "home": "1,150 sq ft Condominium · San Jose, CA",
+      "status": "Agreement Signed",
+      "owner": "Jordan Reese",
+      "created_at": "2026-08-22T11:15:00Z",
+      "updated_at": "2026-08-24T16:31:00Z",
+      "value": 48,
+      "next_action": "Awaiting remittance",
+      "deadline": null,
+      "home_protection_progress": {
+        "furthest_step_idx": 7,
+        "furthest_step_key": "docuseal",
+        "updated_at": "2026-08-24T16:31:00Z"
+      }
     }
   ]
 }

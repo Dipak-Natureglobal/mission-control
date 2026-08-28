@@ -100,6 +100,10 @@ export const STATUS_TO_STEP: Record<string, ScreenKey> = {
   // "Approved" — post-partner-approval waiting state; wizard is done.
   'Working - Approved':          'stage2_result',
 
+  // "Disqualified" — prequal decision came back disqualified; wizard is done.
+  // Terminal negative: show final state read-only, not an editable form.
+  'Disqualified':                'stage2_result',
+
   // ── Post-submission terminal states ───────────────────────────────────────
   'Applied':                     'stage2_result',
 

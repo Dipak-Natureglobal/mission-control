@@ -4,6 +4,8 @@ import {
   contacts as contactsApi,
   opportunities as opportunitiesApi,
   registerOpportunityWriter,
+  homes as homesApi,
+  registerHomeWriter,
 } from 'blinker-platform/api';
 
 // Session-state container for runtime-mutable opportunities + contacts.
@@ -63,7 +65,19 @@ import {
 //
 // `flowPath` only applies to insurance: 'capture_and_quote' (default) or
 // 'quote_only'. CoPilotPane's InsuranceEmbed reads it to seed workflow.
-export function buildNewOpp({ type, contact, vehicle, flowPath }) {
+// Wave 39 (ADR 30) — `home` is the canonical home record (optional; only
+// meaningful for type === 'home_protection'). Its label is built the same
+// way the three home_protection fixtures build theirs (`opportunities.json`
+// — e.g. "2,400 sq ft Single Family · Austin, TX") so a freshly-started
+// home protection opp's inbox row reads identically to the seeded ones.
+// Wave 39-fu — `prefill` is the Wave 31 `_prefill` convention block (see
+// CoPilotPane's Find Coverage spawn for the pattern this follows). Only
+// meaningful when `home` is null: it carries the contact's mailing address
+// forward as an unconfirmed covered-property seed
+// (`{ home: { address, source: 'contact_address' } }`) for
+// home-protection-portal's `home_add` step to pick up. Never stamped when
+// a real `home` was picked/added — that record already has an address.
+export function buildNewOpp({ type, contact, vehicle, flowPath, home, prefill }) {
   const id = `opp_new_${
     typeof crypto !== 'undefined' && crypto.randomUUID
       ? crypto.randomUUID()
@@ -84,7 +98,13 @@ export function buildNewOpp({ type, contact, vehicle, flowPath }) {
         ? 'New'
         : type === 'insurance'
           ? 'Lead Captured'
-          : 'New';
+          // Wave 39 (ADR 30) — home protection's canon status taxonomy
+          // (cloned from vsc) starts at 'Empty', matching the seeded
+          // fixture opps' earliest observed status. 'New' is not a
+          // home_protection canon status.
+          : type === 'home_protection'
+            ? 'Empty'
+            : 'New';
 
   const opp = {
     id,
@@ -92,8 +112,6 @@ export function buildNewOpp({ type, contact, vehicle, flowPath }) {
     contact_id: contact.id,
     contact_name: contactName,
     household: contact.household_id ? `${contactName} Household` : null,
-    vehicle: vehicleLabel,
-    vehicle_id: vehicle?.id || null,
     status,
     owner: 'You',
     created_at: now,
@@ -102,10 +120,48 @@ export function buildNewOpp({ type, contact, vehicle, flowPath }) {
     next_action: 'New — start workflow',
     deadline: null,
   };
+  if (type === 'home_protection') {
+    // Wave 39 (ADR 30) — home_protection opps key off home_id/home
+    // (parallel to vehicle_id/vehicle for every other type), never a
+    // vehicle. Home may be null (StartOpp allows skipping straight into
+    // the wizard's home_add step, mirroring the vehicle-skip pattern).
+    opp.home_id = home?.id || null;
+    opp.home =
+      home?.square_feet != null && home?.home_type
+        ? `${Number(home.square_feet).toLocaleString()} sq ft ${homeTypeLabel(home.home_type)}` +
+          (home.address?.city && home.address?.state
+            ? ` · ${home.address.city}, ${home.address.state}`
+            : '')
+        : '—';
+    // Wave 39-fu — no real home was picked/added, but the contact carries
+    // a usable mailing address; carry it forward per the Wave 31 `_prefill`
+    // convention so home-protection-portal's `home_add` step can start
+    // from it instead of an empty form. Never stamped alongside a real
+    // `home` (see the buildHomePrefill call sites in StartOpportunityFlow —
+    // they only build `prefill` when `home` is null).
+    if (!home && prefill) {
+      opp._prefill = prefill;
+    }
+  } else {
+    opp.vehicle = vehicleLabel;
+    opp.vehicle_id = vehicle?.id || null;
+  }
   if (type === 'insurance') {
     opp.flowPath = flowPath || 'capture_and_quote';
   }
   return opp;
+}
+
+// Wave 39 (ADR 30) — home_type id → display label, matching the fixture
+// opp label prose ("Single Family", "Condominium", "Townhome"). Mirrors
+// canon/plan-mappings.json#home_dwelling_classes.home_types, kept as a
+// tiny local literal rather than importing the canon block here (single
+// use site, three values, unlikely to drift).
+function homeTypeLabel(homeType) {
+  if (homeType === 'single_family') return 'Single Family';
+  if (homeType === 'townhome') return 'Townhome';
+  if (homeType === 'condominium') return 'Condominium';
+  return homeType || '';
 }
 
 export function useSessionData({ registerAsHost = true } = {}) {
@@ -113,6 +169,12 @@ export function useSessionData({ registerAsHost = true } = {}) {
     () => opportunitiesApi.list(),
   );
   const [contacts, setContacts] = useState(() => contactsApi.asMap());
+  // Wave 39 (ADR 30) — session home map, keyed by id (mirrors `contacts`
+  // shape). NOT stored on the contact record — a home can carry TWO
+  // contact_ids (ADR 30 D2), so membership is a property of the home,
+  // not the contact. Seeded from the blinker-platform/api fixture; see
+  // upsertHomeRecord below for how it grows.
+  const [homes, setHomes] = useState(() => homesApi.asMap());
   // Session-only household_relationship records — minted by AddContactModal
   // when the agent picks a relationship for a different-name dedupe match.
   // Canon shape is a stub today (see canon/blinker-domain.json `household._TODO`);
@@ -160,6 +222,88 @@ export function useSessionData({ registerAsHost = true } = {}) {
     });
     return () => registerOpportunityWriter(null);
   }, [appendOpportunity, registerAsHost]);
+
+  // Wave 39 (ADR 30) — id-keyed upsert for the session home map. Used by
+  // BOTH the registered `homes.create()` writer below AND
+  // `appendHomeToContact` — a home only needs id-dedup (unlike vehicles'
+  // id/VIN/YMMT three-tier ladder): AgentView's `onHomeCommitted` contract
+  // computes a deterministic id from the property address, so a repeat
+  // fire for the same physical home always carries the same id.
+  //
+  // On a match, inbound non-empty fields are merged onto the existing
+  // record and `contact_ids` is UNIONED (never replaced) — ADR 30 D2, a
+  // home can carry a second agreement holder, and a later upsert from a
+  // different contact's flow must not drop the first holder.
+  const upsertHomeRecord = useCallback((home) => {
+    if (!home || !home.id) return home;
+    let result = home;
+    setHomes((prev) => {
+      const existing = prev[home.id];
+      if (!existing) {
+        result = home;
+        return { ...prev, [home.id]: home };
+      }
+      const merged = { ...existing };
+      for (const k of Object.keys(home)) {
+        if (k === 'id' || k === 'contact_ids') continue;
+        const inbound = home[k];
+        if (inbound === undefined || inbound === null) continue;
+        if (typeof inbound === 'string' && inbound.trim() === '') continue;
+        merged[k] = inbound;
+      }
+      const existingIds = Array.isArray(existing.contact_ids) ? existing.contact_ids : [];
+      const inboundIds = Array.isArray(home.contact_ids) ? home.contact_ids : [];
+      merged.contact_ids = [...new Set([...existingIds, ...inboundIds])];
+      merged.updated_at = new Date().toISOString();
+      result = merged;
+      return { ...prev, [home.id]: merged };
+    });
+    return result;
+  }, []);
+
+  // Manual-add entry point — AddHomeModal (ContactProfile's Homes
+  // section) calls this with a freshly-filled-out form, no id yet.
+  // Generates an id, ensures contactId is a member of contact_ids /
+  // stamps primary_contact_id when absent, then delegates to
+  // upsertHomeRecord. Mirrors appendVehicleToContact's role for
+  // vehicles, but upsert-by-id rather than blind-append, so re-adding
+  // the same address (e.g. the agent double-submits) patches in place.
+  const appendHomeToContact = useCallback(
+    (contactId, home) => {
+      if (!contactId || !home) return null;
+      const id =
+        home.id ||
+        `home_new_${
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : Date.now()
+        }`;
+      const existingIds = Array.isArray(home.contact_ids) ? home.contact_ids : [];
+      const now = new Date().toISOString();
+      const record = {
+        ...home,
+        id,
+        primary_contact_id: home.primary_contact_id || contactId,
+        contact_ids: existingIds.includes(contactId) ? existingIds : [...existingIds, contactId],
+        source: home.source || 'manual',
+        created_at: home.created_at || now,
+        updated_at: now,
+      };
+      return upsertHomeRecord(record).id;
+    },
+    [upsertHomeRecord],
+  );
+
+  // Wave 39 (ADR 30) — register upsertHomeRecord as the writer for
+  // `blinker-platform/api`'s `homes.create()` wrapper, mirroring the
+  // opportunity writer above. Same `registerAsHost` gating (see the
+  // long-form comment on the opportunity writer effect) — only the true
+  // session host (App.jsx) registers.
+  useEffect(() => {
+    if (!registerAsHost) return undefined;
+    registerHomeWriter((home) => upsertHomeRecord(home));
+    return () => registerHomeWriter(null);
+  }, [upsertHomeRecord, registerAsHost]);
 
   // Targeted opp patch — Phase 1 stand-in for blinkerApi.opportunities.patch.
   // Used by CoPilotPane to bind opportunity.vehicle_id after the embedded
@@ -522,5 +666,14 @@ export function useSessionData({ registerAsHost = true } = {}) {
     appendHouseholdRelationship,
     patchContact,
     updateOpportunity,
+    // Wave 39 (ADR 30) — home analogs. `homes` mirrors `contacts`' shape
+    // (id → record). `dedupAndUpsertHome` is `upsertHomeRecord` under
+    // the name CoPilotPane's onHomeCommitted wire-back handler expects
+    // (parallel to `dedupAndUpsertVehicle`) — same function, two names
+    // because the two call sites (manual AddHomeModal add vs. wizard
+    // wire-back) read more clearly under their own verb.
+    homes,
+    appendHomeToContact,
+    dedupAndUpsertHome: upsertHomeRecord,
   };
 }

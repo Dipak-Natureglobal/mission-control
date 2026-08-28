@@ -1,0 +1,291 @@
+{
+  "_comment": "First-class registry of every external system Blinker integrates with, plus the per-org configurable fields each one exposes. Replaces the legacy `payment_services` JSONB blob (BlinkerLegacy/blinker/app/models/configuration.rb:200-360) where credentials for Ensurety / FluidPay / FloPay / etc. were nested under opaque keys with test/live splits scattered across env vars. Source for the admin-console Integrations card grid (mission-control/src/personas/admin/Integrations.jsx). Each org's enabled providers + actual credential values live on the org record (org-registry.json `integrations` block); this file defines the SHAPE.",
+  "_version": "2026-05-09-v304-wizard-polish",
+  "_principle": "One block per provider. Each provider declares: identity (id/label/category), what it does (purpose), whether it respects the org-level test_mode broad-switch (per architecture/10-admin-console.md), and the field schema the admin-console Edit drawer renders. Sensitive fields are masked in the UI by default and require an explicit reveal click; reveals are audit-logged.",
+  "_consumed_by": [
+    "mission-control/src/personas/admin/Integrations.jsx (card grid + per-provider Edit drawer)",
+    "mission-control/src/personas/admin/OrgConfiguration.jsx (test_mode banner consults supports_test_mode)",
+    "mission-control/src/personas/super/SuperHome.jsx (cross-org integration health, Phase 2)"
+  ],
+  "_test_mode_principle": "Per legacy 04-organization-configuration.md, a single per-org `test_mode` boolean flips EVERY integration that supports_test_mode=true to its sandbox endpoint and credential set in one switch. Preserve this fan-out. The admin-console MUST surface a banner on every screen of an org with test_mode enabled, and toggling test_mode requires a confirm-modal listing every provider that will flip. Providers with supports_test_mode=false (e.g., S3, Google Places) are environment-agnostic.",
+  "_credential_storage_principle": "Phase 1 (now): credential values live in org-registry.json `integrations.<provider_id>.credentials.{test|live}` as plain fixture values (NOT real secrets). Phase 2 (real backend): the API layer stores credentials encrypted-at-rest server-side; the admin-console NEVER receives raw credential values for sensitive fields except via an explicit reveal endpoint. Reveal is gated on `view_integration_credentials` permission (super_admin only by default) and audit-logged.",
+  "_categories": {
+    "crm":               "Lead + opportunity sync (GoHighLevel today; future Salesforce / HubSpot)",
+    "payment_processor": "Card + ACH tokenization and charges (FluidPay)",
+    "payment_plan":      "Recurring billing + plan management (Ensurety)",
+    "paylink":           "Hosted payment-link generation (FloPay)",
+    "product_admin":     "VSC / GAP / appearance product catalog + contract booking (StoneEagle, Express Aftermarket / Omega)",
+    "insurance":         "Embedded insurance quote + bind (Embedded Insurance)",
+    "signing":           "E-signature (DocuSeal; legacy DocuSign)",
+    "communications":    "SMS (Twilio), transactional email (Mandrill), support tickets (Zendesk)",
+    "data":              "VIN decode (VinAudit), market value (MarketCheck), address autocomplete (Google Places)",
+    "banking":           "Bank linking (Plaid)",
+    "storage":           "S3 logo + signature image storage"
+  },
+
+  "providers": {
+    "ghl": {
+      "id": "ghl",
+      "label": "GoHighLevel",
+      "category": "crm",
+      "purpose": "Bi-directional contact + opportunity sync. Per architecture/07-data-layer.md, GHL is a downstream sync target (not source-of-truth); tags are the only bi-directional field.",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "location_id",        "label": "Location ID",       "type": "string", "sensitive": false, "required": true,  "help": "GHL sub-account location id (e.g., reWBjJ4bl9eIFdUlpl4w for Apex). Visible in the GHL URL when browsing the org's location." },
+        { "key": "api_key",            "label": "API key",           "type": "secret", "sensitive": true,  "required": true,  "help": "GHL location-scoped API key. Generate from GHL Settings → Business Profile → API Key." },
+        { "key": "private_token",      "label": "Private integration token", "type": "secret", "sensitive": true, "required": false, "help": "v2 PIT for the marketplace app. Required for v2 endpoints." },
+        { "key": "webhook_secret",     "label": "Webhook secret",    "type": "secret", "sensitive": true,  "required": false, "help": "HMAC secret for verifying inbound webhooks (lead-feed, status updates)." },
+        { "key": "pipeline_mappings",  "label": "Pipeline mappings", "type": "ref",    "sensitive": false, "required": false, "ref": "ghl-status.json", "help": "Per-workflow GHL pipeline + stage → platform status. Edited via super-admin StatusMappingEditor (already shipped Wave 13)." },
+        { "key": "field_mappings",     "label": "Custom field mappings", "type": "ref","sensitive": false, "required": false, "ref": "ghl-fields.json", "help": "Per-org override of canon ghl-fields.json projection. Defaults inherit." }
+      ]
+    },
+
+    "fluidpay": {
+      "id": "fluidpay",
+      "label": "FluidPay",
+      "category": "payment_processor",
+      "purpose": "Card tokenization (hosted fields) + charge execution. Used by protection-portal BillingPayment.",
+      "supports_test_mode": true,
+      "test_mode_fanout": "URL flips ENV[FLUIDPAY_URL] → ENV[FLUIDPAY_TEST_URL] (sandbox.fluidpay.com); api_key flips fluidpay_live_api_key → fluidpay_test_api_key (legacy configuration.rb:200-208).",
+      "fields": [
+        { "key": "merchant_id",   "label": "Merchant ID",          "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "api_key",       "label": "API key",              "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] },
+        { "key": "public_key",    "label": "Public key (tokenizer)","type": "string","sensitive": false, "required": true,  "env": ["test","live"], "help": "Used by FluidPayHostedFields.jsx to initialize the tokenizer iframe." },
+        { "key": "tokenizer_url", "label": "Tokenizer URL",        "type": "string", "sensitive": false, "required": false, "env": ["test","live"], "help": "Override only when not using FluidPay's default sandbox/live URLs." }
+      ]
+    },
+
+    "ensurety": {
+      "id": "ensurety",
+      "label": "Ensurety",
+      "category": "payment_plan",
+      "purpose": "Recurring payment-plan creation + management. The plan provider for monthly-pay protection plans.",
+      "supports_test_mode": true,
+      "test_mode_fanout": "appId flips ENV[ENSURETY_APP_ID] → ENV[ENSURETY_TEST_APP_ID] (BLINKERTESTAPP). account_code, processor, efs_token all flip live → test (legacy configuration.rb:225-355). EnsuretyClient appends ?testMode=true|false to every API call URL.",
+      "fields": [
+        { "key": "app_id",        "label": "App ID",          "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "account_code",  "label": "Account code",    "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "processor",     "label": "Processor",       "type": "string", "sensitive": false, "required": true,  "env": ["test","live"], "help": "Processor identifier (e.g., 'fluidpay', 'authnet')." },
+        { "key": "efs_token",     "label": "EFS token",       "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"], "help": "Token for the Ensurety EFS payment endpoint." },
+        { "key": "default_term_months", "label": "Default term (months)", "type": "integer", "sensitive": false, "required": false, "env": ["test","live"], "help": "Default term displayed in protection-portal coverage card $X/mo tooltips. Falls back to org protection_billing.payment_term.default_months when null." },
+        { "key": "down_payment_mode",   "label": "Down payment mode",     "type": "enum",    "sensitive": false, "required": false, "env": ["test","live"], "options": ["same_as_monthly","percent_of_price","fixed_dollars"], "help": "How the default down-payment is computed for the $X/mo tooltip on coverage cards. 'same_as_monthly' uses the monthly amount as the down payment; 'percent_of_price' uses down_payment_value as a % of plan price; 'fixed_dollars' uses down_payment_value as a literal $ amount." },
+        { "key": "down_payment_value",  "label": "Down payment value",    "type": "decimal", "sensitive": false, "required": false, "env": ["test","live"], "help": "Numeric value used by down_payment_mode. For percent_of_price: 10 = 10%. For fixed_dollars: 500 = $500. Ignored when mode is same_as_monthly." }
+      ]
+    },
+
+    "flopay": {
+      "id": "flopay",
+      "label": "FloPay",
+      "category": "paylink",
+      "purpose": "Hosted payment-link generation. selected_product.sync_to_flopay is called inside ProductPackages::Create#call (legacy product_packages/create.rb).",
+      "supports_test_mode": true,
+      "test_mode_fanout": "Env-var prefix flips ENV[FLOPAY_*] → ENV[FLOPAY_TEST_*] (legacy flopay_paylink/helper.rb:12).",
+      "fields": [
+        { "key": "api_url",       "label": "API URL",         "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "api_key",       "label": "API key",         "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] },
+        { "key": "merchant_id",   "label": "Merchant ID",     "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "default_term_months", "label": "Default term (months)", "type": "integer", "sensitive": false, "required": false, "env": ["test","live"], "help": "Default term displayed in protection-portal coverage card $X/mo tooltips. Falls back to org protection_billing.payment_term.default_months when null." },
+        { "key": "down_payment_mode",   "label": "Down payment mode",     "type": "enum",    "sensitive": false, "required": false, "env": ["test","live"], "options": ["same_as_monthly","percent_of_price","fixed_dollars"], "help": "How the default down-payment is computed for the $X/mo tooltip on coverage cards. 'same_as_monthly' uses the monthly amount as the down payment; 'percent_of_price' uses down_payment_value as a % of plan price; 'fixed_dollars' uses down_payment_value as a literal $ amount." },
+        { "key": "down_payment_value",  "label": "Down payment value",    "type": "decimal", "sensitive": false, "required": false, "env": ["test","live"], "help": "Numeric value used by down_payment_mode. For percent_of_price: 10 = 10%. For fixed_dollars: 500 = $500. Ignored when mode is same_as_monthly." }
+      ]
+    },
+
+    "stoneeagle": {
+      "id": "stoneeagle",
+      "label": "StoneEagle (SCS Auto)",
+      "category": "product_admin",
+      "purpose": "VSC product catalog + rate quotes via GetRates SOAP service (architecture/13-stoneeagle-integration.md). Per-org product administrator credentials (TpaCode + UserId + Password + DealerNo). Reference specs at architecture/integration-partners/stoneeagle/.",
+      "supports_test_mode": true,
+      "test_mode_fanout": "Entire credential set flips ENV[STONE_EAGLE_*] → ENV[STONE_EAGLE_TEST_*] including URL (legacy stone_eagle_client.rb:17). The rewrite exposes ALL StoneEagle credentials at the per-org level (web_service_base_url, tpa_code, user_id, password, dealer_no, recipient_id, products_filter).",
+      "endpoint_paths": {
+        "_comment": "Two ASMX paths derived from web_service_base_url; not per-org configurable (protocol-defined).",
+        "rating": "scsautoservice.asmx",
+        "contracting": "Contractservice.asmx"
+      },
+      "fields": [
+        { "key": "web_service_base_url", "label": "Web service base URL", "type": "string", "sensitive": false, "required": true,  "env": ["test","live"], "help": "Base URL with trailing slash (e.g., http://www.natinc.com/SCSAutoService/). Rating + contracting paths are appended in code." },
+        { "key": "tpa_code",      "label": "TPA code",        "type": "string", "sensitive": false, "required": true,  "env": ["test","live"], "help": "Third-party administrator code (3-4 chars, e.g., OMGA, APEX). THE primary per-org identifier in StoneEagle." },
+        { "key": "user_id",       "label": "User ID",         "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "password",      "label": "Password",        "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] },
+        { "key": "dealer_no",     "label": "Dealer number",   "type": "string", "sensitive": false, "required": true,  "env": ["test","live"], "help": "Unique dealer identifier within the TPA (assigned by SEFI when the dealer is provisioned)." },
+        { "key": "recipient_id",  "label": "Recipient ID",    "type": "string", "sensitive": false, "required": false, "env": ["test","live"], "help": "Optional integration-partner identifier (per spec v1.30+). Some providers require it for routing." },
+        { "key": "products_filter","label": "Product codes filter","type": "enum-array","sensitive": false,"required": false,"env": ["test","live"],
+          "options": [
+            { "value": "VSC",  "label": "Vehicle Service Contract" },
+            { "value": "GAP",  "label": "Guaranteed Asset Protection" },
+            { "value": "MNT",  "label": "Prepaid Maintenance" },
+            { "value": "AP",   "label": "Appearance Protection" },
+            { "value": "PDR",  "label": "Paintless Dent Repair" },
+            { "value": "LTW",  "label": "Limited Warranty" },
+            { "value": "RHT",  "label": "Tire & Wheel" },
+            { "value": "THP",  "label": "Theft Protection" },
+            { "value": "EWT",  "label": "Extended Wear & Tear" },
+            { "value": "ETCH", "label": "Etch (anti-theft VIN etching)" },
+            { "value": "KEY",  "label": "Key Replacement" },
+            { "value": "OTH",  "label": "Other Aftermarket Product" }
+          ],
+          "help": "Whitelist of Product Type Codes to expose to this org (per v1.31 spec §ProductCollection). Empty = all 12 codes returned by StoneEagle. Providers may extend with custom codes; canon enumerates the 12 standard codes."
+        }
+      ]
+    },
+
+    "express_aftermarket": {
+      "id": "express_aftermarket",
+      "label": "Express Aftermarket / Omega",
+      "category": "product_admin",
+      "purpose": "Alternative VSC + only-source GAP product administrator. F&I Express system fronting Omega Auto Care. REST/JSON, HTTP Basic auth.",
+      "supports_test_mode": false,
+      "test_mode_fanout": "Legacy has no separate test mode for Express Aftermarket — confirm with provider before exposing.",
+      "fields": [
+        { "key": "api_url",          "label": "API URL",         "type": "string", "sensitive": false, "required": true,  "help": "Defaults to ENV[EXPRESS_AFTERMARKET_API_URL]." },
+        { "key": "auth_username",    "label": "Auth username",   "type": "string", "sensitive": false, "required": true },
+        { "key": "auth_password",    "label": "Auth password",   "type": "secret", "sensitive": true,  "required": true },
+        { "key": "ex1_provider_id",  "label": "EX1 Provider ID", "type": "string", "sensitive": false, "required": true,  "help": "Omega = 177." },
+        { "key": "products_enabled", "label": "Enabled products","type": "object-array","sensitive": false,"required": true,"help": "Array of { product_code, label, margin } — lifts the legacy EXPRESS_AFTERMARKET_PRODUCTS env-var JSON into per-org config (legacy 06-product-services-providers.md flagged this as a rewrite target). Codes: 1525 Appearance, 1526 GAP, 1527 Loyalty Reward, 1528 VSC, 1529 Prepaid Maintenance." },
+        { "key": "states_with_gap",  "label": "States with GAP for refi","type": "string-array","sensitive": false,"required": false,"help": "Lifts ENV[STATES_WITH_GAP_FOR_REFI] into per-org config; deconflicted with system.refi_active_states." },
+        { "key": "states_with_vsc",  "label": "States with VSC for refi","type": "string-array","sensitive": false,"required": false,"help": "Lifts ENV[STATES_WITH_VSC_FOR_REFI] into per-org config." }
+      ]
+    },
+
+    "embedded_insurance": {
+      "id": "embedded_insurance",
+      "label": "Embedded Insurance",
+      "category": "insurance",
+      "purpose": "Insurance quote + verification + bind. The insurance provider for the cross-sell flow. See architecture/06-embedded-insurance-contract.md.",
+      "supports_test_mode": true,
+      "test_mode_fanout": "Test/live env split per legacy embedded_insurance_client.rb:11.",
+      "fields": [
+        { "key": "api_url",       "label": "API URL",         "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "api_key",       "label": "API key",         "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] },
+        { "key": "partner_id",    "label": "Partner ID",      "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "webhook_secret","label": "Webhook secret",  "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] }
+      ]
+    },
+
+    "docuseal": {
+      "id": "docuseal",
+      "label": "DocuSeal",
+      "category": "signing",
+      "purpose": "E-signature for protection-package agreements. Embedded as iframe in a Blinker-rendered public page; webhook posts to api/v3/webhooks/docuseal_controller with X-Webhook-Token.",
+      "supports_test_mode": false,
+      "test_mode_fanout": "No separate test instance configured in legacy — note in the UI.",
+      "fields": [
+        { "key": "api_url",        "label": "API URL",        "type": "string", "sensitive": false, "required": true },
+        { "key": "api_token",      "label": "API token",      "type": "secret", "sensitive": true,  "required": true },
+        { "key": "webhook_token",  "label": "Webhook token",  "type": "secret", "sensitive": true,  "required": true, "help": "X-Webhook-Token header verified on inbound." },
+        { "key": "template_overrides","label": "State-specific template overrides","type": "object-array","sensitive": false,"required": false,"help": "Array of { state, template_id }. UWP-style state-specific templates per legacy screens/12."}
+      ]
+    },
+
+    "twilio": {
+      "id": "twilio",
+      "label": "Twilio",
+      "category": "communications",
+      "purpose": "SMS — capture-link delivery, customer-portal handoff notifications, agent-to-customer messaging.",
+      "supports_test_mode": true,
+      "test_mode_fanout": "Different routing / from-number / sandbox behavior (legacy twilio.rb:10).",
+      "fields": [
+        { "key": "account_sid",   "label": "Account SID",     "type": "string", "sensitive": false, "required": true,  "env": ["test","live"] },
+        { "key": "auth_token",    "label": "Auth token",      "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] },
+        { "key": "from_number",   "label": "From number",     "type": "string", "sensitive": false, "required": true,  "env": ["test","live"], "help": "E.164 (e.g., +15555550100)." },
+        { "key": "messaging_service_sid","label": "Messaging service SID","type": "string","sensitive": false,"required": false,"env": ["test","live"],"help": "Optional — overrides from_number when set."},
+        { "key": "daily_fail_limit","label": "Daily SMS fail limit","type": "integer","sensitive": false,"required": false,"help": "Mirrors legacy configuration.sms_daily_fail_limit. Auto-pause SMS when exceeded."}
+      ]
+    },
+
+    "mandrill": {
+      "id": "mandrill",
+      "label": "Mandrill",
+      "category": "communications",
+      "purpose": "Transactional email — capture-link delivery, payment receipts, contract notifications.",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "api_key",       "label": "API key",         "type": "secret", "sensitive": true,  "required": true },
+        { "key": "from_email",    "label": "From email",      "type": "string", "sensitive": false, "required": true },
+        { "key": "from_name",     "label": "From name",       "type": "string", "sensitive": false, "required": true }
+      ]
+    },
+
+    "zendesk": {
+      "id": "zendesk",
+      "label": "Zendesk",
+      "category": "communications",
+      "purpose": "Support ticketing. Agents create tickets from /users/:id/create-ticket per legacy.",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "subdomain",     "label": "Subdomain",       "type": "string", "sensitive": false, "required": true,  "help": "<subdomain>.zendesk.com" },
+        { "key": "api_token",     "label": "API token",       "type": "secret", "sensitive": true,  "required": true },
+        { "key": "agent_email",   "label": "Default agent email", "type": "string","sensitive": false,"required": true }
+      ]
+    },
+
+    "plaid": {
+      "id": "plaid",
+      "label": "Plaid",
+      "category": "banking",
+      "purpose": "Bank-account linking for ACH down-payments + refi-flow income/asset verification.",
+      "supports_test_mode": true,
+      "test_mode_fanout": "client_id constant; secret + env (sandbox / development / production) flips.",
+      "fields": [
+        { "key": "client_id",     "label": "Client ID",       "type": "string", "sensitive": false, "required": true },
+        { "key": "secret",        "label": "Secret",          "type": "secret", "sensitive": true,  "required": true,  "env": ["test","live"] },
+        { "key": "environment",   "label": "Environment",     "type": "enum",   "options": ["sandbox","development","production"], "sensitive": false, "required": true }
+      ]
+    },
+
+    "vinaudit": {
+      "id": "vinaudit",
+      "label": "VinAudit",
+      "category": "data",
+      "purpose": "VIN decode for vehicle YMMT. Read-only.",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "api_key",       "label": "API key",         "type": "secret", "sensitive": true,  "required": true }
+      ]
+    },
+
+    "marketcheck": {
+      "id": "marketcheck",
+      "label": "MarketCheck",
+      "category": "data",
+      "purpose": "Vehicle market value lookup. Read-only.",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "api_key",       "label": "API key",         "type": "secret", "sensitive": true,  "required": true }
+      ]
+    },
+
+    "google_places": {
+      "id": "google_places",
+      "label": "Google Places",
+      "category": "data",
+      "purpose": "Address autocomplete. Used by AddressBlock (refi-portal/src/components).",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "api_key",       "label": "API key",         "type": "secret", "sensitive": true,  "required": true,  "help": "Browser-restricted by domain in Google Cloud Console." }
+      ]
+    },
+
+    "s3_storage": {
+      "id": "s3_storage",
+      "label": "S3 storage",
+      "category": "storage",
+      "purpose": "Org logo + authorized-seller signature image storage. Used by call-center-logo + agreement-signing flows.",
+      "supports_test_mode": false,
+      "fields": [
+        { "key": "bucket",        "label": "Bucket",          "type": "string", "sensitive": false, "required": true },
+        { "key": "region",        "label": "Region",          "type": "string", "sensitive": false, "required": true },
+        { "key": "access_key_id", "label": "Access key ID",   "type": "secret", "sensitive": true,  "required": true },
+        { "key": "secret_access_key","label": "Secret access key","type": "secret","sensitive": true,"required": true }
+      ]
+    }
+  },
+
+  "_TODO": [
+    "Phase 2: replace fixture credential storage with encrypted-at-rest server-side; admin-console reveals via dedicated API endpoint with audit log row.",
+    "Decide whether `pipeline_mappings` and `field_mappings` should be EMBEDDED in the org's GHL integration block or kept as references into ghl-status.json / ghl-fields.json. Current design = ref; admin can override by editing the canon file (super-admin) or by adding per-org overrides on the org record (admin).",
+    "Document the inbound-lead-feed webhook as its own provider category once the rewrite ships its first lead-feed integration.",
+    "Confirm DriveAmerica / DocuSign legacy integrations are truly dead before omitting them from this registry (they're flagged dead in legacy docs but no commit has actually deleted the code paths).",
+    "Add a `health_check_endpoint` per provider so the admin-console can show live red/green status (Phase 2 — needs API layer)."
+  ]
+}

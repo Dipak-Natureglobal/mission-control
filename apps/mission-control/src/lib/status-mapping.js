@@ -42,13 +42,19 @@ import canonStatus from '../constants/canon/ghl-status.json';
 
 const STORAGE_KEY = 'mc.status-mapping.v1';
 
-export const WORKFLOW_KEYS = ['vsc', 'refi', 'insurance', 'payments'];
+// Wave 39 (ADR 30) — 'home_protection' added as a fifth workflow key.
+// Its canon block (ghl-status.json#home_protection) has the same
+// `statuses` object shape as 'vsc'/'insurance', so `seedRowsForWorkflow`
+// below needs no branch change — it already handles any workflow whose
+// canon block carries `.statuses`.
+export const WORKFLOW_KEYS = ['vsc', 'refi', 'insurance', 'payments', 'home_protection'];
 
 export const WORKFLOW_LABELS = {
   vsc: 'VSC / Protection',
   refi: 'Refi',
   insurance: 'Insurance',
   payments: 'Payments',
+  home_protection: 'Home Protection',
 };
 
 export const CRM_STATUS_OPTIONS = ['Open', 'Won', 'Lost', 'Abandon'];
@@ -127,6 +133,10 @@ export function seedFromCanon() {
     refi: seedRowsForWorkflow('refi'),
     insurance: seedRowsForWorkflow('insurance'),
     payments: [],
+    // Wave 39 (ADR 30) — home protection's canon block has the same
+    // `statuses` shape as vsc/insurance, so seedRowsForWorkflow needs no
+    // new branch.
+    home_protection: seedRowsForWorkflow('home_protection'),
   };
 }
 
@@ -181,6 +191,10 @@ export function loadMapping() {
       refi: Array.isArray(parsed.refi) ? parsed.refi : seed.refi,
       insurance: Array.isArray(parsed.insurance) ? parsed.insurance : seed.insurance,
       payments: Array.isArray(parsed.payments) ? parsed.payments : [],
+      // Wave 39 (ADR 30) — fifth workflow key, same defensive fallback.
+      home_protection: Array.isArray(parsed.home_protection)
+        ? parsed.home_protection
+        : seed.home_protection,
     };
   } catch (err) {
     console.warn('[status-mapping] loadMapping failed, using canon seed:', err);

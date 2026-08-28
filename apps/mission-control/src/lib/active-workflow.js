@@ -8,7 +8,7 @@ import { createContext, useContext } from 'react';
 // Shape:
 //   active === null               → no CoPilot open
 //   active === {                  → CoPilot is open
-//     kind:           'protection' | 'refi' | 'insurance' | null,
+//     kind:           'protection' | 'refi' | 'insurance' | 'home_protection' | null,
 //     opportunityId:  string,
 //     opportunity:    object,
 //     contact:        object | null,
@@ -117,6 +117,32 @@ import { createContext, useContext } from 'react';
 //                                                 for symmetry.
 //   setResetInsuranceWorkflow : ((fn|null) => void)
 //
+// Home protection form / step (Wave 39, ADR 30):
+//   homeProtectionForm      : null | object — home-protection-portal's
+//                                             wizard form (INITIAL_FORM-
+//                                             shaped + contact + home
+//                                             prefill via
+//                                             buildHomeInitialFormSeed).
+//                                             null until CoPilotPane seeds.
+//   setHomeProtectionForm   : (next | (prev) => next) => void
+//   homeProtectionStepIdx   : number — wizard step index
+//   setHomeProtectionStepIdx : (next | (prev) => next) => void
+//   resetHomeProtectionForm     : () => void | null
+//                                        — registered by CoPilotPane on
+//                                          mount; mirrors protection/refi
+//                                          for symmetry. null when no
+//                                          CoPilot is open. Currently
+//                                          unused (no reset button) but
+//                                          published for future use.
+//   setResetHomeProtectionForm  : ((fn|null) => void)
+//
+//   Lifted for the SAME reason protection lifts its form: so
+//   OpportunityContextPane's active-opp RelatedHomeProtectionProgress
+//   mount (a SIBLING of HomeProtectionEmbed, not a descendant) can read
+//   the live step index. No consolidated DevPanel section reads it in
+//   this wave (see CoPilotPane.jsx's EmbedSlot home_protection-branch
+//   comment) — the ProtectionDevControls-equivalent wiring is future work.
+//
 // Wiring:
 //   - App.jsx owns the [active, setActive] useState + the three per-kind
 //     useState slices + the new refiForm / refiStepIdx / insuranceWorkflow
@@ -158,6 +184,12 @@ export const ActiveWorkflowContext = createContext({
   setInsuranceWorkflow: () => {},
   resetInsuranceWorkflow: null,
   setResetInsuranceWorkflow: () => {},
+  homeProtectionForm: null,
+  setHomeProtectionForm: () => {},
+  homeProtectionStepIdx: 0,
+  setHomeProtectionStepIdx: () => {},
+  resetHomeProtectionForm: null,
+  setResetHomeProtectionForm: () => {},
 });
 
 export function useActiveWorkflow() {

@@ -1,0 +1,88 @@
+name: Deploy refinance-prototype
+
+# Manual deploy, runnable from ANY branch. Pick the branch in the GitHub UI
+# (Actions → Deploy refinance-prototype → Run workflow → Branch), or via:
+#   gh workflow run deploy.yml --ref <branch>
+#
+# NOTE: GitHub only lists a workflow_dispatch workflow once it exists on the
+# default branch (main). Merge this file to main first; after that you can run
+# it against any branch from the Run-workflow branch dropdown.
+on:
+  workflow_dispatch:
+    inputs:
+      platform_ref:
+        description: blinker-platform ref (branch/tag/sha) to build against
+        type: string
+        default: main
+
+# Staging-only. deploy.sh's S3_BUCKET / CLOUDFRONT_DIST_ID defaults
+# (refinance-prototype / E2QH6G2L5VCECW) are the STAGING targets — there is no
+# prod target wired here, so this workflow always deploys staging.
+concurrency:
+  group: deploy-refinance-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write # for OIDC, if AWS_ROLE_ARN is configured
+
+    steps:
+      # refinance-prototype on the branch the workflow was dispatched from.
+      - name: Checkout refinance-prototype
+        uses: actions/checkout@v4
+        with:
+          path: refinance-prototype
+
+      # blinker-platform as a sibling so the `file:../blinker-platform`
+      # dependency + the `../blinker-platform` symlink resolve in CI.
+      - name: Checkout blinker-platform
+        uses: actions/checkout@v4
+        with:
+          repository: BlinkerGit/blinker-platform
+          ref: ${{ inputs.platform_ref }}
+          token: ${{ secrets.PLATFORM_REPO_TOKEN || github.token }}
+          path: blinker-platform
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: refinance-prototype/package-lock.json
+
+      - name: Install dependencies
+        working-directory: refinance-prototype
+        run: npm ci
+
+      # Prefer OIDC (set AWS_ROLE_ARN secret) — falls back to static keys.
+      - name: Configure AWS credentials (OIDC)
+        if: ${{ secrets.AWS_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: Configure AWS credentials (keys)
+        if: ${{ secrets.AWS_ROLE_ARN == '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      # deploy.sh builds (npm run build / build:stage), syncs S3, invalidates CloudFront.
+      # S3_BUCKET / CLOUDFRONT_DIST_ID default inside the script; override via repo
+      # vars only if the targets differ from the defaults.
+      - name: Deploy
+        working-directory: refinance-prototype
+        env:
+          S3_BUCKET: ${{ vars.S3_BUCKET }}
+          CLOUDFRONT_DIST_ID: ${{ vars.CLOUDFRONT_DIST_ID }}
+        run: |
+          [ -n "$S3_BUCKET" ] || unset S3_BUCKET
+          [ -n "$CLOUDFRONT_DIST_ID" ] || unset CLOUDFRONT_DIST_ID
+          ./scripts/deploy.sh staging

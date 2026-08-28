@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 
@@ -26,6 +26,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+      // Symlinked blinker-platform (file:../blinker-platform) imports
+      // lucide-react, but its real dir has no node_modules. Rolldown
+      // resolves that bare specifier from the symlink target and fails
+      // the production build. Point it at this app's copy — same reason
+      // react is pinned above.
+      'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react'),
     },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
   },
 })

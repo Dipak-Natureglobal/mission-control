@@ -26,8 +26,8 @@ export function getSequence(form: RefiForm, hasCoApp: boolean): ScreenKey[] {
         ? ['s1_co_app_contact', 's1_co_app_employment']
         : [];
     const middle: ScreenKey[] = isPoor
-        ? ['s1_co_app_decision', ...coAppDetails, 's1_applicant', 's1_housing', 's1_employment']
-        : ['s1_applicant', 's1_housing', 's1_employment', 's1_co_app_decision', ...coAppDetails];
+        ? [...coAppDetails, 's1_applicant', 's1_housing', 's1_employment']
+        : ['s1_applicant', 's1_housing', 's1_employment', ...coAppDetails];
     return [
         'vehicle_add',
         'vehicle_drive',

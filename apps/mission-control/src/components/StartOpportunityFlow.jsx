@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import {
   ChevronLeft,
+  House,
   Plus,
   RefreshCcw,
   Search,
@@ -10,7 +11,11 @@ import {
   X,
 } from 'lucide-react';
 import { AddContactModal } from './AddContactModal.jsx';
+import { AddHomeModal } from './AddHomeModal.jsx';
 import { buildNewOpp } from '../lib/session-data.js';
+import { getActiveOrgId, isHomeProtectionEnabledForOrg } from '../lib/canon.js';
+import { listHomeTypes } from 'blinker-platform/utils';
+import planMappings from '../constants/canon/plan-mappings.json' with { type: 'json' };
 import { track } from 'blinker-platform/telemetry';
 
 // StartOpportunityFlow — multi-step modal for the AgentHome quick-action
@@ -20,7 +25,8 @@ import { track } from 'blinker-platform/telemetry';
 //
 // Steps (state machine `step`):
 //   1. 'type'    — pick opportunity type. Card-grid of 4 (refi, insurance×2,
-//                  protection). Cards record { type, flowPath } and advance.
+//                  protection) plus, org-gated, a 5th "Home protection" card
+//                  (ADR 30 R8). Cards record { type, flowPath } and advance.
 //   2. 'contact' — searchable list of existing session contacts + a dashed
 //                  "+ Add new contact" tile. Pick → contact selected; tile →
 //                  swap to AddContactModal (inline-mounted), then on save
@@ -31,7 +37,23 @@ import { track } from 'blinker-platform/telemetry';
 //                  to the inline VehicleAdd path (skip the picker UI).
 //                  After picking/adding, build the opp, persist it, fire
 //                  onCreated(opp.id) which the parent uses to deep-link
-//                  into CoPilotPane.
+//                  into CoPilotPane. Only reached for non-home types.
+//   3'. 'home'   — ADR 30 R8 asset step for type === 'home_protection'.
+//                  Home is durable and belongs to the contact (D2), so this
+//                  mirrors 'vehicle' — a picker grid of the contact's
+//                  existing homes plus a dashed "+ Add new home" tile that
+//                  opens AddHomeModal (a real modal, stacked over this one —
+//                  NOT inlined like VehicleAdd, because AddHomeModal already
+//                  owns its own chrome). A skip footer is always offered.
+//                  Wave 39-fu — the step only actually RENDERS when there's
+//                  something to ask: routeToHomeStep skips it entirely when
+//                  the contact has zero homes on file but a usable mailing
+//                  address, seeding that address forward as `_prefill.home`
+//                  (see buildHomePrefill) instead of re-asking for it.
+//                  home-protection-portal's own `home_add` wizard step
+//                  still collects home type / square footage / year built,
+//                  which an address alone can't supply, and consumes the
+//                  prefill as a starting point.
 //
 // Note: there is no 'dob' step. DOB collection for insurance is handled
 // downstream by insurance-portal's LeadOriginationForm ("Confirm your
@@ -51,6 +73,11 @@ import { track } from 'blinker-platform/telemetry';
 //   appendContact         — fn(contact) → id (from useSessionData)
 //   appendOpportunity     — fn(opp)
 //   appendVehicleToContact — fn(contactId, vehicle)
+//   homes                 — session homes map, id → home (from useSessionData;
+//                           ADR 30 — optional, defaults to {}. Filtered by
+//                           contact_ids membership for the 'home' step picker.
+//   appendHomeToContact    — fn(contactId, home) → id (from useSessionData;
+//                           ADR 30 — optional)
 //   onClose               — backdrop / X / Cancel
 //   onCreated             — fn(oppId) — fires on final opp creation; parent
 //                           closes the modal + opens CoPilot.
@@ -92,13 +119,39 @@ const TYPE_OPTIONS = [
   {
     key: 'protection',
     type: 'protection',
-    label: 'Protection plan',
+    label: 'Vehicle protection plan',
     sub: 'VSC / GAP / etc.',
     icon: ShieldCheck,
     iconClass: 'bg-indigo-50 text-indigo-600 ring-indigo-200',
     flowPath: undefined,
   },
+  // ADR 30 R8 — teal, deliberately distinct from protection's indigo (the
+  // two appear side by side in this same grid). Org-gated below at render
+  // time via isHomeProtectionEnabledForOrg — omitted entirely, not shown
+  // disabled, for orgs that don't carry the OMGA home rate set.
+  //
+  // Wave 39-fu — `sub` dropped "· Omega-J Home": that's the OMEGA program
+  // name, not customer-facing copy.
+  {
+    key: 'home_protection',
+    type: 'home_protection',
+    label: 'Home protection',
+    sub: 'Home warranty',
+    icon: House,
+    iconClass: 'bg-teal-50 text-teal-600 ring-teal-200',
+    flowPath: undefined,
+  },
 ];
+
+// ADR 30 — home_type id → display label, matching AddHomeModal's own
+// select options (canon-driven, not hard-coded) and the label prose
+// buildNewOpp uses for the inbox row.
+const HOME_TYPE_LABELS = Object.fromEntries(
+  listHomeTypes(planMappings.home_dwelling_classes).map((t) => [t.id, t.label]),
+);
+function homeTypeLabel(homeType) {
+  return HOME_TYPE_LABELS[homeType] || homeType || '';
+}
 
 const INITIAL_VEHICLE_FORM = {
   vin: '',
@@ -131,6 +184,75 @@ function buildVehicleRecord(form) {
   };
 }
 
+// ADR 30 — stamps a session id onto AddHomeModal's onAdd payload BEFORE
+// persisting, mirroring buildVehicleRecord above. The id is generated here
+// (not read back from appendHomeToContact's return value) so the same
+// id-bearing record can be handed to both appendHomeToContact (persistence)
+// and finalizeOpp/buildNewOpp (the opp's home summary) in the same tick.
+function buildHomeRecord(home) {
+  const id = `home_session_${
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Date.now()
+  }`;
+  return { ...home, id };
+}
+
+// Wave 39-fu — home-step auto-skip helpers (smoke-test follow-up to ADR 30
+// R8). Mirrors the shape of the existing vehicle skip flow: the 'home'
+// step should only ever be RENDERED when there's actually something to
+// ask (a picker with 2+ homes, or a genuinely blank contact). When the
+// contact already typed a usable mailing address (most commonly via "Add
+// new contact" in this same flow) and has no homes on file, that address
+// becomes the covered-property seed instead of re-asking for it.
+
+// Homes this contact already holds, filtered by contact_ids membership —
+// mirrors HomeStep's own `contactHomes` computation and ContactProfile's
+// (a home is NOT stored on contact.homes[]; ADR 30 D2, a home can carry a
+// second agreement holder).
+function contactHomesFor(contact, homes) {
+  if (!contact || !homes) return [];
+  return Object.values(homes).filter(
+    (h) => Array.isArray(h.contact_ids) && h.contact_ids.includes(contact.id),
+  );
+}
+
+// "Usable address" means at minimum a street line plus city/state/zip — a
+// ZIP alone is not enough to seed a covered property. Reads the contact's
+// primary address (falling back to the first) from the canon `contact`
+// shape's addresses[] (see AddContactModal's buildContactRecord — `line_1`
+// / `postal_code`, NOT the home entity's `address1` / `zip` field names).
+function usableContactAddress(contact) {
+  const addresses = contact?.addresses || [];
+  const addr = addresses.find((a) => a.is_primary) || addresses[0];
+  if (!addr) return null;
+  const hasStreet = !!(addr.line_1 && addr.line_1.trim());
+  const hasCityStateZip = !!(addr.city && addr.state && addr.postal_code);
+  if (!hasStreet || !hasCityStateZip) return null;
+  return {
+    address1: addr.line_1 || '',
+    address2: addr.line_2 || '',
+    city: addr.city || '',
+    state: addr.state || '',
+    zip: addr.postal_code || '',
+    country: addr.country || 'US',
+  };
+}
+
+// Builds the Wave 31 `_prefill` convention block for a home_protection opp
+// created with no real home record. Returns null when the contact has no
+// usable address — callers must NOT stamp an empty prefill. Deliberately
+// does NOT mint a `home` entity: a home with an address but no type/square
+// footage can't be classified by classifyDwelling (ADR 30 R2 — null means
+// ineligible), so a half-formed record would pollute the contact graph and
+// the Homes section. The real `home` record is created when the wizard's
+// `home_add` step completes and fires `onHomeCommitted`.
+function buildHomePrefill(contact) {
+  const address = usableContactAddress(contact);
+  if (!address) return null;
+  return { home: { address, source: 'contact_address' } };
+}
+
 export function StartOpportunityFlow({
   open,
   contacts,
@@ -138,6 +260,12 @@ export function StartOpportunityFlow({
   appendOpportunity,
   appendVehicleToContact,
   appendHouseholdRelationship,
+  // ADR 30 — optional; the dashboard launcher (AgentHome) threads these
+  // from useSessionData the same way it threads contacts/vehicles. Default
+  // to a safe no-op shape so any other caller that hasn't been updated
+  // doesn't crash — the 'home' step just renders an empty picker.
+  homes,
+  appendHomeToContact,
   // Optional: when present, the type step is skipped (because the user
   // already picked the type via the enclosing UI) AND the contact step is
   // skipped (because we have a seed contact). Used by AgentHome's "Save
@@ -159,9 +287,26 @@ export function StartOpportunityFlow({
   // (with no contact) jumps to the contact step. seededContact alone
   // jumps to the type step.
   const seededZeroVehicle =
-    !!(seededContact && (seededContact.vehicles || []).length === 0);
+    !!(seededContact && seededType !== 'home_protection' && (seededContact.vehicles || []).length === 0);
+  // ADR 30 — home_protection has its own asset step ('home'), never
+  // 'vehicle'. seededType is never actually passed by today's caller
+  // (AgentHome only seeds a contact), so this branch is defensive/
+  // forward-compatible rather than exercised in the current build.
+  //
+  // Wave 39-fu — the home_protection analog of seededZeroVehicle: the
+  // seeded contact has no homes on file but a usable mailing address, so
+  // the 'home' step would have nothing to ask. Mirrors routeToHomeStep's
+  // branching below (has homes → picker / no homes + address → auto-skip
+  // / neither → picker with Add + Skip).
+  const seededHomeAutoSkip =
+    !!(
+      seededContact &&
+      seededType === 'home_protection' &&
+      contactHomesFor(seededContact, homes).length === 0 &&
+      usableContactAddress(seededContact)
+    );
   const initialStep = seededContact && seededType
-    ? 'vehicle'
+    ? (seededType === 'home_protection' ? 'home' : 'vehicle')
     : seededContact
       ? 'type'
       : 'type';
@@ -178,6 +323,7 @@ export function StartOpportunityFlow({
   const [picked, setPicked] = useState(initialPicked);
   const [contactSearch, setContactSearch] = useState('');
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [addHomeOpen, setAddHomeOpen] = useState(false);
   const [vehicleMode, setVehicleMode] = useState(initialVehicleMode); // 'pick' | 'add'
   const [vehicleForm, setVehicleForm] = useState(INITIAL_VEHICLE_FORM);
 
@@ -211,9 +357,14 @@ export function StartOpportunityFlow({
       flowPath: seededFlowPath || null,
       contact: seededContact || null,
     });
-    setStep(seededContact && seededType ? 'vehicle' : 'type');
+    setStep(
+      seededContact && seededType
+        ? (seededType === 'home_protection' ? 'home' : 'vehicle')
+        : 'type',
+    );
     setContactSearch('');
     setAddContactOpen(false);
+    setAddHomeOpen(false);
     setVehicleMode('pick');
     setVehicleForm(INITIAL_VEHICLE_FORM);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,7 +374,10 @@ export function StartOpportunityFlow({
   // and seededType is also set, the modal would have opened on the
   // 'vehicle' step. Per Wave 16 F2, that step is redundant — every
   // workflow's wizard collects the vehicle inline as step 1. Auto-skip
-  // through runVehicleSkipFlow before VehicleStep renders.
+  // through runVehicleSkipFlow before VehicleStep renders. Never fires
+  // for home_protection — seededZeroVehicle is false in that case (ADR
+  // 29), and the 'home' step's own skip footer covers the equivalent
+  // gap deliberately rather than auto-skipping.
   useEffect(() => {
     if (!open) return;
     if (!seededZeroVehicle) return;
@@ -231,6 +385,21 @@ export function StartOpportunityFlow({
     // step starts as 'vehicle' in this branch — fire once on first
     // open. The effect has no other dependencies so it will not loop.
     runVehicleSkipFlow({
+      type: seededType,
+      flowPath: seededFlowPath,
+      contact: seededContact,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // Wave 39-fu — home_protection analog of the effect above. Defensive/
+  // forward-compatible only (see seededHomeAutoSkip comment) — today's
+  // only caller of the seeded route never seeds seededType.
+  useEffect(() => {
+    if (!open) return;
+    if (!seededHomeAutoSkip) return;
+    if (!seededType || !seededContact) return;
+    runHomeSkipFlow({
       type: seededType,
       flowPath: seededFlowPath,
       contact: seededContact,
@@ -247,6 +416,7 @@ export function StartOpportunityFlow({
     setPicked(initialPicked);
     setContactSearch('');
     setAddContactOpen(false);
+    setAddHomeOpen(false);
     setVehicleMode(initialVehicleMode);
     setVehicleForm(INITIAL_VEHICLE_FORM);
   }
@@ -269,6 +439,13 @@ export function StartOpportunityFlow({
     // which is correct here because handlePickType only fires on user
     // click after setPicked has settled.
     if (picked.contact) {
+      // ADR 30 — home_protection is asset-first with its own 'home' step
+      // (or an auto-skip past it — Wave 39-fu routeToHomeStep); it never
+      // routes through the vehicle picker or its zero-vehicle auto-skip.
+      if (opt.type === 'home_protection') {
+        routeToHomeStep({ type: opt.type, flowPath: opt.flowPath, contact: picked.contact });
+        return;
+      }
       // Zero-vehicle contacts skip the vehicle step entirely — every
       // workflow's wizard collects the vehicle inline as step 1
       // (insurance-portal LeadOriginationForm is being updated in
@@ -317,12 +494,66 @@ export function StartOpportunityFlow({
     if (onCreated) onCreated(opp.id);
   }
 
+  // Wave 39-fu — the home_protection analog of runVehicleSkipFlow. Fires
+  // when the contact has zero homes on file but a usable mailing address:
+  // there's nothing left to ask, so no picker renders at all — the
+  // address becomes the covered-property seed (`_prefill.home`, see
+  // buildHomePrefill) and the opportunity is created directly.
+  function runHomeSkipFlow({ type, flowPath, contact }) {
+    const prefill = buildHomePrefill(contact);
+    track('mission_control.home.start_opportunity_home_skipped', {
+      opp_type: type,
+      contact_id: contact?.id,
+      auto: true,
+      prefill_from_address: !!prefill,
+    });
+    const opp = buildNewOpp({ type, contact, vehicle: null, home: null, flowPath, prefill });
+    if (appendOpportunity) appendOpportunity(opp);
+    track('mission_control.home.start_opportunity_created', {
+      opp_id: opp.id,
+      opp_type: type,
+      contact_id: contact.id,
+      home_id: null,
+      flow_path: flowPath,
+      home_skipped: true,
+      home_prefill_source: prefill ? prefill.home.source : null,
+    });
+    reset();
+    if (onCreated) onCreated(opp.id);
+  }
+
+  // Wave 39-fu — decides what the 'home' step should do for a given
+  // (type, contact) pair, replacing the unconditional `setStep('home')`
+  // that used to run at every home_protection routing point:
+  //   - contact already holds 1+ homes → render the picker (unchanged).
+  //   - no homes, but a usable mailing address → nothing to ask; auto-skip
+  //     via runHomeSkipFlow, carrying the address forward as `_prefill`.
+  //   - no homes and no usable address → render the step (Add new home /
+  //     Skip), same as before.
+  function routeToHomeStep({ type, flowPath, contact }) {
+    if (contactHomesFor(contact, homes).length > 0) {
+      setStep('home');
+      return;
+    }
+    if (usableContactAddress(contact)) {
+      runHomeSkipFlow({ type, flowPath, contact });
+      return;
+    }
+    setStep('home');
+  }
+
   function handlePickContact(contact) {
     track('mission_control.home.start_opportunity_contact_picked', {
       opp_type: picked.type,
       contact_id: contact.id,
     });
     setPicked((prev) => ({ ...prev, contact }));
+    // ADR 30 — home_protection routes to the 'home' step (or auto-skips
+    // it — Wave 39-fu routeToHomeStep), never 'vehicle'.
+    if (picked.type === 'home_protection') {
+      routeToHomeStep({ type: picked.type, flowPath: picked.flowPath, contact });
+      return;
+    }
     // Zero-vehicle contacts skip the vehicle step entirely — the
     // workflow's wizard step 1 collects the vehicle inline.
     if ((contact.vehicles || []).length === 0) {
@@ -351,6 +582,17 @@ export function StartOpportunityFlow({
     });
     setAddContactOpen(false);
     setPicked((prev) => ({ ...prev, contact }));
+    // ADR 30 / Wave 39-fu — a newly-added contact has no homes on file
+    // (the modal never seeds one), but it very often DOES carry a full
+    // mailing address the agent just typed — the observed smoke-test bug
+    // was exactly this: re-asking for an address entered seconds earlier.
+    // routeToHomeStep only renders the 'home' step's "Add new home" tile +
+    // skip footer when there's genuinely nothing to seed from; otherwise
+    // it auto-skips and carries the typed address forward as `_prefill`.
+    if (picked.type === 'home_protection') {
+      routeToHomeStep({ type: picked.type, flowPath: picked.flowPath, contact });
+      return;
+    }
     // Newly-added contacts always have 0 vehicles → skip the vehicle
     // step entirely. The workflow's wizard step 1 collects the
     // vehicle inline (refi/protection have always done this; insurance
@@ -362,13 +604,32 @@ export function StartOpportunityFlow({
     });
   }
 
-  function finalizeOpp(vehicle) {
+  // ADR 30 — `home` is an optional second asset param, only meaningful
+  // when picked.type === 'home_protection'; buildNewOpp branches on type
+  // to decide whether to read `vehicle` or `home`. Non-home call sites
+  // (handleSkipVehicle/handlePickVehicle/handleVehicleAdded) never pass a
+  // third arg, so `home` is undefined there and this stays a no-op change
+  // for the four existing types.
+  //
+  // Wave 39-fu — when home_protection reaches here with no real home
+  // (handleSkipHome — the agent explicitly clicked Skip on a step that
+  // DID render, i.e. the contact had homes-and-no-address-match or
+  // neither), still carry the contact's address forward as `_prefill` if
+  // one exists. buildHomePrefill returns null when there's nothing usable,
+  // so this is a no-op for a genuinely blank contact.
+  function finalizeOpp(vehicle, home) {
     if (!picked.contact) return;
+    const prefill =
+      picked.type === 'home_protection' && !home
+        ? buildHomePrefill(picked.contact)
+        : null;
     const opp = buildNewOpp({
       type: picked.type,
       contact: picked.contact,
       vehicle,
+      home,
       flowPath: picked.flowPath,
+      prefill,
     });
     if (appendOpportunity) appendOpportunity(opp);
     track('mission_control.home.start_opportunity_created', {
@@ -376,8 +637,11 @@ export function StartOpportunityFlow({
       opp_type: picked.type,
       contact_id: picked.contact.id,
       vehicle_id: vehicle?.id || null,
+      home_id: home?.id || null,
       flow_path: picked.flowPath,
       vehicle_skipped: !vehicle,
+      home_skipped: picked.type === 'home_protection' ? !home : undefined,
+      home_prefill_source: prefill ? prefill.home.source : null,
     });
     reset();
     if (onCreated) onCreated(opp.id);
@@ -420,6 +684,48 @@ export function StartOpportunityFlow({
     finalizeOpp(vehicle);
   }
 
+  // ADR 30 — home analogs of handleSkipVehicle / handlePickVehicle /
+  // handleVehicleAdded. Skip is legitimate here (unlike the four other
+  // types it's the only path that reaches finalize with no asset) because
+  // home-protection-portal's `home_add` wizard step can capture the
+  // property later.
+  function handleSkipHome() {
+    track('mission_control.home.start_opportunity_home_skipped', {
+      opp_type: picked.type,
+      contact_id: picked.contact?.id,
+    });
+    finalizeOpp(null, null);
+  }
+
+  function handlePickHome(home) {
+    track('mission_control.home.start_opportunity_home_picked', {
+      opp_type: picked.type,
+      contact_id: picked.contact.id,
+      home_id: home.id,
+    });
+    finalizeOpp(null, home);
+  }
+
+  // Fired by AddHomeModal's onAdd. `home` here is the raw field-set
+  // AddHomeModal builds (no id yet — see its own header comment). Stamp a
+  // session id via buildHomeRecord FIRST so the same id-bearing record can
+  // be persisted (appendHomeToContact) and used to finalize the
+  // opportunity (buildNewOpp reads home.id/home.square_feet/home.home_type
+  // /home.address for the inbox row label) without waiting on a re-render.
+  function handleHomeAddedFromModal(home) {
+    if (!picked.contact) return;
+    const record = buildHomeRecord(home);
+    if (appendHomeToContact) appendHomeToContact(picked.contact.id, record);
+    track('mission_control.home.start_opportunity_home_picked', {
+      opp_type: picked.type,
+      contact_id: picked.contact.id,
+      home_id: record.id,
+      from: 'add_new',
+    });
+    setAddHomeOpen(false);
+    finalizeOpp(null, record);
+  }
+
   const updateVehicleForm = (patch) => {
     setVehicleForm((prev) => ({
       ...prev,
@@ -447,6 +753,13 @@ export function StartOpportunityFlow({
         setVehicleForm(INITIAL_VEHICLE_FORM);
         setVehicleMode('pick');
       }
+    } else if (step === 'home') {
+      if (seededContact) {
+        // Mirrors the 'vehicle' seeded-back branch above.
+        setStep(seededType ? 'home' : 'type');
+      } else {
+        setStep('contact');
+      }
     }
   }
 
@@ -460,6 +773,16 @@ export function StartOpportunityFlow({
                 `${picked.contact.name?.first ?? ''} ${picked.contact.name?.last ?? ''}`.trim())
             : ''
         }`;
+
+  // ADR 30 D9 — home protection is a DECLARED per-org capability, gated on
+  // canon opportunities.home_protection.enabled, never inferred. Prefer
+  // the already-selected contact's org (covers the seeded-contact route)
+  // and fall back to the resolved active org for the general dashboard
+  // launcher, where the type is picked before any contact is in scope.
+  const gatingOrgId = picked.contact?.org_id ?? getActiveOrgId();
+  const visibleTypeOptions = TYPE_OPTIONS.filter(
+    (opt) => opt.type !== 'home_protection' || isHomeProtectionEnabledForOrg(gatingOrgId),
+  );
 
   return (
     <div
@@ -497,7 +820,9 @@ export function StartOpportunityFlow({
           </button>
         </div>
         <div className="flex-1 overflow-auto">
-          {step === 'type' && <TypeStep onPick={handlePickType} />}
+          {step === 'type' && (
+            <TypeStep onPick={handlePickType} options={visibleTypeOptions} />
+          )}
           {step === 'contact' && (
             <ContactStep
               contactList={contactList}
@@ -527,6 +852,16 @@ export function StartOpportunityFlow({
               oppType={picked.type}
             />
           )}
+          {step === 'home' && picked.contact && (
+            <HomeStep
+              contact={picked.contact}
+              homes={homes}
+              onPick={handlePickHome}
+              onAddNew={() => setAddHomeOpen(true)}
+              canSkip={true}
+              onSkip={handleSkipHome}
+            />
+          )}
         </div>
       </div>
 
@@ -537,13 +872,20 @@ export function StartOpportunityFlow({
         contacts={contacts}
         orgId={Object.values(contacts || {})[0]?.org_id ?? 102}
       />
+
+      <AddHomeModal
+        open={addHomeOpen}
+        onClose={() => setAddHomeOpen(false)}
+        onAdd={handleHomeAddedFromModal}
+      />
     </div>
   );
 }
 
 function typeLabel(type, flowPath) {
   if (type === 'refi') return 'Refi';
-  if (type === 'protection') return 'Protection plan';
+  if (type === 'protection') return 'Vehicle protection plan';
+  if (type === 'home_protection') return 'Home protection';
   if (type === 'insurance') {
     if (flowPath === 'quote_only') return 'Insurance · quote only';
     return 'Insurance · capture + quote';
@@ -551,14 +893,15 @@ function typeLabel(type, flowPath) {
   return type || '';
 }
 
-function TypeStep({ onPick }) {
+function TypeStep({ onPick, options }) {
+  const list = options || TYPE_OPTIONS;
   return (
     <div className="px-5 py-4">
       <div className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-2">
         Opportunity type
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {TYPE_OPTIONS.map((opt) => {
+        {list.map((opt) => {
           const Icon = opt.icon;
           return (
             <button
@@ -668,13 +1011,17 @@ function VehicleStep({
   // Skip footer is identical for both modes (add + pick) so the agent
   // can bail out of vehicle entry at any time. All workflow types
   // (refi / protection / insurance) collect the vehicle inline as
-  // wizard step 1, so skipping here is always safe.
+  // wizard step 1, so skipping here is always safe. home_protection never
+  // reaches this component (it routes to HomeStep below) — the branch
+  // here is defensive only.
   const wizardLabel =
     oppType === 'refi'
       ? 'refi'
       : oppType === 'insurance'
         ? 'insurance'
-        : 'protection';
+        : oppType === 'home_protection'
+          ? 'home protection'
+          : 'protection';
   const SkipFooter = canSkip ? (
     <div className="px-5 pt-3 pb-4 border-t border-slate-100 mt-2">
       <button
@@ -748,5 +1095,83 @@ function VehicleStep({
   );
 }
 
+// ADR 30 R8 — asset-step picker for home_protection. Structural twin of
+// VehicleStep's "pick" render (grid + dashed add tile + skip footer), but
+// with no inline "add" mode: AddHomeModal is a full modal (own backdrop +
+// header + close button, not a bare form component like VehicleAdd), so
+// "Add new home" opens it as a sibling modal stacked over this one instead
+// of swapping this step's own content — see the StartOpportunityFlow
+// header comment on step 3'.
+function HomeStep({ contact, homes, onPick, onAddNew, canSkip, onSkip }) {
+  // Mirrors ContactProfile's `contactHomes` computation — membership is
+  // via contact_ids inclusion, NOT a stored contact.homes[] (ADR 30 D2, a
+  // home can carry a second agreement holder).
+  const contactHomes = homes
+    ? Object.values(homes).filter(
+        (h) => Array.isArray(h.contact_ids) && h.contact_ids.includes(contact.id),
+      )
+    : [];
+  const SkipFooter = canSkip ? (
+    <div className="px-5 pt-3 pb-4 border-t border-slate-100 mt-2">
+      <button
+        onClick={onSkip}
+        className="w-full text-sm font-medium px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 inline-flex items-center justify-center gap-2"
+      >
+        Skip — collect the home inside the Home protection wizard
+      </button>
+      <p className="text-[11px] text-slate-400 mt-1.5 text-center">
+        The Home protection CoPilot's home_add step can capture the
+        property later.
+      </p>
+    </div>
+  ) : null;
 
+  return (
+    <>
+      <div className="px-5 py-4">
+        <div className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 mb-2">
+          Home
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {contactHomes.map((h) => {
+            const addr = h.address || {};
+            const cityState = [addr.city, addr.state].filter(Boolean).join(', ');
+            return (
+              <button
+                key={h.id}
+                onClick={() => onPick(h)}
+                className="text-left bg-slate-50 ring-1 ring-slate-200 hover:ring-blue-400 hover:bg-blue-50 rounded-md p-3 transition-colors"
+              >
+                <div className="text-sm font-semibold text-slate-900">
+                  {h.square_feet != null
+                    ? `${Number(h.square_feet).toLocaleString()} sq ft `
+                    : ''}
+                  {homeTypeLabel(h.home_type)}
+                </div>
+                {(addr.address1 || cityState) && (
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    {[addr.address1, cityState].filter(Boolean).join(' · ')}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+          <button
+            onClick={onAddNew}
+            className="text-left rounded-md p-3 border-2 border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50 text-slate-500 hover:text-blue-700 flex items-center gap-2 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm font-medium">Add new home</span>
+          </button>
+        </div>
+        {contactHomes.length === 0 && (
+          <p className="text-[11px] text-slate-400 mt-2">
+            No homes on file for this contact yet.
+          </p>
+        )}
+      </div>
+      {SkipFooter}
+    </>
+  );
+}
 

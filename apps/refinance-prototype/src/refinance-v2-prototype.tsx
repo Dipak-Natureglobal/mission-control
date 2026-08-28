@@ -7,9 +7,10 @@ import {
   DollarSign, ChevronRight, ChevronDown, RefreshCcw, Eye, EyeOff, Zap,
   Search, Gauge, ScanLine, Plus, ClipboardPaste, Wand2,
   Mail, MessageSquare, Headphones, MapPin, PhoneCall, UserCheck, FileCheck2,
-  Shield, Send, ExternalLink, ChevronUp, TrendingDown, BadgeDollarSign
+  Shield, Send, ExternalLink, ChevronUp, TrendingDown, BadgeDollarSign, Lock
 } from "lucide-react";
-import { AddressBlock, RelationshipPicker } from "blinker-platform/components";
+import { RelationshipPicker } from "blinker-platform/components";
+import { AddressBlock } from "./components/AddressBlock";
 import {
   estimateMileageFromAge,
   computeAnnualMileageEstimate,
@@ -23,6 +24,17 @@ import {
   getTrimsForYearMakeModel as _platformGetTrimsForYearMakeModel,
 } from "blinker-platform/utils";
 import { getSequence } from "./lib/refi.js";
+// Candidate-trim lookup + the write context that carries the access token it
+// needs. Both are leaves w.r.t. this monolith (no back-edge), so no cycle.
+import { fetchVehicleTrimsByVin } from "./utils/api";
+import { resolveWriteContext } from "./lib/blinkerWrite";
+// Live YMMT lists from blinker's /api/v3/vehicle_search_options, with the
+// bundled fixture as the no-token fallback. See lib/ymmt-options.ts.
+import { useYmmtOptions, withTrimSentinels } from "./lib/ymmt-options";
+// DEFAULT_ORG_CONFIG lives in ./constants/org-config (leaf). Imported here
+// rather than defined here so org-config can stay the single source of truth
+// without importing back from this monolith — that back-edge created a
+// circular-import TDZ ("Cannot access '_RAW' before initialization").
 import { DEFAULT_ORG_CONFIG } from "./constants/org-config";
 
 /*
@@ -172,12 +184,8 @@ const DISQUAL_REASONS = {
   },
 };
 
-// Default organization configuration now lives in constants/org-config.ts
-// (imported in the block at the top of this file and re-exported below for
-// straggler consumers). It moved out of this monolith because the old
-// re-export direction (org-config re-exporting this const) formed an import
-// cycle with lib/refi.js that threw at module-eval time.
-
+// Default organization configuration. Each refinance partner can override
+// these at runtime; the dev panel lets us edit them live without a code change.
 const MOCK_OFFERS = [
   {
     id: "sg_a", lender: "Pinnacle Credit Union",
@@ -260,106 +268,11 @@ const MOCK_INSURANCE_SAVINGS = {
 };
 
 // ---------- Address / ZIP lookup ----------
-//
-// ZIP → City/State:  Uses zippopotam.us (free, CORS-friendly, no API key).
-//   GET https://api.zippopotam.us/us/{zip}  →  { places: [{ "place name", "state abbreviation" }] }
-//   Falls back to a static table if the fetch fails (sandbox, offline, etc.)
-//
-// Street Autocomplete:  Uses Google Maps JS SDK (Places library) when available.
-//   The SDK is loaded lazily via <script> tag.  In sandbox/artifact previews where
-//   script injection is blocked, the street field is still manually typeable — the
-//   autocomplete dropdown simply won't appear.
-//
-// Google Places API key (for street autocomplete when running on a real domain):
-const PLACES_API_KEY = "AIzaSyDm1wo_5vN-ioDQ3K1gB3zi42c0o0bSPhY";
-// --------------------------------------------------------------------------
-
-// Fallback static ZIP table — covers major metros for demo/offline use.
-const ZIP_FALLBACK = {
-  "30301": { city: "Atlanta", state: "GA" },
-  "30305": { city: "Atlanta", state: "GA" },
-  "31324": { city: "Richmond Hill", state: "GA" },
-  "75001": { city: "Addison", state: "TX" },
-  "75201": { city: "Dallas", state: "TX" },
-  "78701": { city: "Austin", state: "TX" },
-  "85001": { city: "Phoenix", state: "AZ" },
-  "90001": { city: "Los Angeles", state: "CA" },
-  "90210": { city: "Beverly Hills", state: "CA" },
-  "94102": { city: "San Francisco", state: "CA" },
-  "10001": { city: "New York", state: "NY" },
-  "10011": { city: "New York", state: "NY" },
-  "11201": { city: "Brooklyn", state: "NY" },
-  "33101": { city: "Miami", state: "FL" },
-  "32801": { city: "Orlando", state: "FL" },
-  "60601": { city: "Chicago", state: "IL" },
-  "80202": { city: "Denver", state: "CO" },
-  "98101": { city: "Seattle", state: "WA" },
-  "97201": { city: "Portland", state: "OR" },
-  "02108": { city: "Boston", state: "MA" },
-  "19103": { city: "Philadelphia", state: "PA" },
-  "37203": { city: "Nashville", state: "TN" },
-  "28202": { city: "Charlotte", state: "NC" },
-};
-
-// Async ZIP → city/state via zippopotam.us, fallback to static table.
-async function lookupZip(zip) {
-  if (!zip || zip.length !== 5) return null;
-  try {
-    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const place = data?.places?.[0];
-    if (place) {
-      return {
-        city: place["place name"],
-        state: place["state abbreviation"],
-      };
-    }
-    return ZIP_FALLBACK[zip] || null;
-  } catch (err) {
-    console.warn("[ZIP] zippopotam.us failed, using fallback:", err);
-    return ZIP_FALLBACK[zip] || null;
-  }
-}
-
-// ---- Street Autocomplete via Places API (New) REST ----
-//
-// Uses POST https://places.googleapis.com/v1/places:autocomplete
-// Google Places API (New) sends proper CORS headers, so direct fetch works.
-//
-async function streetPredictionsFor(query, city, state) {
-  if (!query || query.length < 3) return [];
-  try {
-    const res = await fetch(
-      "https://places.googleapis.com/v1/places:autocomplete",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": PLACES_API_KEY,
-        },
-        body: JSON.stringify({
-          input: `${query}, ${city}, ${state}`,
-          includedPrimaryTypes: ["street_address", "premise", "subpremise"],
-          includedRegionCodes: ["us"],
-        }),
-      }
-    );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return (data.suggestions || [])
-      .filter((s) => s.placePrediction)
-      .map((s) => ({
-        text: s.placePrediction.structuredFormat?.mainText?.text || s.placePrediction.text?.text || "",
-        fullText: s.placePrediction.text?.text || "",
-        placeId: s.placePrediction.placeId,
-      }))
-      .slice(0, 5);
-  } catch (err) {
-    console.warn("[Places] Street autocomplete failed:", err);
-    return [];
-  }
-}
+// ZIP → city/state and Google Places street autocomplete live in
+// ./components/AddressBlock (UI) over utils/api.ts (lookupZip → zippopotam.us
+// → static ZIP_FALLBACK in constants/index.ts → Google geocode; and
+// streetPredictionsFor → Google Places). The former inline copies + the
+// duplicate PLACES_API_KEY / ZIP_FALLBACK consts here were dead and removed.
 
 // ---------- CORS Proxy Helper ----------
 // MarketCheck doesn't send CORS headers.  For the prototype we cascade through
@@ -694,6 +607,16 @@ function parseFlexDate(v) {
   const s = String(v).trim();
   if (!s) return null;
   let mm, dd, yy;
+  // ISO YYYY-MM-DD (what <input type="date"> / CalendarField emits).
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (iso) {
+    yy = iso[1]; mm = iso[2]; dd = iso[3];
+    const month = parseInt(mm, 10), day = parseInt(dd, 10), year = parseInt(yy, 10);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    const d = new Date(year, month - 1, day);
+    if (d.getMonth() + 1 !== month || d.getDate() !== day) return null;
+    return { month, day, year, date: d };
+  }
   if (s.includes("/") || s.includes("-") || s.includes(".")) {
     // eslint-disable-next-line no-useless-escape
     const parts = s.split(/[/.\-]/);
@@ -784,6 +707,15 @@ const validators = {
     const n = Number(s);
     if (Number.isNaN(n)) return "Enter a number";
     if (n <= 0) return "Must be greater than 0";
+    return null;
+  },
+  currencyInRange: (v, min, max) => {
+    const base = validators.positiveCurrency(v);
+    if (base) return base;
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(String(v));
+    if (min != null && n < min) return `Must be at least $${Number(min).toLocaleString()}`;
+    if (max != null && n > max) return `Must be no more than $${Number(max).toLocaleString()}`;
     return null;
   },
   positiveInt: (v) => {
@@ -893,8 +825,12 @@ export default function RefinanceV2Prototype() {
       // vehicle
       vin: "",
       vinDecoded: false, vinDecodeLoading: false, vinDecodeError: null,
-      year: null, make: "", model: "", trim: "",
+      year: null, make: "", model: "", trim: "", trim_id: null,
       extraMakes: [], extraModels: [], extraTrims: [],
+      // Candidate trims returned by blinker's vehicle_by_vin for this VIN.
+      // Non-empty ⇒ the trim picker is restricted to exactly these (MC's
+      // `allowedTrimIds` rule). Empty ⇒ no restriction, fall back to YMMT.
+      trimCandidates: [], trimCandidateIds: {}, trimLookupLoading: false,
       mileage: 14000,
       condition: "Used",
       purchaseDate: null,
@@ -913,7 +849,7 @@ export default function RefinanceV2Prototype() {
       coAppEmployer: "", coAppEmploymentType: "", coAppIncome: "",
       coAppConsent: false,
       // housing
-      address: "", city: "", state: "", zip: "",
+      address: "", apt_suite: "", city: "", state: "", zip: "",
       ownRent: null, moveInDate: "", housingPayment: "",
       // employment
       employer: "", employmentType: "", income: "", startDate: "",
@@ -1052,15 +988,12 @@ export default function RefinanceV2Prototype() {
 
       if (partner === "auto" && form.mileage !== "" && form.mileage !== null && form.mileage !== undefined) {
         const mileageNum = Number(form.mileage);
-        const mileageOk = mileageNum <= cfg.maxMileage;
+        // Odometer no longer disqualifies — logged for visibility only.
         log.push({
           step: "Check odometer",
-          ok: mileageOk,
+          ok: true,
           detail: `${mileageNum.toLocaleString()} mi · max ${cfg.maxMileage.toLocaleString()}`,
         });
-        if (!mileageOk) {
-          partner = "none"; result = "disqualified"; reason = "mileage_too_high";
-        }
       }
 
       if (partner === "auto" && form.ownership) {
@@ -1149,10 +1082,8 @@ export default function RefinanceV2Prototype() {
       // --- /Org-configured rules ---
 
       if (partner === "auto") {
-        log.push({ step: "Check primary consent", ok: form.consentConfirmed, detail: form.consentConfirmed ? "Primary consent present" : "Primary consent missing" });
-        if (!form.consentConfirmed) {
-          partner = "none"; result = "disqualified"; reason = "no_consent";
-        }
+        // Primary consent no longer disqualifies — logged for visibility only.
+        log.push({ step: "Check primary consent", ok: true, detail: form.consentConfirmed ? "Primary consent present" : "Primary consent missing" });
       }
 
       if (partner === "auto" && effectiveHasCoApp) {
@@ -1274,6 +1205,7 @@ export default function RefinanceV2Prototype() {
                   screen={screen}
                   form={form}
                   update={update}
+                  orgConfig={dev.orgConfig || DEFAULT_ORG_CONFIG}
                   onBack={back}
                   onNext={next}
                   effectiveHasCoApp={effectiveHasCoApp}
@@ -1297,6 +1229,7 @@ export default function RefinanceV2Prototype() {
                 offerConfirmed={offerConfirmed}
                 setOfferConfirmed={setOfferConfirmed}
                 onReturn={returnToEmbedded}
+                onComplete={returnToEmbedded}
                 onReset={resetAll}
               />
             )}
@@ -1879,38 +1812,187 @@ function Footer({ onNext, disabled, nextLabel = "Next", secondary }) {
 
 // ---------- Vehicle screens ----------
 
-function ScreenVehicleAdd({ form, update, onNext, requireVin = true }) {
+// requireVin defaults to FALSE — refi standalone is VIN-or-YMMT (platform
+// locked decision, see views/customer/VehicleAdd.tsx). Embedders that need the
+// strict VIN gate (mission-control StartOpportunityFlow, insurance-portal
+// LeadOriginationForm) pass requireVin={true} explicitly.
+function ScreenVehicleAdd({ form, update, onNext, requireVin = false, busy = false, locked = false }) {
   const [picker, setPicker] = useState(null); // null | 'year' | 'make' | 'model' | 'trim'
   const vinDecodeRef = useRef(null);
 
+  // blinker's vehicle_by_vin needs an access token, so candidate-trim lookup
+  // only runs in the MC hand-off / direct-login modes. Standalone customer
+  // sessions have no token and stay on the VinAudit + YMMT-fixture path.
+  const writeCtx = useMemo(() => resolveWriteContext(), []);
+  const hasTrimBackend = !!(writeCtx.apiBase && writeCtx.token);
+
   const vinError = validators.vin(form.vin);
   const hasVin = form.vin && !vinError;
-  const hasManual = form.year && form.make && form.model && form.trim;
+  // MC's `vinActive = Boolean(vin)` (plateVinForm.tsx:460). ANY text in the
+  // VIN field — not only a complete 17-character one — makes the VIN the
+  // source of truth and freezes the year / make / model rows.
+  const vinActive = !!form.vin;
+
+  const hasYmm = form.year && form.make && form.model;
+  const hasManual = hasYmm && form.trim;
   // Default (refi standalone): YMMT alone is enough to continue.
   // requireVin=true (mission-control / insurance-portal embedders): block
   // until VIN is present (17 chars) AND decoded successfully (or no decode
   // error i.e. user-overridden via manual YMMT after a successful decode).
   // YMMT-only completion is blocked when requireVin is true.
+  //
+  // Trim is NOT part of the requireVin gate: VinAudit frequently returns an
+  // empty `attributes.trim`, and the trim picker is hidden on that path, so
+  // requiring it left Continue permanently disabled with no UI to fix it.
+  // The VIN identifies the vehicle; trim is a refinement (see the optional
+  // picker below).
   const vinDecodeOkOrAbsent = !form.vinDecodeError;
-  const ok = requireVin
-    ? (hasVin && hasManual && vinDecodeOkOrAbsent)
-    : hasManual;
+  // `locked` short-circuits every gate below. The values on screen are the ones
+  // blinker committed at remittance and froze (Vehicle#remittance_locked?), and
+  // every control that could change them is disabled — so validating them asks
+  // for an edit the UI forbids and the backend would reject anyway. A remitted
+  // package always carries a VIN, so that is the one thing still worth
+  // asserting; a lock with no VIN is a broken hand-off, not a valid commit.
+  // Trim specifically is NOT required here: a committed vehicle whose decode
+  // left `trim` blank is a normal state, and the trim picker is disabled under
+  // the lock, so requiring it left Continue permanently disabled with no UI to
+  // fix it (the same dead end already documented for the requireVin path above).
+  const ok = locked
+    ? hasVin
+    : requireVin
+      ? (hasVin && hasYmm && vinDecodeOkOrAbsent)
+      : hasManual;
+
+  // Under requireVin the VIN is the source of truth, but the YMMT rows stay
+  // on screen rather than being hidden: the agent needs to SEE the year /
+  // make / model / trim, whether they arrived from the MissionControl
+  // hand-off (prefilled, before any decode) or from the decode itself.
+  //
+  // Gate on ANY of the four fields, not all of year+make+model. Requiring all
+  // three made the block unmount the moment a value downstream of the user's
+  // own edit was cleared: picking a Make clears model+trim (YmmtPicker.pick),
+  // which dropped hasYmm to false and took the whole block — including the
+  // Make row just used — off screen mid-edit.
+  // `!vinActive` keeps the rows on screen whenever the VIN field is empty.
+  // Without it, clearing a decoded VIN unmounted the whole block: the clearing
+  // effect below blanks year/make/model/trim and vinDecoded on the same commit,
+  // so every other term went false at once. That contradicted the rows' own
+  // "Clear the VIN to edit" hint — following it removed the rows instead of
+  // enabling them, with no way back. Under requireVin the block is now hidden
+  // only while a partial VIN is being typed and nothing has decoded yet.
+  // `locked` forces the rows on screen: the whole point of the remitted state
+  // is that the agent can still SEE the committed vehicle.
+  const hasAnyYmmt = !!(form.year || form.make || form.model || form.trim);
+  const showPickers = locked || !requireVin || !vinActive || form.vinDecoded || hasAnyYmmt;
+
+  // Live YMMT lists from blinker (falls back to the bundled fixture when the
+  // session has no access token). Loaded once here and handed to the picker.
+  const ymmtOptions = useYmmtOptions();
+
+  // Any edit to the VIN string invalidates everything the previous VIN said —
+  // MC blanks year/make/model/trim on `prevProps.vin !== vin`
+  // (plateVinForm.tsx:166-172) and so do we. Declared BEFORE the decode effect
+  // so that on the same commit the decode's own patch is applied last and its
+  // loading flags survive.
+  //
+  // The ref starts at the mounting VIN, so a MissionControl hand-off that
+  // arrives with vin + year/make/model prefilled is NOT cleared on mount —
+  // only a subsequent edit clears it.
+  //
+  // Skipped entirely while `locked`: on a remitted package the VIN field is
+  // read-only, so any VIN change is something we did not sanction, and blanking
+  // year/make/model/trim would destroy the committed record's own values.
+  const prevVinRef = useRef(form.vin);
+  useEffect(() => {
+    if (locked) return;
+    if (prevVinRef.current === form.vin) return;
+    prevVinRef.current = form.vin;
+    update({
+      year: null, make: "", model: "", trim: "", trim_id: null,
+      extraMakes: [], extraModels: [], extraTrims: [],
+      trimCandidates: [], trimCandidateIds: {}, trimLookupLoading: false,
+      vinDecoded: false, vinDecodeLoading: false, vinDecodeError: null,
+      _lastDecodedVin: null,
+    });
+  }, [form.vin]);
 
   // Auto-decode VIN when it becomes valid (17 chars, no format errors).
   // Debounce 500ms so we don't fire on every keystroke.
+  //
+  // Source of truth mirrors MissionControl: blinker's GET /api/v3/vehicle_by_vin
+  // supplies year, make, model AND the trim list in one call
+  // (plateVinForm.tsx:256-319). MC does not call VinAudit at all. We keep
+  // VinAudit strictly as the fallback, because vehicle_by_vin sits behind
+  // Api::V3::ApiController#require_user_credential! — a standalone customer
+  // session has no token and could otherwise not decode a VIN at all.
+  //
+  // Also skipped while `locked` — a decode would overwrite the committed
+  // year/make/model/trim with whatever the decoder says today.
   useEffect(() => {
     if (vinDecodeRef.current) clearTimeout(vinDecodeRef.current);
+    if (locked) return;
     if (!hasVin) return;
     // Don't re-decode if already decoded for this VIN
     if (form.vinDecoded && form.vin === form._lastDecodedVin) return;
 
-    update({ vinDecodeLoading: true, vinDecodeError: null });
+    update({ vinDecodeLoading: true, vinDecodeError: null, trimLookupLoading: hasTrimBackend });
 
     vinDecodeRef.current = setTimeout(async () => {
-      const result = await fetchVinDecode(form.vin);
-      if (result.error) {
-        update({ vinDecodeLoading: false, vinDecodeError: result.error });
-        return;
+      const vin = form.vin;
+
+      // ---- primary: blinker vehicle_by_vin ----------------------------------
+      // Blank `name` renders as "Unknown" rather than an empty row — same as
+      // MC's formatTrimOptions fallback. Dedupe: the backend can return two
+      // trims whose series+style collapse to the same label.
+      let decoded = null;
+      let candidates = [];
+      // label → trim_id for the candidates above. MC keeps the same pairing
+      // (allowedTrimIds plus the trims it pushes into its options cache,
+      // plateVinForm.tsx:270-306) so a VIN-restricted pick still submits an
+      // id. Built before the Set dedupe collapses duplicate labels, so the
+      // first id wins for a repeated label — same row the label came from.
+      let candidateIds = {};
+      let backendError = null;
+      if (hasTrimBackend) {
+        const lookup = await fetchVehicleTrimsByVin({
+          vin,
+          apiBase: writeCtx.apiBase,
+          token: writeCtx.token,
+        });
+        for (const t of lookup.trims) {
+          const label = t.name || "Unknown";
+          if (!(label in candidateIds) && Number.isFinite(t.id)) candidateIds[label] = t.id;
+        }
+        candidates = [...new Set(lookup.trims.map((t) => t.name || "Unknown"))];
+        backendError = lookup.error || null;
+        // A row with no year AND no make AND no model is a Vehicle blinker
+        // imported but could not identify — fall through to VinAudit rather
+        // than reporting a successful decode of nothing.
+        if (!lookup.error && (lookup.year || lookup.make || lookup.model)) {
+          decoded = { year: lookup.year, make: lookup.make, model: lookup.model, trim: "" };
+        }
+      }
+
+      // ---- fallback: VinAudit ------------------------------------------------
+      if (!decoded) {
+        const result = await fetchVinDecode(vin);
+        if (result.error) {
+          // Prefer blinker's message when it also spoke — a 422 there is
+          // "Invalid VIN", which is more specific than VinAudit's transport
+          // error and matches what MC shows (plateVinForm.tsx:322-323).
+          update({
+            vinDecodeLoading: false,
+            trimLookupLoading: false,
+            vinDecodeError: backendError || result.error,
+          });
+          return;
+        }
+        decoded = {
+          year: result.year,
+          make: result.make,
+          model: result.model,
+          trim: result.trim || "",
+        };
       }
 
       // Match decoded make/model/trim to YMMT_DATA (case-insensitive +
@@ -1919,65 +2001,88 @@ function ScreenVehicleAdd({ form, update, onNext, requireVin = true }) {
       // and auto-select it. No error, no friction — Continue stays
       // reachable for legitimate VIN decodes that use values our YMMT
       // fixture happens not to carry.
-      const matchedMake = _ymmtMatch(YMMT_MAKES, result.make);
-      const finalMake = matchedMake || result.make || form.make;
-      const extraMakes = (!matchedMake && result.make) ? [result.make] : [];
+      const matchedMake = _ymmtMatch(YMMT_MAKES, decoded.make);
+      const finalMake = matchedMake || decoded.make || "";
+      const extraMakes =
+        (finalMake && !_ymmtMatch(YMMT_MAKES, finalMake)) ? [finalMake] : [];
 
       // Use finalMake to look up models — handles the case where the make
       // was injected as an extra (we still want to find any models the
-      // VinAudit response provides).
+      // decode response provides).
       const makeModels = YMMT_DATA[finalMake] ? Object.keys(YMMT_DATA[finalMake]).sort() : [];
-      const matchedModel = _ymmtMatch(makeModels, result.model);
-      const finalModel = matchedModel || result.model || form.model;
-      const extraModels = (!matchedModel && result.model) ? [result.model] : [];
+      const matchedModel = _ymmtMatch(makeModels, decoded.model);
+      const finalModel = matchedModel || decoded.model || "";
+      const extraModels =
+        (finalModel && !_ymmtMatch(makeModels, finalModel)) ? [finalModel] : [];
 
       const modelTrims = (YMMT_DATA[finalMake] && YMMT_DATA[finalMake][finalModel])
         ? YMMT_DATA[finalMake][finalModel]
         : [];
-      const matchedTrim = _ymmtMatch(modelTrims, result.trim);
-      const finalTrim = matchedTrim || result.trim || "";
-      // Auto-add unmatched trim to extraTrims so YmmtPicker surfaces it
-      // AND we auto-select it. Future-friendly: when fetchVinDecode evolves
-      // to return multiple candidate trims, push the array here.
-      const extraTrims = (!matchedTrim && result.trim) ? [result.trim] : [];
+
+      // Trim resolution, in MC's order of authority:
+      //   1. exactly one candidate from the VIN ⇒ auto-select it
+      //      (MC: `data.trims.length === 1`)
+      //   2. several candidates ⇒ keep the decoded trim only when it is one
+      //      of them (case-insensitive; keep the candidate's spelling).
+      //      Anything else is stale, so blank it and make the user pick.
+      //   3. no candidates ⇒ no restriction (MC treats an empty trims array
+      //      the same way): fall back to the YMMT list.
+      let finalTrim = "";
+      let extraTrims = [];
+      if (candidates.length === 1) {
+        finalTrim = candidates[0];
+      } else if (candidates.length) {
+        finalTrim =
+          candidates.find(
+            (c) => String(c).toLowerCase() === String(decoded.trim || "").toLowerCase(),
+          ) || "";
+      } else {
+        const matchedTrim = _ymmtMatch(modelTrims, decoded.trim);
+        finalTrim = matchedTrim || decoded.trim || "";
+        extraTrims =
+          (finalTrim && !_ymmtMatch(modelTrims, finalTrim)) ? [finalTrim] : [];
+      }
+
+      // MC sets trim_id on the same commit that auto-selects a trim
+      // (plateVinForm.tsx:237, :290, :317). The VIN's own candidates are the
+      // authority; a trim resolved off the YMMT list instead falls back to
+      // that list's id. Decode-injected extras (case 3) match neither and
+      // stay null.
+      const finalTrimId =
+        (finalTrim ? candidateIds[finalTrim] : undefined) ??
+        ymmtOptions.trimIdFor(decoded.year || null, finalMake, finalModel, finalTrim);
 
       const patch = {
         vinDecoded: true,
         vinDecodeLoading: false,
+        trimLookupLoading: false,
         vinDecodeError: null,
-        _lastDecodedVin: form.vin,
-        year: result.year || form.year,
+        _lastDecodedVin: vin,
+        year: decoded.year || null,
         make: finalMake,
         model: finalModel,
         trim: finalTrim,
+        trim_id: finalTrimId,
         extraMakes,
         extraModels,
         extraTrims,
+        trimCandidates: candidates,
+        trimCandidateIds: candidateIds,
       };
 
-      console.log("[VIN Decode] Matched:", patch, "raw:", result.raw);
+      console.log("[VIN Decode] source:", hasTrimBackend && !backendError ? "blinker" : "vinaudit",
+        "candidates:", candidates, "patch:", patch);
       update(patch);
     }, 500);
 
     return () => { if (vinDecodeRef.current) clearTimeout(vinDecodeRef.current); };
   }, [form.vin]);
 
-  // When user clears or changes VIN to invalid, reset decoded state
-  useEffect(() => {
-    if (!hasVin && form.vinDecoded) {
-      update({
-        vinDecoded: false, vinDecodeLoading: false, vinDecodeError: null,
-        _lastDecodedVin: null,
-        year: null, make: "", model: "", trim: "",
-        extraMakes: [], extraModels: [], extraTrims: [],
-      });
-    }
-  }, [hasVin]);
-
   return (
     <>
       <ScreenHeader icon={Car} eyebrow="Vehicle · Add or confirm" title="What's in your garage?" subtitle={requireVin ? "Enter the consumer's VIN — we'll decode the year, make, model, and trim automatically." : "Enter a VIN to decode automatically, or pick year, make, model, and trim manually."} />
       <div className="px-6 space-y-3">
+        {locked && <RemittanceLockBanner what="VIN, year, make, model, and trim" />}
         <Field
           label="VIN (17 characters)"
           value={form.vin}
@@ -1985,6 +2090,7 @@ function ScreenVehicleAdd({ form, update, onNext, requireVin = true }) {
           placeholder="VIN 1C4PJXAG9SW559532"
           error={form.vin ? vinError : null}
           icon={ScanLine}
+          disabled={locked}
         />
         {form.vinDecodeLoading && (
           <div className="text-xs text-blue-600 flex items-center gap-1">
@@ -2002,7 +2108,7 @@ function ScreenVehicleAdd({ form, update, onNext, requireVin = true }) {
           </div>
         )}
 
-        {!requireVin && (
+        {showPickers && (
           <div className="flex items-center gap-3 my-2">
             <div className="flex-1 h-px bg-slate-200" />
             <span className="text-xs text-slate-400 font-semibold">{form.vinDecoded ? "DECODED" : "OR"}</span>
@@ -2010,47 +2116,90 @@ function ScreenVehicleAdd({ form, update, onNext, requireVin = true }) {
           </div>
         )}
 
-        {/* Year / Make / Model: always shown under !requireVin; hidden under requireVin */}
-        {!requireVin && (
+        {/* Year / Make / Model. MC's enablement rules verbatim
+            (plateVinForm.tsx:463-465): a VIN in the field makes all three
+            read-only — the VIN is the source of truth — and the cascade is
+            strictly year → make → model otherwise.
+
+            MC's `|| requireVin` term is deliberately NOT carried over: there
+            it is the transient `vinRequiredError` flag, here `requireVin` is
+            a standing mode flag for the MC / insurance-portal embedders, so
+            copying it literally would disable every picker for the whole
+            session and dead-end an operator with no VIN. */}
+        {showPickers && (
           <>
-            <PickerField label="Year" value={form.year || ""} onClick={() => setPicker("year")} disabled={form.vinDecoded} disabledHint="Populated from VIN" />
-            <PickerField label="Make" value={form.make} onClick={() => setPicker("make")} disabled={form.vinDecoded} disabledHint="Populated from VIN" />
+            <PickerField
+              label="Year"
+              value={form.year || ""}
+              disabled={locked || vinActive}
+              disabledHint={locked ? "Locked — package remitted" : "Clear the VIN to edit"}
+              onClick={() => setPicker("year")}
+              badge={form.vinDecoded && !!form.year ? "From VIN" : null}
+            />
+            <PickerField
+              label="Make"
+              value={form.make}
+              disabled={locked || vinActive || !form.year}
+              disabledHint={locked ? "Locked — package remitted" : vinActive ? "Clear the VIN to edit" : "Pick a year first"}
+              onClick={() => setPicker("make")}
+              badge={form.vinDecoded && !!form.make ? "From VIN" : null}
+            />
             <PickerField
               label="Model"
               value={form.model}
-              disabled={form.vinDecoded || !form.make}
-              disabledHint={form.vinDecoded ? "Populated from VIN" : "Pick a make first"}
+              disabled={locked || vinActive || !form.make}
+              disabledHint={locked ? "Locked — package remitted" : vinActive ? "Clear the VIN to edit" : "Pick a make first"}
+              badge={form.vinDecoded && !!form.model ? "From VIN" : null}
               onClick={() => setPicker("model")}
             />
           </>
         )}
 
-        {/* Trim: shown under !requireVin only (requireVin=true: VIN decode auto-selects trim end-to-end) */}
-        {!requireVin && (
+        {/* Trim: optional under requireVin (it is not part of that gate), but
+            still offered so a blank decode can be refined by hand.
+            Enablement mirrors MC's `disableTrim`: a complete VIN is enough on
+            its own — the candidate list comes from the VIN, not the model —
+            so we no longer dead-end when the decode left model blank. */}
+        {showPickers && (
           <PickerField
             label="Trim"
             value={form.trim}
-            disabled={!form.model}
-            disabledHint={!form.model ? "Pick a model first" : undefined}
+            disabled={locked || form.trimLookupLoading || !(form.model || hasVin)}
+            disabledHint={locked ? "Locked — package remitted" : form.trimLookupLoading ? "Loading trims…" : "Pick a model first"}
+            badge={form.vinDecoded && !!form.trim ? "From VIN" : null}
             onClick={() => setPicker("trim")}
           />
         )}
 
-        {/* "Trim is required" amber hint — only relevant in the !requireVin manual-pick path */}
-        {!requireVin && form.year && form.make && form.model && !form.trim && (
+        {/* No VIN-vs-manual mismatch banner: with the Y/M/M rows locked while
+            a VIN is present (MC parity), the user cannot disagree with a
+            decode, so there is nothing to confirm. Correcting a decode means
+            clearing the VIN, which blanks Y/M/M and reopens the cascade. */}
+
+        {form.trimLookupLoading && (
+          <div className="text-xs text-blue-600 flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" /> Loading trims…
+          </div>
+        )}
+
+        {/* "Trim is required" amber hint — only relevant in the !requireVin
+            manual-pick path, and never under the remittance lock, where the
+            trim picker is disabled and Continue no longer gates on trim. */}
+        {!locked && !requireVin && form.year && form.make && form.model && !form.trim && (
           <div className="text-xs text-amber-700 flex items-center gap-1">
             <AlertCircle className="w-3 h-3" /> Trim is required to continue.
           </div>
         )}
       </div>
 
-      <Footer onNext={onNext} disabled={!ok} nextLabel="Continue" />
+      <Footer onNext={onNext} disabled={!ok || busy} nextLabel={busy ? "Saving…" : "Continue"} />
 
       {picker && (
         <YmmtPicker
           field={picker}
           form={form}
           update={update}
+          ymmtOptions={ymmtOptions}
           onClose={() => setPicker(null)}
         />
       )}
@@ -2058,10 +2207,30 @@ function ScreenVehicleAdd({ form, update, onNext, requireVin = true }) {
   );
 }
 
-function PickerField({ label, value, onClick, disabled, disabledHint }) {
+// Remittance lock banner. Carries the WHY for every greyed-out control on the
+// screen: PickerField only shows its `disabledHint` when the row is empty, and
+// a locked row always has a value, so the explanation has to live outside the
+// rows themselves.
+function RemittanceLockBanner({ what = "These details" }) {
+  return (
+    <div className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+      <Lock className="w-3.5 h-3.5 text-slate-500 mt-0.5 shrink-0" />
+      <div className="text-xs text-slate-600">
+        <span className="font-semibold text-slate-700">Locked — package remitted.</span>{" "}
+        {what} are part of a committed sale and can no longer be changed.
+      </div>
+    </div>
+  );
+}
+
+function PickerField({ label, value, onClick, disabled, disabledHint, badge = null }) {
   return (
     <button
       onClick={disabled ? undefined : onClick}
+      // Dropping the handler alone left the row focusable and announced as an
+      // enabled control. The cascade now leans on this state for correctness
+      // (a locked row means the VIN owns the value), so say so in the DOM.
+      disabled={!!disabled}
       className={
         "w-full text-left px-4 py-3 rounded-md border flex items-center justify-between " +
         (disabled
@@ -2072,7 +2241,14 @@ function PickerField({ label, value, onClick, disabled, disabledHint }) {
       }
     >
       <div className="flex flex-col">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 flex items-center gap-1.5">
+          {label}
+          {badge && (
+            <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-semibold normal-case tracking-normal">
+              {badge}
+            </span>
+          )}
+        </span>
         <span className={"text-sm " + (value ? "font-medium text-slate-900" : "text-slate-400")}>
           {value || (disabled ? disabledHint : `Select ${label.toLowerCase()}`)}
         </span>
@@ -2082,35 +2258,63 @@ function PickerField({ label, value, onClick, disabled, disabledHint }) {
   );
 }
 
-function YmmtPicker({ field, form, update, onClose }) {
+function YmmtPicker({ field, form, update, onClose, ymmtOptions }) {
   const titles = { year: "Select Year", make: "Select Make", model: "Select Model", trim: "Select Trim" };
 
-  // Wave 20: source year-aware option lists from blinker-platform/utils so
-  // discontinued models (e.g. Honda Element after 2011) are filtered out
-  // by year. Local YMMT_DATA / YMMT_MAKES are still consumed by the VIN-
-  // decode matching helper above (lines ~1908-1927) — the picker no longer
-  // touches them. See blinker-platform/packages/utils/ymmt-data.js for the
-  // YMMT_YEAR_CONSTRAINTS map.
+  // Options come from blinker's /api/v3/vehicle_search_options when the
+  // session is authenticated — the same list MissionControl's plateVinForm
+  // builds its dropdowns from, so an agent working the same vehicle in
+  // either app sees the same choices. `useYmmtOptions` transparently serves
+  // the bundled year-aware fixture (blinker-platform/utils) when there is no
+  // token or the fetch fails, so this component needs no branch of its own.
+  //
+  // Local YMMT_DATA / YMMT_MAKES are still consumed by the VIN-decode
+  // matching helper above — the picker no longer touches them.
+  const src = ymmtOptions || {
+    years: _platformYears,
+    makesFor: () => _platformGetMakes(),
+    modelsFor: (year, make) => _platformGetModelsForYearMake(year, make),
+    trimsFor: (year, make, model) => _platformGetTrimsForYearMakeModel(year, make, model),
+    // The bundled fixture carries labels only — no VehicleTrim ids exist to
+    // resolve to, and this branch is the no-token case where nothing is
+    // written back anyway.
+    trimIdFor: () => null,
+    loading: false,
+  };
+
   let options = [];
-  if (field === "year") options = _platformYears;
+  if (field === "year") options = src.years;
   else if (field === "make") {
-    // Platform makes + any decode-injected makes not present in fixture.
-    const baseMakes = _platformGetMakes();
+    // Makes for the selected year + any decode-injected makes the list
+    // doesn't carry.
+    const baseMakes = src.makesFor(form.year);
     const extras = (form.extraMakes || []).filter((m) => !baseMakes.includes(m));
     options = [...baseMakes, ...extras];
   }
   else if (field === "model" && form.make) {
     // Year-aware: when form.year is falsy the helper returns ALL models for
     // the make (no filtering). Decode-injected extras always surface.
-    const base = _platformGetModelsForYearMake(form.year, form.make);
+    const base = src.modelsFor(form.year, form.make);
     const extras = (form.extraModels || []).filter((m) => !base.includes(m));
     options = [...base, ...extras];
   }
-  else if (field === "trim" && form.make && form.model) {
-    // Year-aware: returns [] if model is out-of-range for the year.
-    const base = _platformGetTrimsForYearMakeModel(form.year, form.make, form.model);
-    const extras = (form.extraTrims || []).filter((t) => !base.includes(t));
-    options = ["I don't know", ...base, ...extras, "Other"];
+  else if (field === "trim") {
+    // Candidate trims from blinker's vehicle_by_vin win outright. MC applies
+    // the VIN's trim list as a hard restriction (`allowedTrimIds`) — these
+    // ARE the trims that exist for this VIN, so the YMMT list and the
+    // "I don't know" / "Other" escape hatches have nothing to add.
+    const candidates = form.trimCandidates || [];
+    if (candidates.length) {
+      options = candidates;
+    } else if (form.make && form.model) {
+      // No restriction (no token, empty trims, or failed lookup). The
+      // sentinels are always present, so a year/make/model combination that
+      // carries no named trim still opens a pickable modal rather than an
+      // empty one.
+      const base = src.trimsFor(form.year, form.make, form.model);
+      const extras = (form.extraTrims || []).filter((t) => !base.includes(t));
+      options = withTrimSentinels([...base, ...extras]);
+    }
   }
 
   const [search, setSearch] = useState("");
@@ -2123,16 +2327,44 @@ function YmmtPicker({ field, form, update, onClose }) {
   }, []);
 
   function pick(v) {
-    if (field === "year") update({ year: v });
+    // Year resets the whole hierarchy below it — MC clears make, model and
+    // trim on a year change (plateVinForm.tsx:181-191). Without this, moving
+    // 2020 → 2015 kept a make/model pair that the new year may not carry, and
+    // the Make row then displayed a value absent from its own option list.
+    if (field === "year") {
+      update({
+        year: v, make: "", model: "", trim: "", trim_id: null,
+        extraMakes: [], extraModels: [], extraTrims: [],
+        trimCandidates: [], trimCandidateIds: {},
+      });
+    }
     else if (field === "make") {
       // User-picked make resets downstream + clears decode-injected
-      // extras for the now-stale model/trim hierarchy.
-      update({ make: v, model: "", trim: "", extraModels: [], extraTrims: [] });
+      // extras for the now-stale model/trim hierarchy. The VIN's candidate
+      // trims go too — they described the make the decode returned, not this
+      // one (MC clears `allowedTrimIds` on the same transitions).
+      update({
+        make: v, model: "", trim: "", trim_id: null,
+        extraModels: [], extraTrims: [], trimCandidates: [], trimCandidateIds: {},
+      });
     }
     else if (field === "model") {
-      update({ model: v, trim: "", extraTrims: [] });
+      update({
+        model: v, trim: "", trim_id: null,
+        extraTrims: [], trimCandidates: [], trimCandidateIds: {},
+      });
     }
-    else if (field === "trim") update({ trim: v });
+    else if (field === "trim") {
+      // Carry the id alongside the label so the vehicle write can send
+      // trim_id. The VIN's candidates win over the YMMT list for the same
+      // reason they win in the options block above: they ARE the trims that
+      // exist for this VIN. Sentinels and decode-injected extras resolve to
+      // null — neither has an id to carry.
+      const candidateId = (form.trimCandidateIds || {})[v];
+      const trimId =
+        candidateId ?? src.trimIdFor?.(form.year, form.make, form.model, v) ?? null;
+      update({ trim: v, trim_id: trimId });
+    }
     onClose();
   }
 
@@ -2182,7 +2414,15 @@ function YmmtPicker({ field, form, update, onClose }) {
             })}
           </div>
           {filtered.length === 0 && (
-            <div className="text-center text-sm text-slate-400 py-6">No matches</div>
+            <div className="text-center text-sm text-slate-400 py-6 flex items-center justify-center gap-1">
+              {src.loading ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" /> Loading options…
+                </>
+              ) : (
+                "No matches"
+              )}
+            </div>
           )}
         </div>
         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
@@ -2199,15 +2439,24 @@ function YmmtPicker({ field, form, update, onClose }) {
 // Used to detect whether the user has manually changed the slider.
 const MILEAGE_INITIAL_DEFAULT = 50000;
 
-function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", orgVehicleDefaults }) {
+function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", orgVehicleDefaults, busy = false, locked = false }) {
   // Org-level annual mileage rate; falls back to US benchmark of 12,000 mi/yr.
   const annualEstimate = orgVehicleDefaults?.annual_mileage_estimate ?? 12000;
 
   // Seed mileage from org config × vehicle age on first render if the user
   // hasn't touched the slider (value is still the system initial default).
+  //
+  // Suppressed by the remittance lock. blinker's lock is whole-record, not
+  // field-scoped: RemittanceLock installs a `before_update` that raises
+  // RemittedRecordError when `has_changes_to_save?` is true for ANY attribute
+  // (app/models/concerns/remittance_lock.rb:20,34), so a mileage write on a
+  // remitted vehicle is rejected exactly like a VIN write. Seeding over a
+  // committed odometer reading would put a value on screen that can never be
+  // saved.
   const mileageSeedAppliedRef = useRef(false);
   useEffect(() => {
     if (mileageSeedAppliedRef.current) return;
+    if (locked) return;
     if (!form.year) return;
     // Only seed when mileage is still at the system default (untouched).
     if (form.mileage !== MILEAGE_INITIAL_DEFAULT) {
@@ -2257,6 +2506,21 @@ function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", o
   }, [annualMiles]);
 
   const mileageError = form.mileage < 100 ? "Mileage must be at least 100" : form.mileage > 300000 ? "Mileage cannot exceed 300,000" : null;
+
+  // Minimum vehicle value gate — block adding a vehicle worth less than $10,000
+  // (per the MarketCheck valuation). Only enforced once a valuation has loaded.
+  const MIN_VEHICLE_VALUE = 10000;
+  const valuationTooLow =
+    form.valuationMarketCheckPrice != null && Number(form.valuationMarketCheckPrice) < MIN_VEHICLE_VALUE;
+  const valuationError = valuationTooLow
+    ? "The value of the vehicle has to be worth at least $10000."
+    : null;
+  // Block Add Vehicle until the MarketCheck valuation has finished loading —
+  // the gate can't be evaluated without a price. If the valuation API fails,
+  // don't block forever: an error means the attempt finished, so let the user
+  // proceed (the value gate simply can't be enforced without a price).
+  const valuationPending =
+    form.valuationLoading || (form.valuationMarketCheckPrice == null && !form.valuationError);
 
   const vehicleTitle = [form.year, form.make, form.model, form.trim].filter(Boolean).join(" ");
   const valuationDebounce = useRef(null);
@@ -2319,10 +2583,16 @@ function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", o
       <ScreenHeader icon={Gauge} eyebrow="Vehicle · Confirm" title="How much do you drive?" subtitle="We use odometer and vehicle age to estimate driving pattern. This helps recommend term and mileage coverage." />
 
       <div className="px-6 space-y-5">
+        {locked && <RemittanceLockBanner what="Odometer readings" />}
         <div>
           <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wide text-center">Confirm your current mileage</div>
           <div className="text-center my-2">
-            <span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md font-semibold text-lg">
+            <span
+              className={
+                "inline-block px-4 py-2 rounded-md font-semibold text-lg " +
+                (locked ? "bg-slate-200 text-slate-500" : "bg-blue-600 text-white")
+              }
+            >
               {form.mileage.toLocaleString()}
             </span>
           </div>
@@ -2333,7 +2603,8 @@ function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", o
             step={1000}
             value={form.mileage}
             onChange={(e) => update({ mileage: parseInt(e.target.value, 10) })}
-            className="w-full accent-blue-600"
+            disabled={locked}
+            className={"w-full " + (locked ? "accent-slate-400 cursor-not-allowed" : "accent-blue-600")}
           />
           <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
             <span>0 mi</span>
@@ -2353,7 +2624,9 @@ function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", o
                 onClick={() => update(c === "New" ? { condition: c, purchaseDate: null } : { condition: c })}
                 className={
                   "flex-1 py-2 rounded-md border text-sm font-medium " +
-                  (form.condition === c ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-200 hover:border-slate-300")
+                  (form.condition === c
+                    ? "border-blue-600 bg-blue-50 text-blue-700"
+                    : "border-slate-200 hover:border-slate-300")
                 }
               >
                 {c}
@@ -2364,15 +2637,11 @@ function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", o
 
         {form.condition === "Used" && (
           <div className="max-w-xs mx-auto">
-            <label className="block text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wide text-center">
-              Date you purchased this vehicle
-            </label>
-            <input
-              type="date"
+            <CalendarField
+              label="Date you purchased this vehicle"
               value={form.purchaseDate || ""}
               max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => update({ purchaseDate: e.target.value || null })}
-              className="w-full px-3 py-2 rounded-md border border-slate-200 hover:border-slate-300 text-sm focus:border-blue-600 focus:outline-none"
+              onChange={(v) => update({ purchaseDate: v || null })}
             />
           </div>
         )}
@@ -2436,20 +2705,35 @@ function ScreenVehicleDrive({ form, update, onNext, nextLabel = "Add Vehicle", o
                   Based on VIN {form.vin} · {form.mileage.toLocaleString()} mi · ZIP {form.zip || MARKETCHECK_DEFAULT_ZIP}
                   {!form.zip && <span className="text-amber-500 ml-1">(default — updates when address entered)</span>}
                 </div>
+                {valuationError && (
+                  <div className="mt-2 p-3 bg-rose-50 border border-rose-200 rounded-md text-sm text-rose-800 flex gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{valuationError}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
 
-      <Footer onNext={onNext} disabled={!!mileageError} nextLabel={nextLabel} />
+      {/* Min-value gate message — also rendered here so it shows on the YMMT-only
+          path where the VIN valuation card above isn't displayed. */}
+      {valuationError && !(form.vin && form.vin.length >= 17) && (
+        <div className="mx-6 mt-3 p-3 bg-rose-50 border border-rose-200 rounded-md text-sm text-rose-800 flex gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{valuationError}</span>
+        </div>
+      )}
+
+      <Footer onNext={onNext} disabled={!!mileageError || valuationTooLow || valuationPending || busy} nextLabel={busy ? "Saving…" : nextLabel} />
     </>
   );
 }
 
 // ---------- Stage 1 screens ----------
 
-function ScreenOwnership({ form, update, onNext }) {
+function ScreenOwnership({ form, update, onNext, busy = false }) {
   const selected = OWNERSHIP_OPTIONS.find((o) => o.id === form.ownership);
   const blocked = selected && !selected.eligible;
   return (
@@ -2487,15 +2771,47 @@ function ScreenOwnership({ form, update, onNext }) {
           </div>
         </div>
       )}
-      <Footer onNext={onNext} disabled={!form.ownership || blocked} />
+      <Footer onNext={onNext} disabled={!form.ownership || blocked || busy} nextLabel={busy ? "Saving…" : "Next"} />
     </>
   );
 }
 
-function ScreenAutoLoan({ form, update, onNext }) {
+function ScreenAutoLoan({ form, update, onNext, orgConfig = DEFAULT_ORG_CONFIG }) {
+  const cfg = orgConfig || DEFAULT_ORG_CONFIG;
   const monthlyError = validators.positiveCurrency(form.monthlyPayment);
-  const payoffError = validators.positiveCurrency(form.payoff);
-  const hasErrors = !!monthlyError || !!payoffError;
+  const payoffError = validators.currencyInRange(form.payoff, cfg.minPayoff, cfg.maxPayoff);
+
+  // Early LTV (Loan-to-Value) gate. The decision engine does the per-credit-band
+  // LTV check later, but credit band isn't chosen yet on this screen, so we gate
+  // against the MOST LENIENT band cap (max across maxLtv). Exceeding even that
+  // means the applicant is disqualified for every band — block here so the user
+  // isn't walked through the rest of Stage 1 only to be rejected. Stricter
+  // band-specific cases still fall through to runDecision after the credit step.
+  const vehicleVal = Number(form.valuationMarketCheckPrice) || 0;
+  const payoffNum = Number(String(form.payoff ?? '').replace(/[^0-9.]/g, '')) || 0;
+  const maxLtvCap = Math.max(0, ...Object.values(cfg.maxLtv || {}).map(Number));
+  const ltv = vehicleVal > 0 ? payoffNum / vehicleVal : 0;
+  const ltvError =
+    vehicleVal > 0 && payoffNum > 0 && maxLtvCap > 0 && ltv >= maxLtvCap
+      ? `Payoff $${payoffNum.toLocaleString()} exceeds ${(maxLtvCap * 100).toFixed(0)}% of the vehicle's $${vehicleVal.toLocaleString()} value (LTV ${(ltv * 100).toFixed(0)}%). This loan can't be refinanced.`
+      : '';
+
+  // Require lender, monthly payment, and payoff before advancing.
+  const requiredMissing =
+    !String(form.lender ?? '').trim() ||
+    !String(form.monthlyPayment ?? '').trim() ||
+    !String(form.payoff ?? '').trim();
+  // Hard minimum payoff of $10,000 to refinance.
+  const MIN_PAYOFF = 10000;
+  const payoffTooLow = payoffNum > 0 && payoffNum < MIN_PAYOFF;
+
+  // LTV warning is informational only — still surfaced to the user, but it no
+  // longer blocks progression. The per-band LTV check still runs later in
+  // runDecision.
+  const hasErrors = !!monthlyError || !!payoffError || requiredMissing || payoffTooLow;
+  const guardedNext = () => {
+    onNext();
+  };
   return (
     <>
       <ScreenHeader icon={DollarSign} title="Tell us about your current loan" subtitle="Partners use this to recommend the best refinance fit. All fields are optional." />
@@ -2507,13 +2823,22 @@ function ScreenAutoLoan({ form, update, onNext }) {
         />
         <Field label="Monthly payment" value={form.monthlyPayment} onChange={(v) => update({ monthlyPayment: sanitizeNumeric(v) })} placeholder="450" prefix="$" inputMode="decimal" error={monthlyError} />
         <Field label="Estimated payoff" value={form.payoff} onChange={(v) => update({ payoff: sanitizeNumeric(v) })} placeholder="18250" prefix="$" inputMode="decimal" error={payoffError} />
+        {!payoffError && !ltvError && (
+          <p className="text-xs text-slate-500">
+            Minimum payoff ${Number(cfg.minPayoff).toLocaleString()}
+            {cfg.maxPayoff != null && ` · maximum $${Number(cfg.maxPayoff).toLocaleString()}`}
+          </p>
+        )}
+        {ltvError && (
+          <p className="text-xs text-rose-600">{ltvError}</p>
+        )}
       </div>
       <Footer
-        onNext={onNext}
+        onNext={guardedNext}
         disabled={hasErrors}
         nextLabel="Next"
         secondary={
-          <button onClick={onNext} className="text-sm text-slate-500 hover:text-slate-700 underline">
+          <button onClick={guardedNext} className="text-sm text-slate-500 hover:text-slate-700 underline disabled:opacity-40 disabled:cursor-not-allowed">
             Skip
           </button>
         }
@@ -2703,7 +3028,7 @@ function ScreenCoAppEmployment({ form, update, onNext }) {
   );
 }
 
-function ScreenApplicant({ form, update, onNext }) {
+function ScreenApplicant({ form, update, onNext, busy = false }) {
   const errs = {
     firstName: validators.required(form.firstName),
     lastName: validators.required(form.lastName),
@@ -2725,12 +3050,12 @@ function ScreenApplicant({ form, update, onNext }) {
         <PhoneField label="Phone" value={form.phone} onChange={(v) => update({ phone: v })} error={form.phone ? validators.usPhone(form.phone) : null} />
         <Field label="Email" value={form.email} onChange={(v) => update({ email: v })} placeholder="name@example.com" inputMode="email" error={form.email ? validators.email(form.email) : null} />
       </div>
-      <Footer onNext={onNext} disabled={!ok} />
+      <Footer onNext={onNext} disabled={!ok || busy} nextLabel={busy ? "Saving…" : "Next"} />
     </>
   );
 }
 
-function ScreenHousing({ form, update, onNext }) {
+function ScreenHousing({ form, update, onNext, busy = false }) {
   const errs = {
     address: validators.required(form.address),
     city: validators.required(form.city),
@@ -2738,7 +3063,7 @@ function ScreenHousing({ form, update, onNext }) {
     zip: validators.required(form.zip) || validators.zip(form.zip),
     ownRent: validators.required(form.ownRent),
     housingPayment: validators.required(form.housingPayment) || validators.positiveCurrency(form.housingPayment),
-    moveInDate: validators.required(form.moveInDate) || validators.flexDateInPast(form.moveInDate),
+    moveInDate: validators.required(form.moveInDate) || (new Date(form.moveInDate) > new Date() ? "Date must be in the past" : null),
   };
   const ok = Object.values(errs).every((e) => !e);
 
@@ -2746,13 +3071,19 @@ function ScreenHousing({ form, update, onNext }) {
     <>
       <ScreenHeader icon={Home} title="Current housing" subtitle="Our lenders use your current housing information to match to the best local options available to you." />
       <div className="px-6 space-y-3">
-        {/* Address block — ZIP → city/state autofill + Google Places street
-            autocomplete. Lives in blinker-platform/packages/components/
-            (Wave 15c) so sibling apps (mission-control co-pilot,
-            protection-portal cross-sell) embed the same address-collection
-            UX without inheriting the housing-status / payment / move-in
-            fields. */}
-        <AddressBlock form={form} update={update} />
+        {/* Address block — step 7 (S1.5) address capture: ZIP is the FIRST
+            lookup (zippopotam.us → static table → Google geocode) and
+            autofills city/state, THEN the full street address resolves via
+            Google Places autocomplete. Local to refi-portal at
+            ./components/AddressBlock (over utils/api.ts); independent of
+            blinker-platform. Housing-status / payment / move-in fields stay
+            on this screen, outside the reusable block. */}
+        <AddressBlock
+          form={form}
+          update={update}
+          showAptSuite
+          labels={{ address: "Address Line 1", apt_suite: "Address Line 2" }}
+        />
 
         <div>
           <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wide">Housing status</div>
@@ -2780,24 +3111,26 @@ function ScreenHousing({ form, update, onNext }) {
           inputMode="decimal"
           error={form.housingPayment ? validators.positiveCurrency(form.housingPayment) : null}
         />
-        <DateField
+        <CalendarField
           label="Move-in date"
           value={form.moveInDate}
+          max={new Date().toISOString().slice(0, 10)}
           onChange={(v) => update({ moveInDate: v })}
-          error={form.moveInDate ? validators.flexDateInPast(form.moveInDate) : null}
+          error={form.moveInDate && new Date(form.moveInDate) > new Date() ? "Date must be in the past" : null}
         />
       </div>
-      <Footer onNext={onNext} disabled={!ok} />
+      <Footer onNext={onNext} disabled={!ok || busy} nextLabel={busy ? "Saving…" : "Next"} />
     </>
   );
 }
 
-function ScreenEmployment({ form, update, onNext }) {
+function ScreenEmployment({ form, update, onNext, orgConfig = DEFAULT_ORG_CONFIG }) {
+  const cfg = orgConfig || DEFAULT_ORG_CONFIG;
   const errs = {
     employer: validators.required(form.employer),
     employmentType: validators.required(form.employmentType),
-    income: validators.required(form.income) || validators.positiveCurrency(form.income),
-    startDate: form.startDate ? validators.flexDateInPast(form.startDate) : null,
+    income: validators.required(form.income) || validators.currencyInRange(form.income, cfg.minAnnualIncome, cfg.maxAnnualIncome),
+    startDate: validators.required(form.startDate) || validators.flexDateInPast(form.startDate),
   };
   const ok = !errs.employer && !errs.employmentType && !errs.income && !errs.startDate;
   return (
@@ -2813,14 +3146,20 @@ function ScreenEmployment({ form, update, onNext }) {
           placeholder="65250"
           prefix="$"
           inputMode="decimal"
-          error={form.income ? validators.positiveCurrency(form.income) : null}
+          error={form.income ? errs.income : null}
         />
-        <DateField
+        {form.income && !errs.income && (
+          <p className="text-xs text-slate-500">
+            Minimum annual income ${Number(cfg.minAnnualIncome).toLocaleString()}
+            {cfg.maxAnnualIncome != null && ` · maximum $${Number(cfg.maxAnnualIncome).toLocaleString()}`}
+          </p>
+        )}
+        <CalendarField
           label="Start date"
           value={form.startDate}
+          max={new Date().toISOString().slice(0, 10)}
           onChange={(v) => update({ startDate: v })}
           error={form.startDate ? validators.flexDateInPast(form.startDate) : null}
-          optional
         />
       </div>
       <Footer onNext={onNext} disabled={!ok} />
@@ -2828,10 +3167,19 @@ function ScreenEmployment({ form, update, onNext }) {
   );
 }
 
-function ScreenIdentityConsent({ form, update, onNext, effectiveHasCoApp, showDisclosureModal, setShowDisclosureModal }) {
+function ScreenIdentityConsent({ form, update, onNext, effectiveHasCoApp, showDisclosureModal, setShowDisclosureModal, submitting, submitError }) {
   const primaryDobError = form.dob ? dobAdult(form.dob) : null;
   const primarySsnError = form.ssn ? validators.ssn(form.ssn) : null;
-  const coAppDobError = effectiveHasCoApp && form.coAppDob ? dobAdult(form.coAppDob) : null;
+  // Co-applicant DOB is required and must be 18+. dobAdult returns the generic
+  // under-18 message; remap that case to the co-applicant-specific copy. Other
+  // problems (invalid / future date) keep dobAdult's message. coAppReady below
+  // requires form.coAppDob present AND no error, so "Submit for prequal" stays
+  // disabled until a valid 18+ co-applicant DOB is entered.
+  const rawCoAppDobError = effectiveHasCoApp && form.coAppDob ? dobAdult(form.coAppDob) : null;
+  const coAppDobError =
+    rawCoAppDobError === "Applicant must be 18 or older"
+      ? "Age should be more than or equal to 18 years"
+      : rawCoAppDobError;
   const coAppSsnError = effectiveHasCoApp && form.coAppSsn ? validators.ssn(form.coAppSsn) : null;
 
   const primaryReady = form.dob && !primaryDobError && !primarySsnError;
@@ -2893,19 +3241,38 @@ function ScreenIdentityConsent({ form, update, onNext, effectiveHasCoApp, showDi
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400" />
         </button>
+
+        {!consentReady && (
+          <p className="text-xs text-rose-600">
+            {!form.consentConfirmed
+              ? "Primary consent is required before submitting for prequal."
+              : "Co-applicant consent is required before submitting for prequal."}
+          </p>
+        )}
       </div>
 
-      <Footer onNext={onNext} disabled={!ok} nextLabel="Submit for prequal" />
+      {submitError && (
+        <p className="px-6 pt-2 text-xs text-rose-600">{submitError}</p>
+      )}
+
+      <Footer
+        onNext={onNext}
+        disabled={!ok || submitting}
+        nextLabel={submitting ? 'Submitting…' : 'Submit for prequal'}
+      />
 
       {showDisclosureModal && (
         <DisclosureModal
           effectiveHasCoApp={effectiveHasCoApp}
           primaryName={primaryName}
           coAppName={coAppName}
+          confirmed={consentReady}
           onClose={() => setShowDisclosureModal(false)}
           onConfirm={(primary, coApp) => {
+            // Lock consent. Keep the modal open so the checkbox + Confirm
+            // button show their disabled/agreed state; the user dismisses via
+            // Close. Submit-for-prequal is now enabled behind the modal.
             update({ consentConfirmed: primary, coAppConsent: coApp });
-            setShowDisclosureModal(false);
           }}
         />
       )}
@@ -2930,9 +3297,10 @@ function IdentityBlock({ label, name, dob, ssn, dobError, ssnError, onDob, onSsn
         <User className="w-4 h-4 text-slate-400" />
       </div>
       <div className="p-4 grid grid-cols-2 gap-3">
-        <DateField
+        <CalendarField
           label="Date of birth"
           value={dob}
+          max={new Date().toISOString().slice(0, 10)}
           onChange={onDob}
           error={dobError}
         />
@@ -2950,9 +3318,11 @@ function IdentityBlock({ label, name, dob, ssn, dobError, ssnError, onDob, onSsn
   );
 }
 
-function DisclosureModal({ onClose, onConfirm, effectiveHasCoApp, primaryName, coAppName }) {
-  const [primary, setPrimary] = useState(false);
-  const [coApp, setCoApp] = useState(false);
+function DisclosureModal({ onClose, onConfirm, effectiveHasCoApp, primaryName, coAppName, confirmed = false }) {
+  // Seed from `confirmed` so a re-open (or the post-confirm locked state)
+  // shows the boxes already ticked.
+  const [primary, setPrimary] = useState(confirmed);
+  const [coApp, setCoApp] = useState(confirmed);
   const ready = primary && (!effectiveHasCoApp || coApp);
   return (
     <div className="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -2981,27 +3351,34 @@ function DisclosureModal({ onClose, onConfirm, effectiveHasCoApp, primaryName, c
         </div>
         <div className="px-5 py-4 border-t border-slate-100 space-y-2">
           <label className="flex items-start gap-2 text-sm">
-            <input type="checkbox" checked={primary} onChange={(e) => setPrimary(e.target.checked)} className="mt-0.5" />
+            <input type="checkbox" checked={primary} disabled={confirmed} onChange={(e) => setPrimary(e.target.checked)} className="mt-0.5" />
             <span><span className="font-semibold">{primaryName}</span> has read and agrees to the disclosure.</span>
           </label>
           {effectiveHasCoApp && (
             <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={coApp} onChange={(e) => setCoApp(e.target.checked)} className="mt-0.5" />
+              <input type="checkbox" checked={coApp} disabled={confirmed} onChange={(e) => setCoApp(e.target.checked)} className="mt-0.5" />
               <span><span className="font-semibold">{coAppName}</span> has read and agrees to the disclosure.</span>
             </label>
           )}
         </div>
         <div className="px-5 py-3 bg-slate-50 flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800">
+            {confirmed ? "Close" : "Cancel"}
+          </button>
           <button
             onClick={() => onConfirm(primary, coApp)}
-            disabled={!ready}
+            disabled={!ready || confirmed}
             className={
-              "px-4 py-2 text-sm rounded-md font-semibold " +
-              (ready ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-slate-200 text-slate-400 cursor-not-allowed")
+              "px-4 py-2 text-sm rounded-md font-semibold flex items-center gap-1 " +
+              (confirmed
+                ? "bg-emerald-100 text-emerald-700 cursor-not-allowed"
+                : ready
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed")
             }
           >
-            Confirm consent
+            {confirmed && <CheckCircle2 className="w-4 h-4" />}
+            {confirmed ? "Consent confirmed" : "Confirm consent"}
           </button>
         </div>
       </div>
@@ -3011,7 +3388,7 @@ function DisclosureModal({ onClose, onConfirm, effectiveHasCoApp, primaryName, c
 
 // ---------- Field primitives ----------
 
-function Field({ label, value, onChange, placeholder, prefix, error, icon: Icon, inputMode, maxLength }) {
+function Field({ label, value, onChange, placeholder, prefix, error, icon: Icon, inputMode, maxLength, disabled = false }) {
   return (
     <div>
       <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wide">{label}</div>
@@ -3029,11 +3406,16 @@ function Field({ label, value, onChange, placeholder, prefix, error, icon: Icon,
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          // Matches PickerField's disabled treatment so a locked text input and
+          // a locked picker row read as the same state on the same screen.
+          disabled={!!disabled}
           className={
             "w-full border rounded-md py-2 text-sm focus:outline-none focus:ring-1 " +
-            (error
-              ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500"
-              : "border-slate-200 focus:border-blue-500 focus:ring-blue-500") +
+            (disabled
+              ? "border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed"
+              : error
+                ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500"
+                : "border-slate-200 focus:border-blue-500 focus:ring-blue-500") +
             " " +
             (prefix ? "pl-7 pr-3" : Icon ? "pl-9 pr-3" : "px-3")
           }
@@ -3079,6 +3461,36 @@ function DateField({ label, value, onChange, error, optional }) {
   );
 }
 
+// CalendarField — native date picker. Shows the OS calendar widget and
+// handles formatting itself; value is the ISO YYYY-MM-DD string the
+// <input type="date"> emits (no manual typing/parsing). `max` caps the
+// selectable range (e.g. today, for past-only dates).
+function CalendarField({ label, value, onChange, error, optional, max, disabled = false }) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+        {label + (optional ? " (optional)" : "")}
+      </label>
+      <input
+        type="date"
+        value={value || ""}
+        max={max}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={!!disabled}
+        className={
+          "w-full px-3 py-2 rounded-md border text-sm focus:outline-none focus:ring-1 " +
+          (disabled
+            ? "border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed"
+            : error
+              ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500"
+              : "border-slate-200 focus:border-blue-500 focus:ring-blue-500")
+        }
+      />
+      {error && <div className="text-xs text-rose-600 mt-1">{error}</div>}
+    </div>
+  );
+}
+
 function SelectField({ label, value, onChange, options, error }) {
   return (
     <div>
@@ -3105,7 +3517,12 @@ function SelectField({ label, value, onChange, options, error }) {
 
 // ---------- Decision engine transition ----------
 
-function DecisionEngineScreen({ decision, onDone }) {
+// isQualified defaults to true so existing callers (this monolith's own
+// decision_engine screen) keep the single "Continue to Stage 2" CTA. When a
+// caller passes isQualified={false}, the qualified CTA is hidden and a
+// "Re-enter vehicle details" button (onGoToVehicle) is shown instead — that
+// path fires no refi API call.
+function DecisionEngineScreen({ decision, onDone, isQualified = true, onGoToVehicle, failedStepLabel, submitting = false }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8">
       <div className="flex items-center gap-2 text-blue-600 mb-2">
@@ -3144,12 +3561,27 @@ function DecisionEngineScreen({ decision, onDone }) {
         <Kv k="result_type" v={decision.result} />
         {decision.reason && <Kv k="disqualification_reason_code" v={decision.reason} />}
       </div>
-      <button
-        onClick={onDone}
-        className="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold text-sm flex items-center justify-center gap-2"
-      >
-        Continue to Stage 2 <ArrowRight className="w-4 h-4" />
-      </button>
+      {isQualified ? (
+        <button
+          onClick={onDone}
+          disabled={submitting}
+          className={
+            "w-full px-5 py-2.5 text-white rounded-md font-semibold text-sm flex items-center justify-center gap-2 " +
+            (submitting
+              ? "bg-blue-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700")
+          }
+        >
+          {submitting ? "Submitting…" : <>Continue to Stage 2 <ArrowRight className="w-4 h-4" /></>}
+        </button>
+      ) : (
+        <button
+          onClick={onGoToVehicle}
+          className="w-full px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-md font-semibold text-sm flex items-center justify-center gap-2"
+        >
+          {failedStepLabel || "Re-enter vehicle details"} <ArrowRight className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 }
@@ -3165,7 +3597,7 @@ function Kv({ k, v }) {
 
 // ---------- Stage 2 result screens ----------
 
-function StageTwoResult({ decision, form, update, selectedOfferId, setSelectedOfferId, offerConfirmed, setOfferConfirmed, onReturn, onReset }) {
+function StageTwoResult({ decision, form, update, selectedOfferId, setSelectedOfferId, offerConfirmed, setOfferConfirmed, onReturn, onComplete, onReset }) {
   const selectedOffer = selectedOfferId ? MOCK_OFFERS.find((o) => o.id === selectedOfferId) : null;
   const showCoverageTeaser = !form.planSold;
   const showInsuranceTeaser = !form.insuranceReviewed;
@@ -3173,7 +3605,7 @@ function StageTwoResult({ decision, form, update, selectedOfferId, setSelectedOf
   return (
     <div className="space-y-3">
       {decision.result === "pre_approved" && (
-        <QualifiedHandoffCard decision={decision} form={form} selectedOffer={null} onReturn={onReturn} insuranceSavings={insuranceSavings} />
+        <QualifiedHandoffCard decision={decision} form={form} selectedOffer={null} onComplete={onComplete} insuranceSavings={insuranceSavings} />
       )}
       {decision.result === "offers_returned" && !offerConfirmed && (
         <OffersCard
@@ -3186,7 +3618,7 @@ function StageTwoResult({ decision, form, update, selectedOfferId, setSelectedOf
         />
       )}
       {decision.result === "offers_returned" && offerConfirmed && (
-        <QualifiedHandoffCard decision={decision} form={form} selectedOffer={selectedOffer} onReturn={onReturn} insuranceSavings={insuranceSavings} />
+        <QualifiedHandoffCard decision={decision} form={form} selectedOffer={selectedOffer} onComplete={onComplete} insuranceSavings={insuranceSavings} />
       )}
       {decision.result === "disqualified" && <DisqualifiedCard decision={decision} onReturn={onReturn} onReset={onReset} />}
       {decision.result === "pending" && <PendingCard decision={decision} onReturn={onReturn} />}
@@ -3263,7 +3695,7 @@ function PartnerHandoff({ decision }) {
 }
 
 // ---- Qualified handoff card (used for Gravity pre-approval AND post-offer-selection on Savings Group) ----
-function QualifiedHandoffCard({ decision, form, selectedOffer, onReturn, insuranceSavings }) {
+function QualifiedHandoffCard({ decision, form, selectedOffer, onComplete, insuranceSavings }) {
   const insSav = insuranceSavings || 0;
   const partnerName = decision.partnerName || "our refi partner";
   const loanId = decision.externalApplicationId || "—";
@@ -3437,7 +3869,7 @@ function QualifiedHandoffCard({ decision, form, selectedOffer, onReturn, insuran
         <PartnerHandoff decision={decision} />
 
         <button
-          onClick={onReturn}
+          onClick={onComplete}
           className="w-full px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold text-sm flex items-center justify-center gap-2"
         >
           <UserCheck className="w-4 h-4" /> Mark transfer complete & return to quote card
@@ -3561,7 +3993,7 @@ function DisqualifiedCard({ decision, onReturn, onReset }) {
         </div>
       )}
       <div className="text-xs text-slate-500 mb-5 font-mono">
-        prequal_result = disqualified · reason_code = {decision.reason || "—"}
+        prequal_result = disqualified · reason_code = {decision.reason || "—"} · platform_status=Disqualified
       </div>
       <div className="flex gap-2">
         <button onClick={onReset} className="flex-1 px-5 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-md font-semibold text-sm">

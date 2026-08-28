@@ -45,7 +45,7 @@ import { AchievementChip } from '../../shared/AchievementChip.jsx';
 // container). URL/right-state plumbing is owned by ManagerTeam.jsx — this
 // component is presentational + delegates clicks via props.
 
-const TYPES_ORDER = ['protection', 'refi', 'insurance', 'payments'];
+const TYPES_ORDER = ['protection', 'refi', 'insurance', 'payments', 'home_protection'];
 
 function initialsOf(name) {
   if (!name) return '?';

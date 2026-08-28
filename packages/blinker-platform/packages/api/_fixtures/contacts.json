@@ -28,6 +28,7 @@
       "addresses": [
         { "id": "ad_alv_1", "type": "primary", "line_1": "412 Cypress Ln", "city": "Austin", "state": "TX", "postal_code": "78702", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Chicago", "is_primary": true }
       ],
+      "homes": ["home_alvarez_cypress"],
       "vehicles": [
         { "id": "veh_alv_rav4", "year": 2022, "make": "Toyota", "model": "RAV4", "trim": "XLE", "vin": "JTMP1RFV9ND123456", "mileage": 38420, "ownership": "own", "value": 28500, "payoff": 14200, "source": "vin_decode", "source_recorded_at": "2026-04-29T15:14:00Z" },
         { "id": "veh_alv_camry", "year": 2015, "make": "Toyota", "model": "Camry", "trim": "LE", "vin": "4T1BF1FK0FU987654", "mileage": 112800, "ownership": "own", "value": 11200, "payoff": 0, "source": "manual", "source_recorded_at": "2026-04-30T09:02:00Z" }
@@ -80,6 +81,7 @@
       "addresses": [
         { "id": "ad_chen_1", "type": "primary", "line_1": "88 Larkspur Way", "city": "San Jose", "state": "CA", "postal_code": "95129", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }
       ],
+      "homes": ["home_chen_meridian"],
       "vehicles": [
         { "id": "veh_chen_pilot", "year": 2019, "make": "Honda", "model": "Pilot", "trim": "EX-L", "vin": "5FNYF6H56KB098123", "mileage": 64210, "ownership": "finance", "value": 24800, "payoff": 9650, "source": "vin_decode", "source_recorded_at": "2026-05-01T16:11:00Z" }
       ],
@@ -129,6 +131,7 @@
       "addresses": [
         { "id": "ad_oka_1", "type": "primary", "line_1": "2210 W Magnolia Blvd", "city": "Burbank", "state": "CA", "postal_code": "91506", "country": "US", "ownership": "Own", "ownership_type": "Primary", "timezone": "America/Los_Angeles", "is_primary": true }
       ],
+      "homes": ["home_okafor_verdugo"],
       "vehicles": [
         { "id": "veh_oka_f150", "year": 2024, "make": "Ford", "model": "F-150", "trim": "Lariat", "vin": "1FTFW1E58RFA12345", "mileage": 8210, "ownership": "finance", "value": 62400, "payoff": 51800, "source": "vin_decode", "source_recorded_at": "2026-04-21T14:02:00Z" }
       ],
@@ -222,6 +225,7 @@
       "addresses": [
         { "id": "ad_bro_1", "type": "primary", "line_1": "412 Cypress Ln", "city": "Austin", "state": "TX", "postal_code": "78702", "country": "US", "ownership": "Live with Others", "timezone": "America/Chicago", "is_primary": true }
       ],
+      "homes": ["home_alvarez_cypress"],
       "vehicles": [
         { "id": "veh_bro_equinox", "year": 2020, "make": "Chevrolet", "model": "Equinox", "trim": "LT", "vin": "2GNAXKEV3L6109876", "mileage": 71400, "ownership": "finance", "value": 17200, "payoff": 9100, "source": "manual", "source_recorded_at": "2026-04-12T09:31:00Z" }
       ],

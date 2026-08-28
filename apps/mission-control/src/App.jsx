@@ -214,6 +214,15 @@ export default function App() {
   const [resetRefiForm, setResetRefiForm] = useState(null);
   const [insuranceWorkflow, setInsuranceWorkflow] = useState(null);
   const [resetInsuranceWorkflow, setResetInsuranceWorkflow] = useState(null);
+  // Wave 39 (ADR 30) — home protection wizard form + step, lifted for the
+  // same structural reason as protection's: CoPilotPane's HomeProtectionEmbed
+  // seeds/owns this, and OpportunityContextPane (a SIBLING, not a
+  // descendant) reads homeProtectionStepIdx for the active-opp
+  // RelatedHomeProtectionProgress mount. No consolidated DevPanel section
+  // reads it in this wave — see active-workflow.js's doc comment.
+  const [homeProtectionForm, setHomeProtectionForm] = useState(null);
+  const [homeProtectionStepIdx, setHomeProtectionStepIdx] = useState(0);
+  const [resetHomeProtectionForm, setResetHomeProtectionForm] = useState(null);
 
   function handlePersonaChange(next) {
     setPersona(next);
@@ -293,6 +302,12 @@ export default function App() {
         setInsuranceWorkflow,
         resetInsuranceWorkflow,
         setResetInsuranceWorkflow,
+        homeProtectionForm,
+        setHomeProtectionForm,
+        homeProtectionStepIdx,
+        setHomeProtectionStepIdx,
+        resetHomeProtectionForm,
+        setResetHomeProtectionForm,
       }}
     >
       <div className="h-screen w-screen flex bg-slate-50 text-slate-900">
@@ -384,6 +399,10 @@ function ConsolidatedDevPanel({
     resetRefiForm,
     insuranceWorkflow,
     setInsuranceWorkflow,
+    // Wave 39 (ADR 30) — home protection's lifted form, for the DEV ·
+    // Payload live-mirror only (no HomeProtectionDevControls section is
+    // mounted here yet — see active-workflow.js's doc comment).
+    homeProtectionForm,
   } = useActiveWorkflow();
   const liveLabel =
     active?.kind === 'insurance' ? 'live workflow' : 'live form';
@@ -405,7 +424,9 @@ function ConsolidatedDevPanel({
         ? refiForm
         : active?.kind === 'insurance'
           ? insuranceWorkflow
-          : null;
+          : active?.kind === 'home_protection'
+            ? homeProtectionForm
+            : null;
 
   // Wave 14 follow-up — refi formState + wizardNav now wired to lifted
   // state. RefiDevControls' applyPrefill (Section 1 + presets) merges

@@ -16,7 +16,8 @@ import { X, Filter as FilterIcon } from 'lucide-react';
 //         label,              // visible field label
 //         field,              // dotted path used by the consumer's getter
 //                             //   (e.g. 'contact.name.first', 'vehicle.vin',
-//                             //   'opportunity.status'). AdvancedFilter
+//                             //   'opportunity.status', 'home.square_feet').
+//                             //   AdvancedFilter
 //                             //   itself is path-agnostic; the path is
 //                             //   handed back to the consumer via the
 //                             //   getter callback at filter time.
@@ -45,8 +46,11 @@ import { X, Filter as FilterIcon } from 'lucide-react';
 //                             //   they are pruned automatically on next render.
 //                             //   (Pure UI prune — `applyFilters` already filters
 //                             //   by whatever the user committed, no change there.)
-//         level,              // 'contact' | 'vehicle' | 'opportunity'
+//         level,              // 'contact' | 'vehicle' | 'opportunity' | 'home'
 //                             //   (informational; consumer may group by it)
+//                             //   'home' added Wave 39 (ADR 30) — see
+//                             //   AgentContacts.jsx's home_square_feet field
+//                             //   for the reference usage.
 //         allowNull,          // for type=enum: when true, the rendered
 //                             //   checklist gets a top-of-list option whose
 //                             //   value is the literal NULL_VALUE sentinel

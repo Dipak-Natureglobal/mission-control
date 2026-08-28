@@ -1502,3 +1502,15 @@ Open `mission-control` in a fresh session and paste:
 > **Contact-form re-point (D1).** `src/lib/contact-form.js` — import `findContactMatch`/`buildHouseholdRelationship`/`HOUSEHOLD_RELATIONSHIP_KINDS` from `blinker-platform/utils`, re-export them, delete the local definitions. Keep `validateContactForm` local. Verify `AddContactModal` still imports cleanly.
 >
 > High blast radius (`CoPilotPane.jsx`) — verify identifier scope before referencing. No `npm run dev`/`install`; one-shot `npm run build` OK. One commit (`feat(copilot): v3.0.15 …`), git identity `dealercrm`/`chad@carcarepeople.com`, do NOT push, do NOT commit synced `src/constants/canon/` changes.
+
+## Wave 39 — Home Protection Plan (2026-08-25)
+
+Governing docs: `architecture/30-home-protection-plan.md`, `docs/superpowers/specs/2026-08-25-home-protection-plan-design.md`, `docs/superpowers/plans/2026-08-25-home-protection-plan.md`. Phase A (canon + packages) is LANDED in `blinker-platform`. Phase B gates Phase C.
+
+### § 39B — home-protection-portal (new repo, Opus)
+
+> Build a new sibling repo `home-protection-portal/` at `~/Documents/Claude/Projects/home-protection-portal/`, following Phase B of `~/Documents/Claude/Projects/blinker-platform/docs/superpowers/plans/2026-08-25-home-protection-plan.md`. Read that plan and `architecture/30-home-protection-plan.md` first. Scaffold from `protection-portal` (Vite + React 19 + JS, lucide-react, `file:../blinker-platform`, `/se-rating` vite proxy), then build the nine-step consumer wizard. Everything you need from the platform already exists and is tested: `classifyDwelling`/`isHomeEligible`/`listHomeTypes` and `parseOptionDesc`/`resolveHomeAddOns`/`sumAddOnPrices`/`revalidateSelections` from `blinker-platform/utils`; `getRatesForHome` from `blinker-platform/integrations/product_admin`; `resolveTemplateId`/`buildHomeSubmissionFields`/`createSubmission` from `blinker-platform/integrations/signing`. Do not reimplement any of them and do not copy `protection-portal/src/lib/plan-selector.js` — home has no term/mileage optimizer, no new/used, no deductible filter, no tier borrowing. Set the repo git identity to dealercrm/chad@carcarepeople.com. Never run `npm run dev` or `npm install` between commits.
+
+### § 39C — mission-control (Sonnet, AFTER 39B lands)
+
+> Thread the new `home_protection` opportunity type through mission-control, following Phase C of `~/Documents/Claude/Projects/blinker-platform/docs/superpowers/plans/2026-08-25-home-protection-plan.md`. The plan carries the exact file:line map for every registry that needs the new type. Add `"home-protection-portal": "file:../home-protection-portal"`, import its `AgentView` LAZILY (matching refi/insurance, not protection's eager import), and clone `RelatedProtectionProgress.jsx` into `RelatedHomeProtectionProgress.jsx` with the home step set. Remember mission-control keeps the step-label map in TWO places — the timeline component and `CoPilotPane.jsx:1586`. Verify with `npm run build`. Never run `npm run dev`.

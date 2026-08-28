@@ -16,9 +16,11 @@
 import { useState } from 'react';
 import {
   AlertCircle,
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   DollarSign,
+  House,
   Save,
   Sliders as SlidersIcon,
   TestTube2,
@@ -39,6 +41,10 @@ export function OrgConfiguration({
   const [openSection, setOpenSection] = useState('pricing');
   const billing = org?.protection_billing || {};
   const crossSell = org?.cross_sell || {};
+  // Wave 39 (ADR 30) — home protection is a SEPARATE canon block from
+  // protection_billing (different product line, different margins).
+  const homeBilling = org?.home_protection_billing || {};
+  const homeEnabled = org?.opportunities?.home_protection?.enabled === true;
 
   function toggleSection(key) {
     setOpenSection((prev) => (prev === key ? null : key));
@@ -206,6 +212,174 @@ export function OrgConfiguration({
           />
         </FieldGrid>
         <SaveBar onSave={() => onSaveStub('monthly_membership')} />
+      </Accordion>
+
+      <Accordion
+        sectionKey="home_protection"
+        openSection={openSection}
+        onToggle={toggleSection}
+        icon={House}
+        label="Home protection"
+        sub={
+          homeEnabled
+            ? `enabled · $${homeBilling.markup?.fixed_term_dollars ?? '?'} fixed-term / $${homeBilling.markup?.monthly_dollars ?? '?'}/mo markup`
+            : 'disabled'
+        }
+      >
+        {/* Wave 39 (ADR 30) — canon's home_protection_billing block carries
+            an explicit `_TODO` flagging every number below as an educated
+            guess pending product confirmation (feedback_canon_todo_defaults).
+            Admin — a read-only surface — must not let these read as
+            settled config, so the warning renders unconditionally whenever
+            the canon `_TODO` is present, same as the super-admin editor. */}
+        {homeBilling._TODO && (
+          <div className="flex items-start gap-2 text-xs text-amber-800 bg-amber-50 ring-1 ring-amber-300 rounded-md p-3 mb-3">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+            <div>
+              <div className="font-semibold">Unconfirmed — placeholder values</div>
+              <div className="mt-0.5 leading-relaxed">{homeBilling._TODO}</div>
+            </div>
+          </div>
+        )}
+        <FieldGrid>
+          <Field label="Enabled" value={homeEnabled ? 'yes' : 'no'} />
+          <Field label="Max discount %" value={homeBilling.discount?.max_percent} />
+          <Field label="Max discount $" value={homeBilling.discount?.max_dollars} />
+          <Field
+            label="Discount disabled in"
+            value={(homeBilling.discount?.disabled_in_states || []).join(', ') || '—'}
+          />
+        </FieldGrid>
+        {/* Add-on discount cap — SEPARATE cap from the plan discount above.
+            Configured max_percent is shown alongside the LIVE break-even
+            ceiling (markup / (1 + markup)) computed from add_on_percent, so
+            an admin can see at a glance whether the configured cap will be
+            clamped at read time by getHomeDiscountCaps. */}
+        {(() => {
+          const addOnMarkupRaw = Number(homeBilling.markup?.add_on_percent);
+          const addOnMarkupFraction = Number.isFinite(addOnMarkupRaw) && addOnMarkupRaw > 0
+            ? (addOnMarkupRaw > 1 ? addOnMarkupRaw / 100 : addOnMarkupRaw)
+            : 0;
+          const breakEvenPercent = addOnMarkupFraction > 0
+            ? Math.round((addOnMarkupFraction / (1 + addOnMarkupFraction)) * 10000) / 100
+            : null;
+          const configuredPercent = homeBilling.discount?.add_on?.max_percent;
+          const clamped = breakEvenPercent != null
+            && Number.isFinite(Number(configuredPercent))
+            && Number(configuredPercent) > breakEvenPercent;
+          return (
+            <>
+              <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 mt-3 mb-1.5">
+                Add-on discount cap (separate from plan discount)
+              </div>
+              <FieldGrid>
+                <Field label="Configured max %" value={configuredPercent} />
+                <Field label="Break-even % (live)" value={breakEvenPercent} />
+              </FieldGrid>
+              {clamped && (
+                <div className="flex items-start gap-2 text-xs text-amber-800 bg-amber-50 ring-1 ring-amber-300 rounded-md p-2.5 mt-2">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600" />
+                  <div>
+                    Configured cap ({configuredPercent}%) exceeds break-even
+                    ({breakEvenPercent}%) — the resolver clamps the effective
+                    cap down to {breakEvenPercent}% at read time.
+                  </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
+        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 mt-3 mb-1.5">
+          Markup — fixed-term plans (35 / 36 / 37)
+        </div>
+        <FieldGrid>
+          <Field label="Default $" value={homeBilling.markup?.fixed_term_dollars} />
+          <Field label="Florida $" value={homeBilling.markup?.florida_fixed_term_dollars} />
+        </FieldGrid>
+        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 mt-3 mb-1.5">
+          Markup — monthly-membership plans (38 / 48 / 49)
+        </div>
+        <FieldGrid>
+          <Field label="Default $/mo" value={homeBilling.markup?.monthly_dollars} />
+          <Field label="Florida $/mo" value={homeBilling.markup?.florida_monthly_dollars} />
+        </FieldGrid>
+        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 mt-3 mb-1.5">
+          Markup — add-on
+        </div>
+        <FieldGrid>
+          <Field
+            label="Add-on markup %"
+            value={
+              homeBilling.markup?.add_on_percent == null
+                ? null
+                : formatPercent(
+                    Number(homeBilling.markup.add_on_percent) > 1
+                      ? Number(homeBilling.markup.add_on_percent) / 100
+                      : Number(homeBilling.markup.add_on_percent),
+                  )
+            }
+          />
+        </FieldGrid>
+        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 mt-3 mb-1.5">
+          Down payment / payment term (fallback)
+        </div>
+        <FieldGrid>
+          <Field label="Default down %" value={homeBilling.down_payment?.default_percent} />
+          <Field label="Min down %" value={homeBilling.down_payment?.min_percent} />
+          <Field label="Default term (mo)" value={homeBilling.payment_term?.default_months} />
+          <Field
+            label="Term options (mo)"
+            value={(homeBilling.payment_term?.options_months || []).join(', ')}
+          />
+        </FieldGrid>
+
+        {/* payment_term.by_coverage_term — AUTHORITATIVE per-coverage-term
+            options; the flat fallback above only applies to a coverage term
+            with no row here. */}
+        {(() => {
+          const byTerm = homeBilling.payment_term?.by_coverage_term || {};
+          const entries = Object.entries(byTerm);
+          return entries.length > 0 ? (
+            <>
+              <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500 mt-3 mb-1.5">
+                Payment term by coverage term (authoritative)
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      {['Coverage term', 'Options (mo)', 'Default (mo)'].map((h) => (
+                        <th key={h} className="px-2 py-1 text-[9px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {entries.map(([term, row]) => {
+                      const opts = Array.isArray(row?.options_months) ? row.options_months : [];
+                      const def = row?.default_months;
+                      const mismatch = def != null && opts.length > 0 && !opts.includes(Number(def));
+                      return (
+                        <tr key={term} className="border-b border-slate-100 last:border-b-0">
+                          <td className="px-2 py-1 text-xs font-mono text-slate-700">{term} mo</td>
+                          <td className="px-2 py-1 text-xs font-mono text-slate-900">{opts.join(', ') || '—'}</td>
+                          <td className="px-2 py-1 text-xs font-mono text-slate-900">
+                            {def ?? '—'}
+                            {mismatch && (
+                              <span className="ml-1.5 text-rose-700 font-sans">(not in options)</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : null;
+        })()}
+        <SaveBar onSave={() => onSaveStub('home_protection')} />
       </Accordion>
 
       <Accordion

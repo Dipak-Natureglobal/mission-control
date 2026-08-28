@@ -15,7 +15,7 @@
 //         orgConfig and route via runDecision().
 import type { FC } from 'react';
 import { RefiWizard } from './RefiWizard';
-import type { RefiForm, WizardDevOptions, Persona } from '../../types';
+import type { RefiForm, WizardDevOptions, Persona, StepChangeContext } from '../../types';
 
 interface CustomerViewProps {
   persona?: Persona;
@@ -25,6 +25,7 @@ interface CustomerViewProps {
   stepIdx: number;
   setStepIdx: (idx: number) => void;
   dev?: Partial<WizardDevOptions>;
+  beforeStepChange?: (ctx: StepChangeContext) => void;
 }
 
 export const CustomerView: FC<CustomerViewProps> = ({
@@ -35,6 +36,7 @@ export const CustomerView: FC<CustomerViewProps> = ({
   stepIdx,
   setStepIdx,
   dev,
+  beforeStepChange,
 }) => {
   return (
     <div>
@@ -44,6 +46,7 @@ export const CustomerView: FC<CustomerViewProps> = ({
         stepIdx={stepIdx}
         setStepIdx={setStepIdx}
         dev={dev}
+        beforeStepChange={beforeStepChange}
       />
       {/*
         Persona props are accepted but not yet surfaced in the wizard

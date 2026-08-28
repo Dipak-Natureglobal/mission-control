@@ -1,0 +1,88 @@
+{
+  "_comment": "Home fixtures (ADR 30 D1/D2). Shape per canon/blinker-domain.json#home. Three homes covering three of the five dwelling buckets, including one two-holder household (the Omega home agreement has two agreement-holder slots).",
+  "_test_case_principle": "Each home names the case it exists to exercise, matching the convention in opportunities.json.",
+  "homes": {
+    "home_alvarez_cypress": {
+      "id": "home_alvarez_cypress",
+      "_test_case": "two-holder-household-single-family",
+      "org_id": 102,
+      "household_id": "hh_alvarez_brooks",
+      "contact_ids": [
+        "ct_alvarez",
+        "ct_brooks"
+      ],
+      "primary_contact_id": "ct_alvarez",
+      "home_type": "single_family",
+      "address": {
+        "address1": "412 Cypress Ln",
+        "address2": "",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78702",
+        "zip4": "",
+        "country": "US"
+      },
+      "year_built": 1998,
+      "square_feet": 2400,
+      "purchase_price": 415000,
+      "disposition": null,
+      "source": "manual",
+      "created_at": "2026-08-18T14:02:00Z",
+      "updated_at": "2026-08-18T14:02:00Z"
+    },
+    "home_okafor_verdugo": {
+      "id": "home_okafor_verdugo",
+      "_test_case": "large-single-family-mid-bucket",
+      "org_id": 102,
+      "household_id": null,
+      "contact_ids": [
+        "ct_okafor"
+      ],
+      "primary_contact_id": "ct_okafor",
+      "home_type": "single_family",
+      "address": {
+        "address1": "1180 Verdugo Rd",
+        "address2": "",
+        "city": "Burbank",
+        "state": "CA",
+        "zip": "91502",
+        "zip4": "",
+        "country": "US"
+      },
+      "year_built": 2011,
+      "square_feet": 6200,
+      "purchase_price": 1450000,
+      "disposition": null,
+      "source": "manual",
+      "created_at": "2026-08-20T17:40:00Z",
+      "updated_at": "2026-08-20T17:40:00Z"
+    },
+    "home_chen_meridian": {
+      "id": "home_chen_meridian",
+      "_test_case": "condominium-under-5000",
+      "org_id": 102,
+      "household_id": null,
+      "contact_ids": [
+        "ct_chen"
+      ],
+      "primary_contact_id": "ct_chen",
+      "home_type": "condominium",
+      "address": {
+        "address1": "88 Meridian Ave",
+        "address2": "Unit 402",
+        "city": "San Jose",
+        "state": "CA",
+        "zip": "95126",
+        "zip4": "",
+        "country": "US"
+      },
+      "year_built": 2016,
+      "square_feet": 1150,
+      "purchase_price": 720000,
+      "disposition": null,
+      "source": "manual",
+      "created_at": "2026-08-22T11:15:00Z",
+      "updated_at": "2026-08-22T11:15:00Z"
+    }
+  }
+}

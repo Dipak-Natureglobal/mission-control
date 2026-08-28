@@ -99,6 +99,9 @@ function sortValueFor(row, key) {
 const PROTECTION_STATUSES = Object.keys(ghlStatus.vsc?.statuses || {});
 const INSURANCE_STATUSES = Object.keys(ghlStatus.insurance?.statuses || {});
 const REFI_STATUSES = Array.from(ghlStatus.refi?.statuses_summary || []);
+// Wave 39 (ADR 30) — home protection's canon block has the same
+// `statuses` map shape as vsc/insurance.
+const HOME_PROTECTION_STATUSES = Object.keys(ghlStatus.home_protection?.statuses || {});
 
 // Wave 26a fu3: Organization enum is restricted to orgs the logged-in
 // agent has an association with (stub returns all canon-active orgs
@@ -113,6 +116,7 @@ const TYPE_ENUM = [
   { value: 'insurance', label: 'Insurance' },
   { value: 'protection', label: 'Protection (VSC)' },
   { value: 'payments', label: 'Payments' },
+  { value: 'home_protection', label: 'Home Protection' },
 ];
 
 export function AgentContacts({
@@ -134,6 +138,9 @@ export function AgentContacts({
     patchContact,
     appendContact,
     appendHouseholdRelationship,
+    // Wave 39 (ADR 30) — session home map, for the home_square_feet
+    // AdvancedFilter field below.
+    homes,
   } = session || localSession;
 
   const [filter, setFilter] = useState('all');
@@ -170,6 +177,11 @@ export function AgentContacts({
       if (!oppsByContact[opp.contact_id]) oppsByContact[opp.contact_id] = [];
       oppsByContact[opp.contact_id].push(opp);
     }
+    // Wave 39 (ADR 30) — homes are NOT stored on the contact record (a
+    // home can carry TWO contact_ids — ADR 30 D2), so membership is
+    // computed here the same way blinkerApi.homes.list({contact_id})
+    // does: filter on contact_ids inclusion, not equality.
+    const homesList = homes ? Object.values(homes) : [];
 
     return Object.values(contacts).map((c) => {
       const contactOpps = oppsByContact[c.id] || [];
@@ -209,12 +221,17 @@ export function AgentContacts({
         .filter(Boolean)
         .join(' ');
 
+      const contactHomes = homesList.filter(
+        (h) => Array.isArray(h.contact_ids) && h.contact_ids.includes(c.id),
+      );
+
       return {
         ...c,
         _opps: contactOpps,
         _refiOpp: refiOpp,
         _insOpp: insOpp,
         _vscOpp: vscOpp,
+        _homes: contactHomes,
         _vehicleCount: vehicles.length,
         _openOppCount: openOpps.length,
         _totalOppCount: contactOpps.length,
@@ -223,7 +240,7 @@ export function AgentContacts({
         _phonesDigits: phonesDigits,
       };
     });
-  }, [contacts, opportunities]);
+  }, [contacts, opportunities, homes]);
 
   // Schema — contact / vehicle / opportunity levels. Status enum is
   // grouped by opp type (Wave 26a fu1 Item 3); Payments group derived
@@ -246,6 +263,7 @@ export function AgentContacts({
       { groupLabel: 'Protection (VSC)', values: PROTECTION_STATUSES },
       { groupLabel: 'Refi', values: REFI_STATUSES },
       { groupLabel: 'Insurance', values: INSURANCE_STATUSES },
+      { groupLabel: 'Home Protection', values: HOME_PROTECTION_STATUSES },
     ];
     if (paymentsStatuses.length > 0) {
       statusGroups.push({ groupLabel: 'Payments', values: paymentsStatuses });
@@ -270,6 +288,11 @@ export function AgentContacts({
       { key: 'vehicle_model', label: 'Vehicle model', field: 'vehicle.model', type: 'text', level: 'vehicle' },
       { key: 'vehicle_trim', label: 'Vehicle trim', field: 'vehicle.trim', type: 'text', level: 'vehicle' },
       { key: 'vehicle_vin', label: 'Vehicle VIN', field: 'vehicle.vin', type: 'text', level: 'vehicle' },
+      // Home level — Wave 39 (ADR 30). Structural twin of the vehicle-
+      // level fields above; only square_feet is exposed for now (the
+      // filterable dimension that matters for dwelling-class eligibility
+      // triage), not the full home shape.
+      { key: 'home_square_feet', label: 'Home square feet', field: 'home.square_feet', type: 'number_range', level: 'home' },
       // Opportunity level
       { key: 'opp_type', label: 'Opportunity type', field: 'opportunity.type', type: 'enum', enumValues: TYPE_ENUM, level: 'opportunity' },
       {
@@ -285,6 +308,7 @@ export function AgentContacts({
             refi: 'Refi',
             insurance: 'Insurance',
             payments: 'Payments',
+            home_protection: 'Home Protection',
           };
           const wanted = new Set(
             selectedTypes.map((t) => TYPE_TO_GROUP_LABEL[t]).filter(Boolean),
@@ -332,6 +356,14 @@ export function AgentContacts({
       const rest = field.slice('vehicle.'.length);
       const vehicles = Array.isArray(row.vehicles) ? row.vehicles : [];
       return vehicles.map((v) => rest.split('.').reduce((acc, k) => (acc == null ? null : acc[k]), v));
+    }
+    // Wave 39 (ADR 30) — home level, structural twin of vehicle.* above.
+    // row._homes is precomputed in allRows (membership via contact_ids,
+    // not a stored contact.homes[] — ADR 30 D2).
+    if (field.startsWith('home.')) {
+      const rest = field.slice('home.'.length);
+      const homesForRow = Array.isArray(row._homes) ? row._homes : [];
+      return homesForRow.map((h) => rest.split('.').reduce((acc, k) => (acc == null ? null : acc[k]), h));
     }
     if (field.startsWith('opportunity.')) {
       const rest = field.slice('opportunity.'.length);

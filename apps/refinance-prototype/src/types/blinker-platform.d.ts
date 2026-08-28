@@ -84,6 +84,8 @@ declare module 'blinker-platform/components' {
     contactId?: string | null;
     opportunityId?: string | null;
     authorId?: string;
+    onLoadNotes?: () => Promise<unknown>;
+    onCreateNote?: (body: string) => Promise<unknown>;
     showTags?: boolean;
     selectedTagIds?: string[];
     onTagAdd?: (tagId: string) => void;
@@ -101,7 +103,13 @@ declare module 'blinker-platform/components' {
   export const JsonPeek: FC<{ label?: string; data?: object | null }>;
 
   // AddressBlock.jsx
-  export const AddressBlock: FC<{ form: object; update: (patch: object) => void }>;
+  export const AddressBlock: FC<{
+    form: object;
+    update: (patch: object) => void;
+    fieldNames?: Record<string, string>;
+    showAptSuite?: boolean;
+    labels?: Record<string, string>;
+  }>;
 
   // RelationshipPicker.jsx — stores label-as-id (id === label per prototype comment)
   export const RelationshipPicker: FC<{
@@ -135,9 +143,18 @@ declare module 'blinker-platform/utils' {
   export function estimateMileageFromAge(year: number): number;
   export function computeAnnualMileageEstimate(mileage: number, year: number): number;
   export const YEARS: number[];
-  export function getMakes(year: number): string[];
-  export function getModelsForYearMake(year: number, make: string): string[];
-  export function getTrimsForYearMakeModel(year: number, make: string, model: string): string[];
+  // Signatures match packages/utils/ymmt-data.js: getMakes takes no argument,
+  // and a falsy `year` means "no year filter" rather than an error.
+  export function getMakes(): string[];
+  export function getModelsForYearMake(
+    year: number | string | null | undefined,
+    make: string,
+  ): string[];
+  export function getTrimsForYearMakeModel(
+    year: number | string | null | undefined,
+    make: string,
+    model: string,
+  ): string[];
 }
 
 declare module 'blinker-platform/telemetry' {

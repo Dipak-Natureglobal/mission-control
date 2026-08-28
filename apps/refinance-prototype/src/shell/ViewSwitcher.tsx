@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { CustomerView } from '../views/customer/CustomerView';
 import { AgentView } from '../views/agent/AgentView';
-import type { ViewType, RefiForm, WizardDevOptions } from '../types';
+import type { ViewType, RefiForm, WizardDevOptions, StepChangeContext } from '../types';
 
 const PLACEHOLDERS = {
   partner: {
@@ -12,10 +12,17 @@ const PLACEHOLDERS = {
 
 export const VIEW_KEYS: ViewType[] = ['customer', 'agent', 'partner'];
 
-export function readViewFromUrl(defaultView: ViewType = 'customer'): ViewType {
+// Views an external user may reach via the ?view= URL param. customer and
+// partner are not in production use yet, so a direct ?view=customer or
+// ?view=partner is treated as unavailable and falls back to agent. Internal
+// DEV CONTROLS can still flip to any VIEW_KEYS entry for WIP preview (the
+// panel is hidden in production builds).
+export const URL_AVAILABLE_VIEWS: ViewType[] = ['agent'];
+
+export function readViewFromUrl(defaultView: ViewType = 'agent'): ViewType {
   if (typeof window === 'undefined') return defaultView;
   const v = new URLSearchParams(window.location.search).get('view');
-  return VIEW_KEYS.includes(v as ViewType) ? (v as ViewType) : defaultView;
+  return URL_AVAILABLE_VIEWS.includes(v as ViewType) ? (v as ViewType) : defaultView;
 }
 
 interface ViewSwitcherProps {
@@ -25,6 +32,16 @@ interface ViewSwitcherProps {
   updateForm: (updates: Partial<RefiForm>) => void;
   stepIdx: number;
   setStepIdx: (idx: number) => void;
+  // Canonical-ish contact derived from MissionControl redirect query
+  // params — seeds the agent capture-link gate's email/phone.
+  agentContact?: Record<string, unknown> | null;
+  // Fires when the wizard changes step — drives MC write-back per section.
+  beforeStepChange?: (ctx: StepChangeContext) => void;
+  // Agent-view notes: real-backend handlers + availability flag. Notes attach
+  // to the handed-off ProductPackage so MissionControl shows them.
+  notesEnabled?: boolean;
+  onLoadNotes?: () => Promise<import('../lib/blinkerWrite').NoteEntry[]>;
+  onCreateNote?: (body: string) => Promise<import('../lib/blinkerWrite').NoteEntry | null>;
 }
 
 const ViewSwitcher: FC<ViewSwitcherProps> = ({
@@ -34,6 +51,11 @@ const ViewSwitcher: FC<ViewSwitcherProps> = ({
   updateForm,
   stepIdx,
   setStepIdx,
+  agentContact,
+  beforeStepChange,
+  notesEnabled,
+  onLoadNotes,
+  onCreateNote,
 }) => {
   if (view === 'customer') {
     return (
@@ -45,6 +67,7 @@ const ViewSwitcher: FC<ViewSwitcherProps> = ({
         stepIdx={stepIdx}
         setStepIdx={setStepIdx}
         dev={devOptions}
+        beforeStepChange={beforeStepChange}
       />
     );
   }
@@ -59,6 +82,11 @@ const ViewSwitcher: FC<ViewSwitcherProps> = ({
         stepIdx={stepIdx}
         setStepIdx={setStepIdx}
         dev={devOptions}
+        contact={agentContact}
+        beforeStepChange={beforeStepChange}
+        notesEnabled={notesEnabled}
+        onLoadNotes={onLoadNotes}
+        onCreateNote={onCreateNote}
       />
     );
   }

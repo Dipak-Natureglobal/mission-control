@@ -18,7 +18,8 @@
 //   * `hasCoApp` is the resolved boolean — caller is expected to apply
 //     dev.coAppOverride before passing in (the prototype's
 //     `effectiveHasCoApp` derivation).
-//   * `includeSsn` defaults to true. SSN absence routes to Savings Group.
+//   * `includeSsn` defaults to true. SSN presence no longer changes routing;
+//     all non-disqualified applicants route to Gravity.
 //   * `disqualReason` is the fallback reason string when the result is
 //     forced to "disqualified" but no rule fires.
 //
@@ -54,15 +55,97 @@ import type {
 // (UI, copy variants) can render messaging without reaching into the monolith.
 export { DISQUAL_REASONS, DEFAULT_ORG_CONFIG, PARTNER_NAMES, ROUTING_PHONE };
 
+// Decision results that count as a "qualified" loan application — i.e. the
+// applicant can proceed to Stage 2 and we should fire the real refi API.
+// Everything else (disqualified / pending) is NOT qualified; those branches
+// route the consumer back to re-enter vehicle details instead.
+const QUALIFIED_RESULTS: DecisionResult[] = ['pre_approved', 'offers_returned', 'qualified'];
+
+/**
+ * isQualifiedDecision — true when the (locally-computed) decision is a
+ * qualifying outcome. Pure check on decision.result; no API call. Callers
+ * use this to gate whether "Continue to Stage 2" fires the refi API.
+ */
+export function isQualifiedDecision(decision: Decision | null | undefined): boolean {
+  return !!decision && QUALIFIED_RESULTS.includes(decision.result);
+}
+
+// Disqualification reason → the wizard step whose data caused the failure.
+// Drives the disqualified-branch CTA on the decision_engine screen so the user
+// is sent straight to the screen they need to fix, instead of back to step 0.
+// Keys match runDecision()'s `reason` codes; values match getSequence() keys.
+export const DISQUAL_REASON_TO_STEP: Record<string, ScreenKey> = {
+  // Identity / consent (entered on s1_identity_consent)
+  under_18:                  's1_identity_consent',
+  no_consent:               's1_identity_consent',
+  ssn_required_for_partner: 's1_identity_consent',
+  // Vehicle
+  vehicle_too_old:          'vehicle_add',
+  mileage_too_high:         'vehicle_drive',
+  // Ownership
+  ownership_ineligible:     's1_ownership',
+  // Current loan / payoff / LTV (all editable on the auto-loan snapshot)
+  payoff_below_min:         's1_auto_loan',
+  payoff_out_of_range:      's1_auto_loan',
+  ltv_too_high:             's1_auto_loan',
+  // Credit
+  credit_out_of_range:      's1_credit',
+  // Poor credit + no co-applicant → add a co-applicant
+  credit_requires_coapp:    's1_co_app_decision',
+  // Employment / income
+  income_below_min:         's1_employment',
+  income_out_of_range:      's1_employment',
+  employment_and_credit:    's1_employment',
+};
+
+// Button copy per destination step — describes what the user goes to fix.
+const STEP_FIX_LABEL: Partial<Record<ScreenKey, string>> = {
+  vehicle_add:          'Update vehicle details',
+  vehicle_drive:        'Update mileage',
+  s1_ownership:         'Update ownership status',
+  s1_auto_loan:         'Update loan & payoff',
+  s1_credit:            'Update credit details',
+  s1_co_app_decision:   'Add a co-applicant',
+  s1_housing:           'Update address',
+  s1_employment:        'Update employment & income',
+  s1_identity_consent:  'Update identity & consent',
+};
+
+/**
+ * disqualStepTarget — for a disqualified decision, the step to send the user to
+ * and the CTA label to show. Returns null for non-disqualified decisions so the
+ * qualified "Continue to Stage 2" path is untouched. Unknown reasons fall back
+ * to vehicle_add (the original "re-enter vehicle details" behavior).
+ */
+export function disqualStepTarget(
+  decision: Decision | null | undefined
+): { step: ScreenKey; label: string } | null {
+  if (!decision || decision.result !== 'disqualified') return null;
+  const step = (decision.reason && DISQUAL_REASON_TO_STEP[decision.reason]) || 'vehicle_add';
+  return { step, label: STEP_FIX_LABEL[step] ?? 'Re-enter vehicle details' };
+}
+
 /**
  * getSequence — return the ordered Stage-1 step keys for the refi wizard.
+ *
+ * `opts.includeCoAppDecision` re-inserts the s1_co_app_decision step (the
+ * "do you have a co-applicant?" yes/no gate). The agent flow turns this on so
+ * the agent can capture co-applicant data; the customer/partner flows leave it
+ * off for now (co-app there is dev-override only). When on AND the user answered
+ * yes (hasCoApp), the co-app contact + employment screens follow the decision.
  */
-export function getSequence(form: RefiForm, hasCoApp: boolean): ScreenKey[] {
+export function getSequence(
+  form: RefiForm,
+  hasCoApp: boolean,
+  opts: { includeCoAppDecision?: boolean } = {}
+): ScreenKey[] {
   const isPoor = form.creditBand === '300_579';
+  const coAppDecision = opts.includeCoAppDecision ? ['s1_co_app_decision'] : [];
   const coAppDetails = hasCoApp ? ['s1_co_app_contact', 's1_co_app_employment'] : [];
+  const coAppCluster = [...coAppDecision, ...coAppDetails];
   const middle = isPoor
-    ? ['s1_co_app_decision', ...coAppDetails, 's1_applicant', 's1_housing', 's1_employment']
-    : ['s1_applicant', 's1_housing', 's1_employment', 's1_co_app_decision', ...coAppDetails];
+    ? [...coAppCluster, 's1_applicant', 's1_housing', 's1_employment']
+    : ['s1_applicant', 's1_housing', 's1_employment', ...coAppCluster];
   return [
     'vehicle_add',
     'vehicle_drive',
@@ -130,17 +213,12 @@ export function runDecision({
       form.mileage !== undefined
     ) {
       const mileageNum = Number(form.mileage);
-      const mileageOk = mileageNum <= cfg.maxMileage;
+      // Odometer no longer disqualifies — logged for visibility only.
       log.push({
         step: 'Check odometer',
-        ok: mileageOk,
+        ok: true,
         detail: `${mileageNum.toLocaleString()} mi · max ${cfg.maxMileage.toLocaleString()}`,
       });
-      if (!mileageOk) {
-        partner = 'none';
-        result = 'disqualified';
-        reason = 'mileage_too_high';
-      }
     }
 
     if (partner === 'auto' && form.ownership) {
@@ -250,16 +328,12 @@ export function runDecision({
     }
 
     if (partner === 'auto') {
+      // Primary consent no longer disqualifies — logged for visibility only.
       log.push({
         step: 'Check primary consent',
-        ok: form.consentConfirmed,
+        ok: true,
         detail: form.consentConfirmed ? 'Primary consent present' : 'Primary consent missing',
       });
-      if (!form.consentConfirmed) {
-        partner = 'none';
-        result = 'disqualified';
-        reason = 'no_consent';
-      }
     }
 
     if (partner === 'auto' && hasCoApp) {
@@ -275,8 +349,8 @@ export function runDecision({
     if (partner === 'auto') {
       log.push({
         step: 'Check SSN',
-        ok: includeSsn,
-        detail: includeSsn ? 'SSN present' : 'SSN absent — Gravity ineligible',
+        ok: true,
+        detail: includeSsn ? 'SSN present' : 'SSN absent',
       });
     }
 
@@ -291,21 +365,11 @@ export function runDecision({
         result = 'disqualified';
         reason = 'credit_out_of_range';
         log.push({ step: 'Evaluate credit band', ok: false, detail: 'Below all partner minimums' });
-      } else if (!includeSsn) {
-        partner = 'savings_group';
-        result = 'offers_returned';
-        ruleId = 'sg_ga_580plus';
-        log.push({ step: 'Fallback to Savings Group', ok: true, detail: 'SG supports no-SSN prequal' });
-      } else if (form.creditBand === '580_669') {
-        partner = 'savings_group';
-        result = 'offers_returned';
-        ruleId = 'sg_ga_580plus';
-        log.push({ step: 'Route to Savings Group', ok: true, detail: '580-669 band → SG priority' });
       } else {
         partner = 'gravity';
         result = 'pre_approved';
         ruleId = 'gravity_general';
-        log.push({ step: 'Route to Gravity', ok: true, detail: '670+ band → Gravity priority' });
+        log.push({ step: 'Route to Gravity', ok: true, detail: '580+ band → Gravity' });
       }
     }
   } else if (partner !== 'auto' && result === 'auto') {

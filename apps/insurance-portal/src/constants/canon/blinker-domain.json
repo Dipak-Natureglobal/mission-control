@@ -124,11 +124,44 @@
     ]
   },
   "opportunity": {
-    "_TODO": "Stub. Promote mission-control/src/fixtures/opportunities.json shape into here. Cross-cuts all 4 workflow types (protection / refi / insurance / payments). Common fields likely: { id, contact_id, workflow_type, status (canon machine_id), status_changed_at, owner_id, age_days (derived), next_action, workflow_specific: object }. Workflow-specific payloads stay in their own workflow blocks."
+    "_TODO": "Stub. Promote mission-control/src/fixtures/opportunities.json shape into here. Cross-cuts all 4 workflow types (protection / refi / insurance / payments). Common fields likely: { id, contact_id, workflow_type, status (canon machine_id), status_changed_at, owner_id, age_days (derived), next_action, workflow_specific: object }. Workflow-specific payloads stay in their own workflow blocks. Wave 39 (ADR 30) adds workflow_type 'home_protection' and a home_id reference pointing at the `home` block below."
   },
   "vehicle":     {
     "_TODO": "Stub. Today denormalized inside contact and opportunity. Canonicalize when first cross-app vehicle-detail screen ships. Common fields likely: { id, contact_id, year, make, model, trim, vin, mileage, style, ownership, value, payoff, source: 'vin_decode'|'manual'|'partner', source_recorded_at, ymmt_decoded_payload: object?, vin_decoded_payload: object? }.",
     "_first_field_to_land": "annual_mileage_estimate — integer (miles/year). Computed by packages/utils/mileageEstimator.js::computeAnnualMileageEstimate; persisted on form.vehicle.annual_mileage_estimate by protection-portal VehicleDrive.jsx after condition + purchaseDate are captured. Source for Wave 19 Task 1; first concrete field in the vehicle shape. All other vehicle fields wait for the vehicle-detail screen per STATUS.md 'wait for the consumer' rule."
+  },
+  "home": {
+    "_principle": "Canonical Blinker home shape. FIRST-CLASS entity, sibling to `vehicle` (ADR 30 D1) — a home is durable and re-quotable: it survives the opportunity that captured it, can be re-rated at renewal, and can carry more than one agreement over its life. Unlike a vehicle, which hangs off a single contact's vehicles[], a home attaches to a HOUSEHOLD and to MULTIPLE contacts, because the Omega home agreement has two agreement-holder slots (ADR 30 D2).",
+    "_produced_by": "Phase 1: packages/api/_fixtures/homes.json + the home-protection-portal HomeAdd step (source: 'manual'). Phase 2: blinkerApi.homes.create / list.",
+    "_consumers": [
+      "home-protection-portal/src/views/customer/HomeAdd.jsx",
+      "mission-control ContactProfile Homes section",
+      "mission-control CoPilotPane left-rail Home card",
+      "packages/integrations/signing/docuseal.js (covered-property address + dwelling checkbox)"
+    ],
+    "shape": {
+      "id":                 "string — 'home_' prefixed.",
+      "org_id":             "number — canonical Org ID per org-registry.json.",
+      "household_id":       "string? — household this home belongs to.",
+      "contact_ids":        "Array<string> — one or more contacts on the agreement. Order is NOT significant; primary_contact_id names the first holder. The Omega home agreement has two holder slots.",
+      "primary_contact_id": "string — MUST appear in contact_ids.",
+      "home_type":          "'single_family' | 'townhome' | 'condominium' — see plan-mappings.json#home_dwelling_classes.home_types.",
+      "address":            "{ address1, address2, city, state, zip, zip4, country } — the COVERED PROPERTY address. DISTINCT from the agreement holder's mailing address, which lives on the contact. The DocuSeal templates keep these in separate field sets (Property* vs the bare names) — see ADR 30 R5.",
+      "year_built":         "integer — four-digit year. Captured for the agreement and for agent context; NOT an input to GetRates.",
+      "square_feet":        "integer — heated/finished square footage. Drives dwelling_class; NOT an input to GetRates.",
+      "purchase_price":     "number? — dollars. Captured for parity with the legacy Add Home screen; not an input to rating.",
+      "disposition":        "string? — free-form, carried from the legacy Add Home screen.",
+      "source":             "'manual' — the only Phase 1 path. No VIN-decode analog exists for a home.",
+      "created_at":         "string — ISO 8601.",
+      "updated_at":         "string — ISO 8601."
+    },
+    "_derived": {
+      "dwelling_class": "string|null — computed by packages/utils/dwelling-class.js#classifyDwelling from (home_type, square_feet) against plan-mappings.json#home_dwelling_classes. null means INELIGIBLE (no dwelling checkbox exists on the agreement for that combination), NOT 'unknown' — the wizard blocks rather than quoting. See ADR 30 R2."
+    },
+    "_open_questions": [
+      "contact_ids has no Phase-1 persistence target for the holder RELATIONSHIP (who is spouse vs co-owner) — same gap ADR 27 left for buildHouseholdRelationship. ADR 30 R3.",
+      "Does a home ever move between households (sale)? Today the record is per-org and per-household with no transfer path."
+    ]
   },
   "note": {
     "_principle": "Free-form annotation an agent (or rarely manager/admin) writes about a contact, optionally scoped to a specific opportunity. Distinct from `activity` records: a note is the *content* the human wrote; the activity feed gets a corresponding `type: 'note'` activity entry whose payload links back to the note via note_id. ContactProfile renders notes in their own panel; the activity feed shows note-creation as one event among others. Notes are append-mostly — edits are allowed within a soft-edit window (TBD) and tracked via edited_at; deletes are soft (not yet modeled here, lands when first delete UI ships).",
@@ -178,7 +211,7 @@
       "call":            "{ duration_seconds?: number, direction: 'inbound'|'outbound', recording_url?: string } — outcome and disposition belong here when call-tracking integration lands.",
       "sms":             "{ direction: 'inbound'|'outbound', content_preview?: string } — content_preview is the first 80 chars of the message body, redacted for PII as needed. Full body lives in the messaging system, not on the activity record.",
       "email":           "{ direction: 'inbound'|'outbound', content_preview?: string } — content_preview is subject + first 80 chars of body. Same redaction rules as sms.",
-      "status_change":   "{ from_status: string, to_status: string, workflow_type: 'protection'|'refi'|'insurance'|'payments' } — status values are canon machine_ids per ghl-status.json. workflow_type lets cross-workflow feeds disambiguate without joining to opportunity.",
+      "status_change":   "{ from_status: string, to_status: string, workflow_type: 'protection'|'refi'|'insurance'|'payments'|'home_protection' } — status values are canon machine_ids per ghl-status.json. workflow_type lets cross-workflow feeds disambiguate without joining to opportunity.",
       "note":            "{ note_id: string } — FK back to the corresponding note record. The note's body lives in the note entity; the activity is just the timeline marker.",
       "agent_action":    "{ action_name: string, target_id?: string, target_type?: string } — action_name is a stable verb ('lead_captured', 'tag_added', 'household_clustered', 'opportunity_created'). target_id + target_type identify the affected entity for actions that mutate something (e.g., target_type: 'tag', target_id: tag.id).",
       "consumer_action": "{ action_name: string, screen_key?: string } — consumer-side analog. screen_key is the customer-view step where the action occurred (e.g., 'recommended_coverage', 'capture_contact').",

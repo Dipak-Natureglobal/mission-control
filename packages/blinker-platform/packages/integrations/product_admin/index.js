@@ -101,4 +101,28 @@ export async function getRates(input, { orgId, signal } = {}) {
   });
 }
 
-export default { getRates, selectProvider };
+/**
+ * Get product rates for a HOME — ADR 30. Same resolution and no-provider
+ * contract as getRates; the provider decides how to address its home line.
+ * A provider that does not implement home rating returns no_provider rather
+ * than silently falling back to the vehicle path.
+ */
+export async function getRatesForHome(input, { orgId, signal } = {}) {
+  const resolved = selectProvider(orgId);
+  if (!resolved || typeof resolved.provider.getRatesForHome !== 'function') {
+    return {
+      status: 'no_provider',
+      reason: resolved ? 'provider_lacks_home_rating' : 'no_provider_configured',
+      plan_rates: [],
+      products: [],
+    };
+  }
+  return resolved.provider.getRatesForHome(input, {
+    credentials: resolved.credentials,
+    testMode: resolved.testMode,
+    orgId,
+    signal,
+  });
+}
+
+export default { getRates, getRatesForHome, selectProvider };

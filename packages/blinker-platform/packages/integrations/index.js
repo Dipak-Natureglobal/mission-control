@@ -71,6 +71,20 @@
 //       for sandbox testing (Wave 24). See packages/integrations/payment/_TODO.md
 //       and architecture/09-protection-billing-config.md.
 //
+//   import { getRatesForHome } from 'blinker-platform/integrations/product_admin';
+//     ↳ Omega-J Home 2024 rate quotes (Wave 39, ADR 30). Separate entry point
+//       from getRates because a home has no new/used axis — one call, no
+//       vehicle-class fan-out.
+//
+//   import { resolveTemplateId, buildHomeSubmissionFields, createSubmission }
+//     from 'blinker-platform/integrations/signing';
+//     ↳ DocuSeal e-signature (Wave 39, ADR 30 D8). The platform's first real
+//       signing client. Template id resolves through
+//       packages/utils/plan-presentation.js#resolvePlanPresentation.
+//       buildHomeSubmissionFields emits the home agreement's full field map —
+//       twelve add-on checkboxes and five dwelling checkboxes are ALWAYS
+//       emitted explicitly, never omitted.
+//
 //   (email_verification + sms_lookup land separately in Wave 15d when
 //   NeverBounce + Twilio Lookup ship.)
 

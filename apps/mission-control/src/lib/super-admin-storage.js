@@ -230,6 +230,33 @@ export const DEFAULT_PROTECTION = {
   validation_discount_max: 0,
 };
 
+// Wave 39 (ADR 30 D9) — home protection billing defaults. Structural twin
+// of DEFAULT_PROTECTION, but a SEPARATE block (not merged into it) — a
+// different product line with different margins, different discount caps,
+// and no monthly_membership by_plan_code table (home's monthly-vs-fixed-
+// term split is two flat markup numbers, not a per-plan-code override map).
+//
+// These numbers are placeholders seeded from canon's home_protection_billing
+// block, which itself carries an explicit `_TODO` flagging them as
+// educated guesses pending product confirmation (feedback_canon_todo_defaults).
+// HomeProtection.jsx renders a visible "Unconfirmed" warning banner
+// whenever the merged form carries that `_TODO` string — see
+// withConfigDefaults below, which spreads org.home_protection_billing
+// (including its `_TODO`/`_comment` keys) into the editor shape verbatim.
+export const DEFAULT_HOME_PROTECTION = {
+  enabled: false,
+  markup: {
+    fixed_term_dollars: 300,
+    florida_fixed_term_dollars: 285,
+    monthly_dollars: 10,
+    florida_monthly_dollars: 9,
+  },
+  discount: { max_percent: 15, max_dollars: 150, disabled_in_states: ['FL'] },
+  down_payment: { default_percent: 10, min_percent: 10, max_percent_of_total: 75 },
+  payment_term: { options_months: [1, 6, 12], default_months: 12 },
+  first_payment_date: { default_strategy: 'first_of_next_month', min_days_from_today: 31, max_days_from_today: 45 },
+};
+
 export const DEFAULT_PAYMENTS = {
   primary_processor: 'fluidpay',
   lienholder_default: 'EFS',
@@ -271,6 +298,8 @@ export function addOrg(org) {
       refinance: { ...DEFAULT_REFI },
       insurance: { ...DEFAULT_INSURANCE },
       protection: JSON.parse(JSON.stringify(DEFAULT_PROTECTION)),
+      // Wave 39 (ADR 30) — home protection editor block.
+      home_protection: JSON.parse(JSON.stringify(DEFAULT_HOME_PROTECTION)),
     },
     payments: { ...DEFAULT_PAYMENTS },
     ...org,
@@ -295,6 +324,22 @@ export function withConfigDefaults(org) {
     // into the new opportunities.protection editor.
     ...(org.protection_billing || {}),
   };
+  // Wave 39 (ADR 30) — same merge shape as protection above, but reading
+  // org.home_protection_billing (a SEPARATE canon block, never merged into
+  // protection_billing). Spreading org.home_protection_billing verbatim
+  // also carries its `_TODO`/`_comment` keys into the editor form, which
+  // HomeProtection.jsx reads to decide whether to render the "Unconfirmed"
+  // warning banner.
+  const homeProt = org.opportunities?.home_protection || {};
+  const homeProtectionMerged = {
+    ...JSON.parse(JSON.stringify(DEFAULT_HOME_PROTECTION)),
+    // home_protection_billing carries its OWN (slightly redundant) `enabled`
+    // key alongside the margin numbers; spread it BEFORE opportunities.
+    // home_protection so the latter — the authoritative per-org capability
+    // toggle (ADR 30 D9) — always wins the `enabled` field.
+    ...(org.home_protection_billing || {}),
+    ...homeProt,
+  };
   return {
     ...org,
     system: { ...DEFAULT_SYSTEM, ...(org.system || {}) },
@@ -316,6 +361,8 @@ export function withConfigDefaults(org) {
         ...(org.opportunities?.insurance || {}),
       },
       protection: protectionMerged,
+      // Wave 39 (ADR 30).
+      home_protection: homeProtectionMerged,
     },
     payments: { ...DEFAULT_PAYMENTS, ...(org.payments || {}) },
   };

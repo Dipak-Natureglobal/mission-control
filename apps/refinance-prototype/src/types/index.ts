@@ -28,9 +28,15 @@ export type {
 } from './wizard';
 export type {
     VinDecodeResult,
+    VehicleTrimCandidate,
+    VehicleTrimLookupResult,
+    VehicleSearchOption,
+    VehicleSearchOptionsResult,
+    PackageStatusResult,
     ValuationResult,
     ZipLookupResult,
     StreetPrediction,
     GooglePlacesSuggestion,
 } from './api';
 export type { VehicleData, ValuationData, YMMTData } from './vehicle';
+export type { BlinkerToken, BlinkerUser, SharedSession } from './session';

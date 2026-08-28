@@ -45,6 +45,11 @@ export interface RefiForm {
   make: string;
   model: string;
   trim: string;
+  // blinker VehicleTrim id behind `trim`. Submitted with the vehicle so the
+  // importer resolves the trim by id instead of by year/make/model string
+  // match. null whenever the label has no id: the "I don't know" / "Other"
+  // sentinels, decode-injected extras, and the no-token fixture path.
+  trim_id?: number | null;
   mileage: number;
   condition: string;
   // Internal UI state — YMMT picker + VIN decode tracking (not submitted)
@@ -52,6 +57,16 @@ export interface RefiForm {
   extraMakes: string[];
   extraModels: string[];
   extraTrims: string[];
+  // Candidate trim labels from blinker's vehicle_by_vin. Non-empty restricts
+  // the trim picker to exactly these; empty means no restriction.
+  trimCandidates: string[];
+  // trim_id for each label in trimCandidates. vehicle_by_vin returns ids
+  // (utils/api.ts fetchVehicleTrimsByVin) but the picker is label-keyed, so
+  // the mapping is kept alongside rather than folded into the label list —
+  // MC keeps the same pairing as `allowedTrimIds` + its options cache
+  // (plateVinForm.tsx:270-306).
+  trimCandidateIds?: Record<string, number>;
+  trimLookupLoading: boolean;
   _lastDecodedVin?: string;
   vehicle?: Record<string, unknown>;
   // Applicant primary
@@ -82,6 +97,7 @@ export interface RefiForm {
   coAppConsent: boolean;
   // Housing
   address: string;
+  apt_suite: string;
   city: string;
   state: string;
   zip: string;

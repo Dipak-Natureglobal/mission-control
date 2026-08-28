@@ -104,6 +104,9 @@ function digitsOnly(s) {
 const PROTECTION_STATUSES = Object.keys(ghlStatus.vsc?.statuses || {});
 const INSURANCE_STATUSES = Object.keys(ghlStatus.insurance?.statuses || {});
 const REFI_STATUSES = Array.from(ghlStatus.refi?.statuses_summary || []);
+// Wave 39 (ADR 30) — home protection's canon block has the same
+// `statuses` map shape as vsc/insurance.
+const HOME_PROTECTION_STATUSES = Object.keys(ghlStatus.home_protection?.statuses || {});
 
 // Wave 26a fu3: Organization enum is restricted to orgs the logged-in
 // agent has an association with (stub returns all canon-active orgs
@@ -175,6 +178,12 @@ export function AgentInbox({
     patchContact,
     appendContact,
     appendHouseholdRelationship,
+    // Wave 39 (ADR 30) — home analogs, threaded through to CoPilotPane
+    // (Home card resolution + onHomeCommitted wire-back) and
+    // ContactProfile (Homes section).
+    homes,
+    appendHomeToContact,
+    dedupAndUpsertHome,
   } = session || localSession;
 
   // Task 1A: default sort = age ASC (smallest age = newest first).
@@ -274,6 +283,7 @@ export function AgentInbox({
       { groupLabel: 'Protection (VSC)', values: PROTECTION_STATUSES },
       { groupLabel: 'Refi', values: REFI_STATUSES },
       { groupLabel: 'Insurance', values: INSURANCE_STATUSES },
+      { groupLabel: 'Home Protection', values: HOME_PROTECTION_STATUSES },
     ];
     if (paymentsStatuses.length > 0) {
       STATUS_GROUPS.push({ groupLabel: 'Payments', values: paymentsStatuses });
@@ -309,6 +319,7 @@ export function AgentInbox({
             refi: 'Refi',
             insurance: 'Insurance',
             payments: 'Payments',
+            home_protection: 'Home Protection',
           };
           const wanted = TYPE_TO_GROUP_LABEL[effectiveType];
           return STATUS_GROUPS.filter((g) => g.groupLabel === wanted);
@@ -554,6 +565,8 @@ export function AgentInbox({
         appendVehicleToContact={appendVehicleToContact}
         updateContactVehicle={updateContactVehicle}
         dedupAndUpsertVehicle={dedupAndUpsertVehicle}
+        homes={homes}
+        dedupAndUpsertHome={dedupAndUpsertHome}
         updateOpportunity={updateOpportunity}
         onClose={closeRight}
         onOpenContactProfile={() => openProfile(selectedOpp.contact_id)}
@@ -580,6 +593,8 @@ export function AgentInbox({
         patchContact={patchContact}
         appendContact={appendContact}
         appendHouseholdRelationship={appendHouseholdRelationship}
+        homes={homes}
+        appendHomeToContact={appendHomeToContact}
         persona={persona}
         onClose={closeRight}
         onOpenInCoPilot={openCoPilot}
@@ -651,6 +666,7 @@ export function AgentInbox({
               <option value="refi">Refi</option>
               <option value="insurance">Insurance</option>
               <option value="payments">Payments</option>
+              <option value="home_protection">Home protection</option>
             </select>
           </div>
           <button

@@ -31,6 +31,154 @@
     }
   },
 
+  "home_protection": {
+    "_label": "Home Protection Plan",
+    "_pipelines": ["Home - Prospects", "Home - Onboarding", "Home - Clients"],
+    "_source": "ADR 30 — cloned from the `vsc` block. The status ladder is identical: the home workflow differs in its wizard steps (no VIN validation, no rates-changed), not in its CRM lifecycle. `actor` is stamped per ADR 27 D7 and is distinct from `role` (persona visibility): agent originates and sends; consumer reviews, pays and signs; system handles remittance and the post-sale lifecycle.",
+    "statuses": {
+      "Empty": {
+          "crm_stage": "New Lead",
+          "pipeline": "Prospects",
+          "role": "agent",
+          "actor": "agent",
+          "description": "A new application was started, however the home and customer information was not complete enough to generate a quote."
+        },
+      "Quoted": {
+          "crm_stage": "Quoted",
+          "pipeline": "Prospects",
+          "role": "agent",
+          "actor": "agent",
+          "description": "Agent entered home and customer info to generate quotes; product package created with default plan selected."
+        },
+      "Quoted - No Results": {
+          "crm_stage": "Quoted",
+          "pipeline": "Prospects",
+          "role": "agent",
+          "actor": "agent",
+          "description": "Sub-status of Quoted. No plans returned."
+        },
+      "Selected": {
+          "crm_stage": "Working",
+          "pipeline": "Prospects",
+          "role": "agent",
+          "actor": "agent",
+          "description": "Agent reviewed, saved, and selected home protection plan quote(s); consumer sent package for review."
+        },
+      "Sent to Consumer": {
+          "crm_stage": "Working",
+          "pipeline": "Prospects",
+          "role": "agent",
+          "actor": "agent",
+          "description": "Agent sent consumer agreement and payment workflow."
+        },
+      "Consumer Reviewed": {
+          "crm_stage": "Working",
+          "pipeline": "Prospects",
+          "role": "consumer",
+          "actor": "consumer",
+          "description": "Consumer clicked on the link and visited the coverage / payment / price page."
+        },
+      "Booked": {
+          "crm_stage": "Working",
+          "pipeline": "Prospects",
+          "role": "agent_consumer",
+          "actor": "consumer",
+          "description": "Customer confirmed selected plan. Awaiting signature and billing information."
+        },
+      "Payment Failed": {
+          "crm_stage": "Lost",
+          "pipeline": "Prospects",
+          "role": "agent_consumer",
+          "actor": "consumer",
+          "description": "Consumer failed to make payment."
+        },
+      "Payment Success": {
+          "crm_stage": "Payment Success",
+          "pipeline": "Prospects",
+          "role": "agent_consumer",
+          "actor": "consumer",
+          "description": "Consumer made successful payment."
+        },
+      "Product Agreement Signed": {
+          "crm_stage": "Won",
+          "pipeline": "Prospects",
+          "role": "agent_consumer",
+          "actor": "consumer",
+          "description": "Consumer signed product agreement."
+        },
+      "Payment Agreement Signed": {
+          "crm_stage": "Won",
+          "pipeline": "Prospects",
+          "role": "agent_consumer",
+          "actor": "consumer",
+          "description": "Consumer signed payment agreement."
+        },
+      "Agreement Signed": {
+          "crm_stage": "Won",
+          "pipeline": "Prospects",
+          "role": "agent_consumer",
+          "actor": "consumer",
+          "description": "Consumer signed all required agreements."
+        },
+      "Remitted - Product Error": {
+          "crm_stage": "Won",
+          "pipeline": "Prospects",
+          "role": "system",
+          "actor": "system",
+          "description": "Sub-status of Remitted: error remitting to Product Provider."
+        },
+      "Remitted - Payment Error": {
+          "crm_stage": "Won",
+          "pipeline": "Prospects",
+          "role": "system",
+          "actor": "system",
+          "description": "Sub-status of Remitted: error remitting to Payment Provider."
+        },
+      "Remitted - Both Error": {
+          "crm_stage": "Won",
+          "pipeline": "Prospects",
+          "role": "system",
+          "actor": "system",
+          "description": "Sub-status of Remitted: errors at both providers."
+        },
+      "Remitted": {
+          "crm_stage": "Won",
+          "pipeline": "Onboarding",
+          "role": "system",
+          "actor": "system",
+          "description": "System has remitted the agreement to the provider for activation."
+        },
+      "Active": {
+          "crm_stage": "Active",
+          "pipeline": "Clients",
+          "role": "system",
+          "actor": "system",
+          "description": "Consumer making payments with active agreement."
+        },
+      "Paid in Full": {
+          "crm_stage": "Paid in Full",
+          "pipeline": "Clients",
+          "role": "system",
+          "actor": "system",
+          "description": "Consumer paid in full or completed all payments."
+        },
+      "Pending Cancellation": {
+          "crm_stage": "Pending",
+          "pipeline": "Clients",
+          "role": "system",
+          "actor": "system",
+          "description": "Recurring payment failed; pending cancellation if not corrected."
+        },
+      "Cancelled": {
+          "crm_stage": "Cancelled",
+          "pipeline": "Clients",
+          "role": "system",
+          "actor": "system",
+          "description": "Protection product cancelled."
+        }
+    }
+  },
+
   "refi": {
     "_label": "Refinance",
     "_pipelines": ["REFI - Prospects"],

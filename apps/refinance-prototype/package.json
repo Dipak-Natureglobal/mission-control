@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 30005",
+    "stage": "vite --port 5179 --mode staging",
     "build": "vite build",
+    "build:stage": "vite build --mode staging",
     "lint": "eslint .",
-    "preview": "vite preview --port 30005"
+    "preview": "vite preview --port 30005",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "blinker-platform": "workspace:*",
@@ -18,19 +22,24 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
     "@vitejs/plugin-react-swc": "^4.0.0",
-    "typescript-eslint": "^8.39.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "jsdom": "^29.1.1",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "typescript": "~5.8.3",
-    "vite": "^8.0.4"
+    "typescript-eslint": "^8.39.1",
+    "vite": "^8.0.4",
+    "vitest": "^3.2.6"
   }
 }

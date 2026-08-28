@@ -344,12 +344,22 @@ function AddPlanModal({ onClose, onSubmit }) {
   const [tpa, setTpa] = useState('');
   const [ptc, setPtc] = useState('VSC');
   const [plan, setPlan] = useState('');
+  // Wave 39 (ADR 30) — asset_kind is a real field on every catalog entry
+  // now (canon plan-mappings.json#plan_catalog backfilled it on the 17
+  // existing auto entries and stamped it on the 6 new home entries), so a
+  // manually-added override needs to declare which asset it rates.
+  const [assetKind, setAssetKind] = useState('vehicle');
 
   function submit(e) {
     e.preventDefault();
     if (!tpa.trim() || !plan.trim()) return;
     const key = `${tpa.trim()}::${ptc.trim() || 'VSC'}::${plan.trim()}`;
-    onSubmit(key, { tpa_code: tpa.trim(), product_type_code: ptc.trim() || 'VSC', plan_code: plan.trim() });
+    onSubmit(key, {
+      tpa_code: tpa.trim(),
+      product_type_code: ptc.trim() || 'VSC',
+      plan_code: plan.trim(),
+      asset_kind: assetKind,
+    });
     onClose();
   }
 
@@ -393,6 +403,17 @@ function AddPlanModal({ onClose, onSubmit }) {
               required
               className="w-full text-xs border border-slate-200 rounded px-2.5 py-1.5 bg-white focus:outline-none focus:border-violet-500 font-mono"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Asset kind</label>
+            <select
+              value={assetKind}
+              onChange={(e) => setAssetKind(e.target.value)}
+              className="w-full text-xs border border-slate-200 rounded px-2.5 py-1.5 bg-white focus:outline-none focus:border-violet-500"
+            >
+              <option value="vehicle">Vehicle</option>
+              <option value="home">Home</option>
+            </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button
@@ -580,6 +601,24 @@ function PlanRow({ rowKey, entry, orgOverride, isSuper, onUpdateOverride, onRese
           </span>
         )}
       </td>
+      {/* Wave 39 (ADR 30) — read-only asset_kind column. Canon-driven, not
+          editable per-row: a plan's asset kind is a property of the rater
+          response (which product line the TpaCode/ProductTypeCode/PlanCode
+          triple came from), not something an org override should be able
+          to flip. Missing on org-only rows added before this wave defaults
+          to 'vehicle' for display (matches the canon backfill default). */}
+      <td className="px-3 py-2 text-xs">
+        <span
+          className={
+            'inline-flex text-[9px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap ' +
+            ((ovr.asset_kind || base.asset_kind) === 'home'
+              ? 'bg-teal-50 text-teal-700 border-teal-200'
+              : 'bg-indigo-50 text-indigo-700 border-indigo-200')
+          }
+        >
+          {(ovr.asset_kind || base.asset_kind) === 'home' ? 'Home' : 'Vehicle'}
+        </span>
+      </td>
       <td className="px-3 py-2">
         <select
           value={localLevel}
@@ -713,6 +752,8 @@ function PlansTab({ org, persona }) {
   const [htmlDrawer, setHtmlDrawer] = useState(null); // { key, html }
   // Add plan modal
   const [showAddModal, setShowAddModal] = useState(false);
+  // Wave 39 (ADR 30) — asset-kind filter over the Plans table.
+  const [assetFilter, setAssetFilter] = useState('all'); // 'all' | 'vehicle' | 'home'
 
   function updateOverride(key, newEntry) {
     setLocalOrg((prev) => ({
@@ -746,6 +787,17 @@ function PlansTab({ org, persona }) {
   }
 
   const overrideCount = Object.keys(orgOverrides).length;
+
+  // Wave 39 (ADR 30) — asset-kind-filtered key list. Rows with no catalog
+  // entry (org-only overrides) default to 'vehicle' for filtering purposes,
+  // matching the canon backfill default + the PlanRow display fallback.
+  const filteredKeys = useMemo(() => {
+    if (assetFilter === 'all') return allKeys;
+    return allKeys.filter((key) => {
+      const kind = orgOverrides[key]?.asset_kind || catalogMap[key]?.asset_kind || 'vehicle';
+      return kind === assetFilter;
+    });
+  }, [allKeys, assetFilter, orgOverrides, catalogMap]);
 
   if (allKeys.length === 0) {
     return (
@@ -781,21 +833,33 @@ function PlansTab({ org, persona }) {
         <div className="text-[11px] text-slate-500">
           {catalogEntries.length} catalogued · {overrideCount} this-org override{overrideCount !== 1 ? 's' : ''}
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded border border-violet-300 bg-violet-50 hover:bg-violet-100 text-violet-700"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Add plan
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Wave 39 (ADR 30) — Vehicle/Home/All asset-kind filter. */}
+          <select
+            value={assetFilter}
+            onChange={(e) => setAssetFilter(e.target.value)}
+            className="text-xs border border-slate-200 rounded px-2 py-1.5 bg-white focus:outline-none focus:border-violet-500"
+          >
+            <option value="all">All assets</option>
+            <option value="vehicle">Vehicle</option>
+            <option value="home">Home</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded border border-violet-300 bg-violet-50 hover:bg-violet-100 text-violet-700"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add plan
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm">
         <table className="min-w-full text-left">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50">
-              {['Plan Key', 'TpaCode', 'PTC', 'Plan Code', 'Level', 'Title', 'Sample Agreement URL', 'DocuSeal Tpl', 'Coverage', 'Actions'].map((h) => (
+              {['Plan Key', 'TpaCode', 'PTC', 'Plan Code', 'Asset', 'Level', 'Title', 'Sample Agreement URL', 'DocuSeal Tpl', 'Coverage', 'Actions'].map((h) => (
                 <th key={h} className="px-3 py-2 text-[10px] uppercase tracking-wide font-semibold text-slate-500 whitespace-nowrap">
                   {h}
                 </th>
@@ -803,7 +867,7 @@ function PlansTab({ org, persona }) {
             </tr>
           </thead>
           <tbody>
-            {allKeys.map((key) => (
+            {filteredKeys.map((key) => (
               <PlanRow
                 key={key}
                 rowKey={key}
