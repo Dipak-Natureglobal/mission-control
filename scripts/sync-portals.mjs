@@ -238,4 +238,5 @@ main();
 
 // Upstream package.json files declare `file:../x` deps that only resolve in the
 // original polyrepo layout. Re-apply the workspace rewrites after every sync.
-await import('./apply-monorepo-patches.mjs');
+// Skipped under --check, which must not write anything.
+if (!CHECK_ONLY) await import('./apply-monorepo-patches.mjs');
