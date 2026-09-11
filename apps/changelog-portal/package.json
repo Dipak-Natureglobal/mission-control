@@ -1,0 +1,26 @@
+{
+  "name": "changelog-portal",
+  "description": "LOCALLY AUTHORED — unlike its siblings this app is not vendored from BlinkerGit. Never add it to sync.config.json: pnpm sync would delete it.",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 30007",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview --port 30007"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "vite": "^8.0.4"
+  }
+}

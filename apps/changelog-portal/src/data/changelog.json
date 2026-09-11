@@ -1,0 +1,136 @@
+[
+  {
+    "date": "2026-09-10",
+    "generatedAt": "2026-09-10T12:50:53.957Z",
+    "kind": "baseline",
+    "headline": "Where we start: the Blinker apps brought together in one place, with this record added",
+    "meaning": [
+      "**Nothing changed inside the apps themselves today.** This is the first record — a picture of where things already stood, so that everything after it has something to be compared against.",
+      "**All the apps now live in one place.** Each one used to be set up and run on its own. They are now kept side by side, each still separate, each taken from the Blinker teams exactly as they wrote it. Nothing was merged or rewritten.",
+      "**They can all run at the same time.** Each app has its own fixed address, so two of them no longer fight over the same one.",
+      "**They all get published the same way now**, so an app cannot quietly work on one computer and fail on another.",
+      "**This record was added.** From now on, every time new work comes in from the Blinker teams, it gets written down here in plain words."
+    ],
+    "actionNeeded": "No. There is nothing to install or set up.",
+    "stillOpen": "Three things. The Customer Portal has no website yet — the Blinker team has not built it. The card-payment step only works on a developer's own computer, so it will not work on the live site. And the pricing service may turn away requests coming from the live site. All three are being tracked.",
+    "portals": [
+      {
+        "remote": "customer",
+        "name": "Customer Portal",
+        "dir": "apps/customer-portal",
+        "unchanged": true,
+        "at": "45cdbb08"
+      },
+      {
+        "remote": "home",
+        "name": "Home Protection Portal",
+        "dir": "apps/home-protection-portal",
+        "unchanged": true,
+        "at": "f9434af6"
+      },
+      {
+        "remote": "insurance",
+        "name": "Insurance Portal",
+        "dir": "apps/insurance-portal",
+        "unchanged": true,
+        "at": "a4abfd86"
+      },
+      {
+        "remote": "mission",
+        "name": "Mission Control",
+        "dir": "apps/mission-control",
+        "unchanged": true,
+        "at": "003af186"
+      },
+      {
+        "remote": "protection",
+        "name": "Protection Portal",
+        "dir": "apps/protection-portal",
+        "unchanged": true,
+        "at": "0d08c1be"
+      },
+      {
+        "remote": "refinance",
+        "name": "Refinance Portal",
+        "dir": "apps/refinance-prototype",
+        "unchanged": true,
+        "at": "de7736c2"
+      },
+      {
+        "remote": "platform",
+        "name": "Blinker Platform (shared library)",
+        "dir": "packages/blinker-platform",
+        "unchanged": true,
+        "at": "932356ce"
+      }
+    ],
+    "local": [
+      {
+        "sha": "0ccb37c",
+        "at": "2026-09-10T13:00:57+05:30",
+        "group": "Internal cleanup (nothing visible changed)",
+        "subject": "Remove AuthGate wrapper from main rendering"
+      },
+      {
+        "sha": "0d2d112",
+        "at": "2026-08-28T03:21:21-04:00",
+        "group": "Documentation",
+        "subject": "Remove known state section regarding linting issues from README"
+      },
+      {
+        "sha": "cb3aba8",
+        "at": "2026-08-28T03:12:31-04:00",
+        "group": "Documentation",
+        "subject": "Sync README with real repo state; make sync:check read-only"
+      },
+      {
+        "sha": "d860c92",
+        "at": "2026-08-28T03:12:00-04:00",
+        "group": "Upstream syncs",
+        "subject": "Update vendored portals to upstream main; vendor home-protection-portal"
+      },
+      {
+        "sha": "0e3ea87",
+        "at": "2026-08-12T08:38:05-04:00",
+        "group": "Housekeeping",
+        "subject": "Add installCommand and build environment to vercel.json for consistency"
+      },
+      {
+        "sha": "f838666",
+        "at": "2026-08-12T08:07:06-04:00",
+        "group": "Housekeeping",
+        "subject": "Update installCommand in vercel.json for consistent package installation"
+      },
+      {
+        "sha": "e2c293f",
+        "at": "2026-08-12T07:59:56-04:00",
+        "group": "Housekeeping",
+        "subject": "Add installCommand to vercel.json for consistent package installation"
+      },
+      {
+        "sha": "18e8d03",
+        "at": "2026-08-12T07:57:03-04:00",
+        "group": "Internal cleanup (nothing visible changed)",
+        "subject": "Reorganize DEFAULT_ORG_CONFIG to avoid import cycle and improve clarity"
+      },
+      {
+        "sha": "91e81dc",
+        "at": "2026-08-12T07:26:47-04:00",
+        "group": "Housekeeping",
+        "subject": "Pin apps to the 30001-30005 platform port map"
+      },
+      {
+        "sha": "23345c8",
+        "at": "2026-08-12T07:15:09-04:00",
+        "group": "Housekeeping",
+        "subject": "Guard ANSI colors behind TTY and record upstream SHAs"
+      },
+      {
+        "sha": "c406497",
+        "at": "2026-08-12T07:11:00-04:00",
+        "group": "Housekeeping",
+        "subject": "Vendor five Blinker portals into a pnpm/Turborepo monorepo"
+      }
+    ]
+  }
+]

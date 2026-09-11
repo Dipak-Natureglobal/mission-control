@@ -154,7 +154,7 @@ function main() {
 
         if (oldSha === newSha && fs.existsSync(path.join(ROOT, dir)) && !FORCE) {
             console.log(`${c.dim}up to date (${short(newSha)})${c.reset}`);
-            report.push({ remote, dir, status: 'up to date', detail: short(newSha) });
+            report.push({ remote, dir, status: 'up to date', detail: short(newSha), oldSha, newSha });
             continue;
         }
 
@@ -194,6 +194,11 @@ function main() {
                 dir,
                 status: 'updated',
                 detail: `+${stats.added} ~${stats.updated} -${stats.removed}`,
+                // Carried through for scripts/changelog.mjs, which re-reads the
+                // commit range in full rather than the ten lines printed above.
+                oldSha,
+                newSha,
+                stats,
             });
             state.portals = state.portals ?? {};
             state.portals[remote] = { repo: portal.repo, branch, dir, sha: newSha };
@@ -221,22 +226,33 @@ function main() {
 
     if (CHECK_ONLY) {
         console.log(`${c.dim}Check-only run: no files were modified. Run \`pnpm sync\` to apply.${c.reset}`);
-        return;
+        return report;
     }
 
     if (changed) {
         console.log(`\nNext:`);
         console.log(`  ${c.bold}pnpm run sync:patch${c.reset}   ${c.dim}re-apply monorepo dependency rewrites (also run automatically below)${c.reset}`);
         console.log(`  ${c.bold}pnpm install${c.reset}          ${c.dim}refresh pnpm-lock.yaml if any package.json changed${c.reset}`);
+        console.log(`  ${c.dim}fill in the plain-English summary on the new changelog entry (see below)${c.reset}`);
+        console.log(`  ${c.bold}pnpm changelog:check${c.reset}  ${c.dim}fails while that summary is still unwritten${c.reset}`);
         console.log(`  ${c.bold}git status && git diff${c.reset}`);
         console.log(`  ${c.bold}git add . && git commit -m "sync: update portals"${c.reset}`);
         console.log(`  ${c.bold}git push origin main${c.reset}`);
     }
+
+    return report;
 }
 
-main();
+const syncReport = main();
 
 // Upstream package.json files declare `file:../x` deps that only resolve in the
 // original polyrepo layout. Re-apply the workspace rewrites after every sync.
 // Skipped under --check, which must not write anything.
 if (!CHECK_ONLY) await import('./apply-monorepo-patches.mjs');
+
+// Record what this sync brought in, so the change is readable months from now.
+// Also skipped under --check. `--no-changelog` opts out for a one-off run.
+if (!CHECK_ONLY && !argv.includes('--no-changelog')) {
+    const { writeChangelogEntry } = await import('./changelog.mjs');
+    writeChangelogEntry(syncReport);
+}

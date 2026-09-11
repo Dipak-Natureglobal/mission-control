@@ -8,6 +8,7 @@ The apps stay independent. Nothing is merged, rewritten, or combined.
 ```
 blinker-prototype/
 ├── apps/
+│   ├── changelog-portal/       ← LOCALLY AUTHORED, not vendored      package: changelog-portal       :30007
 │   ├── customer-portal/        ← BlinkerGit/customer-portal          (spec only — see note below)
 │   ├── home-protection-portal/ ← BlinkerGit/home-protection-portal   package: home-protection-portal :30006
 │   ├── insurance-portal/       ← BlinkerGit/insurance-portal         package: insurance-portal       :30002
@@ -25,9 +26,12 @@ blinker-prototype/
 │       └── CLAUDE.md           agent orientation + repo layout
 ├── scripts/
 │   ├── sync-portals.mjs        pnpm sync
+│   ├── changelog.mjs           pnpm changelog
 │   └── apply-monorepo-patches.mjs
+├── CHANGELOG.md                generated — what changed, in plain English
+├── ROADMAP.md                  hand-written — what is still to be done
 ├── sync.config.json            upstream remote → folder mapping
-├── sync-state.json             last-synced commit per upstream
+├── sync-state.json             last-synced commit per upstream + last changelog entry
 ├── vercel.json                 repo-root install command + corepack flag
 ├── pnpm-workspace.yaml
 ├── turbo.json
@@ -37,6 +41,11 @@ blinker-prototype/
 Folder names follow the upstream repository names. Package names come from each app's own
 `package.json` and may differ — `apps/refinance-prototype/` publishes the name **`refi-portal`**,
 which is what sibling apps import.
+
+**`apps/changelog-portal/` is the one exception to all of that.** It has no upstream repository —
+it was written here. It is deliberately absent from `sync.config.json`, and **must stay that way**:
+`pnpm sync` mirrors upstream onto a folder by deleting whatever upstream does not have, so adding it
+there would delete the whole app.
 
 ## Requirements
 
@@ -127,6 +136,8 @@ Then review and publish yourself:
 git status
 git diff
 pnpm install                # only needed if a package.json changed
+# fill in the plain-English summary on the new changelog entry — see "Change log" below
+pnpm changelog:check        # fails while that summary is still unwritten
 git add .
 git commit -m "sync: update portals"
 git push origin main
@@ -178,6 +189,7 @@ scripts and its `vite.config`:
 | `apps/customer-portal`        | `30004` | *(reserved — no app yet)*  |
 | `apps/refinance-prototype`    | `30005` | 5179                       |
 | `apps/home-protection-portal` | `30006` | 5178 dev, 5177 preview     |
+| `apps/changelog-portal`       | `30007` | *(local — no upstream)*    |
 
 Upstream each repo picks its own `517x` port independently, and they collide once all of them run
 side by side — `home-protection-portal` previews on 5177, which is `mission-control`'s dev port.
@@ -188,13 +200,103 @@ written rather than rewriting upstream prose.
 Build scripts, source files, and dependency versions are left exactly as upstream. The script is
 idempotent and runs automatically at the end of every sync, so both rewrites survive `pnpm sync`.
 
+## Change log
+
+A sync used to leave no trace but a squashed `sync: update portals` commit. Three things now record
+what happened, and all three read the same data:
+
+| | What it is | Who writes it |
+| --- | --- | --- |
+| [`CHANGELOG.md`](CHANGELOG.md) | What has already changed, newest first | Generated |
+| [`ROADMAP.md`](ROADMAP.md) | What is still to be done | By hand |
+| `apps/changelog-portal` | A site: pick an app, see its complete history | Generated |
+
+The site opens on a grid of every app. Clicking one shows **every update that app has ever had** —
+its first to its latest — as a date and a sentence, grouped by month, with a search box. No version
+codes, no file counts. The hand-written summary of the most recent change sits at the top of the
+front page.
+
+**They are written for a non-technical reader.** Each entry opens with a plain-English summary — a
+headline, what it means app by app, whether anyone needs to do anything, and what is still open. The
+commit-level detail lives underneath, folded away. If a sentence in the summary cannot be understood
+without expanding the detail, the sentence is wrong and should be rewritten.
+
+### How an entry gets written
+
+`pnpm sync` writes the entry automatically at the end of a successful run, filling in the upstream
+commits, versions and file counts. It cannot write the plain-English half — no script knows what a
+change *meant* — so it leaves four `TODO:` placeholders:
+
+```bash
+pnpm sync                   # writes a scaffolded entry
+# fill headline / meaning / actionNeeded / stillOpen in
+#   apps/changelog-portal/src/data/changelog.json
+pnpm changelog:check        # exits non-zero while any TODO: remains
+```
+
+`changelog:check` is a plain script, not a git hook — nothing runs it for you. Run it before you
+commit.
+
+### The commands
+
+```bash
+pnpm changelog              # add an entry from this repo's own commits (sync calls this itself)
+pnpm changelog:dry          # render the entry to the terminal, write nothing
+pnpm changelog:check        # fail while an entry is half-written or CHANGELOG.md has drifted
+pnpm changelog:render       # rebuild CHANGELOG.md and history.json from the JSON after editing it
+pnpm sync -- --no-changelog # skip the entry for one sync
+```
+
+### Where the data lives
+
+Two generated files, both under `apps/changelog-portal/src/data/`:
+
+- **`changelog.json`** — the dated entries with their hand-written summaries. This is the **source of
+  truth**; `CHANGELOG.md` is rendered from it on every write and must not be hand-edited
+  (`changelog:check` compares the two and fails if they disagree).
+- **`history.json`** — every update every app has ever had, read straight from each app's own
+  history up to the version recorded in `sync-state.json`. Rebuilt from scratch on every write, so
+  it needs no record-keeping of ours and was complete the first time it ran. This is what the site's
+  per-app pages show.
+
+They sit inside the app rather than at the repo root on purpose: `turbo.json` keys the build cache on
+`src/**`, so a data file anywhere else would let turbo serve a stale build after the log changed.
+
+`sync-state.json` gains a `changelog` block recording the last logged commit of this repo, so the
+next entry knows where to start. If `main`'s history is ever rewritten that marker goes stale; the
+generator warns and falls back to the last 20 commits rather than failing.
+
+One more hand-written file: `apps/changelog-portal/src/data/apps.json` holds each app's one-line
+description and its live address. The descriptions were written from folder names and are educated
+guesses — correct them.
+
+The Blinker mark in the header is `src/components/BlinkerMark.jsx`, copied from the brand asset at
+`blinker-web/apps/customer-portal/src/assets/blinker-icon.svg`. The original is white, for dark
+backgrounds — Blinker's own header forces it black with a CSS filter. Here the fill is
+`currentColor` instead, so it takes the page's accent colour with no filter. The favicon is the same
+mark, white on an accent tile.
+
+**A known limit.** The sentences on an app's page are the Blinker developers' own update messages,
+tidied only mechanically (the `feat:` / `fix:` prefixes are stripped and the first letter
+capitalised). Where a developer wrote in developer language, that is what appears. Rewriting 600+
+messages in plain English is a people job, not a script's, and inventing a plainer meaning risks
+saying something untrue.
+
+### Running the site
+
+```bash
+pnpm --filter changelog-portal dev      # http://localhost:30007
+```
+
 ## The reference: `packages/blinker-platform`
 
 `packages/blinker-platform` is the source of truth for everything cross-cutting. Read it before
 changing anything that spans more than one app:
 
 - [`STATUS.md`](packages/blinker-platform/STATUS.md) — the live Phase 1 tracker: what's done, in
-  flight, blocked, and next, wave by wave.
+  flight, blocked, and next, wave by wave. It tracks the **upstream teams'** work and is overwritten
+  by every sync; [`ROADMAP.md`](ROADMAP.md) at the repo root is the monorepo-side counterpart and
+  survives syncs.
 - [`CLAUDE.md`](packages/blinker-platform/CLAUDE.md) — repo layout, the ADR index, and the
   coordinator-role rules.
 - [`architecture/`](packages/blinker-platform/architecture/) — numbered ADRs `00`–`30`, plus
@@ -220,13 +322,17 @@ sibling packages, never a child app) — applies unchanged.
 Create **one Vercel project per app**, all pointing at this repository, each with a different
 **Root Directory**:
 
-| Vercel project         | Root Directory                |
-| ---------------------- | ----------------------------- |
-| home-protection-portal | `apps/home-protection-portal` |
-| insurance-portal       | `apps/insurance-portal`       |
-| mission-control        | `apps/mission-control`        |
-| protection-portal      | `apps/protection-portal`      |
-| refinance-prototype    | `apps/refinance-prototype`    |
+| Vercel project         | Root Directory                | Live address                                  |
+| ---------------------- | ----------------------------- | --------------------------------------------- |
+| changelog-portal       | `apps/changelog-portal`       | *(not deployed yet)*                          |
+| home-protection-portal | `apps/home-protection-portal` | https://home-portal-new.vercel.app            |
+| insurance-portal       | `apps/insurance-portal`       | https://insurance-portal-new.vercel.app       |
+| mission-control        | `apps/mission-control`        | https://mission-portal-new.vercel.app         |
+| protection-portal      | `apps/protection-portal`      | https://protection-portal-new.vercel.app      |
+| refinance-prototype    | `apps/refinance-prototype`    | https://refi-portal-new.vercel.app            |
+
+The live addresses are also held in `apps/changelog-portal/src/data/apps.json`, which is what puts
+the **Open the app ↗** links on the site. Change them in that one place.
 
 Install and build are **not** left to Vercel's defaults. Both the repo-root `vercel.json` and every
 app's `vercel.json` set:

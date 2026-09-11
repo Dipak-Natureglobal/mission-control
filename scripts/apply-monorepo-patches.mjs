@@ -31,6 +31,9 @@ const PORTS = {
     'customer-portal': 30004,
     'refinance-prototype': 30005,
     'home-protection-portal': 30006,
+    // Locally authored, not vendored — it has no upstream to drift from, so
+    // pinning it here is a no-op. Listed anyway so the port map stays complete.
+    'changelog-portal': 30007,
 };
 
 /** Scripts that take a `--port` flag. `build` and `lint` are left alone. */

@@ -42,5 +42,9 @@
       "dir": "apps/home-protection-portal",
       "sha": "f9434af6b09d3e8efd5032ee930657b2fd3aaaef"
     }
+  },
+  "changelog": {
+    "lastLocalSha": "0ccb37ce4188ec0c49cf23b8adef72252542434b",
+    "lastEntry": "2026-09-10T12:50:53.957Z"
   }
 }

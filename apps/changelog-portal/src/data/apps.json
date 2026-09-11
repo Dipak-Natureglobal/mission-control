@@ -1,0 +1,93 @@
+{
+  "_comment": "Hand-written, not generated. `purpose` is the one-line plain description shown on the app card. `live` is the address anyone can open in a browser, or null when the app is not published. Correct anything here that does not match reality.",
+  "apps": [
+    {
+      "remote": "protection",
+      "dir": "apps/protection-portal",
+      "name": "Protection Portal",
+      "purpose": "Where a customer sets up a vehicle protection plan.",
+      "port": 30001,
+      "vercel": "protection-portal",
+      "repo": "https://github.com/BlinkerGit/protection-portal",
+      "state": "live",
+      "live": "https://protection-portal-new.vercel.app"
+    },
+    {
+      "remote": "insurance",
+      "dir": "apps/insurance-portal",
+      "name": "Insurance Portal",
+      "purpose": "Where a customer gets an insurance quote.",
+      "port": 30002,
+      "vercel": "insurance-portal",
+      "repo": "https://github.com/BlinkerGit/insurance-portal",
+      "state": "live",
+      "live": "https://insurance-portal-new.vercel.app"
+    },
+    {
+      "remote": "mission",
+      "dir": "apps/mission-control",
+      "name": "Mission Control",
+      "purpose": "The staff dashboard. The other apps appear inside it, and shared settings are edited here.",
+      "port": 30003,
+      "vercel": "mission-control",
+      "repo": "https://github.com/BlinkerGit/mission-control",
+      "state": "live",
+      "live": "https://mission-portal-new.vercel.app"
+    },
+    {
+      "remote": "customer",
+      "dir": "apps/customer-portal",
+      "name": "Customer Portal",
+      "purpose": "Not built yet. There is no website for it — only the shared settings files. Its place is being held.",
+      "port": 30004,
+      "vercel": null,
+      "repo": "https://github.com/BlinkerGit/customer-portal",
+      "state": "not-built",
+      "live": null
+    },
+    {
+      "remote": "refinance",
+      "dir": "apps/refinance-prototype",
+      "name": "Refinance Portal",
+      "purpose": "Where a customer refinances a vehicle.",
+      "port": 30005,
+      "vercel": "refinance-prototype",
+      "repo": "https://github.com/BlinkerGit/refinance-prototype",
+      "state": "live",
+      "live": "https://refi-portal-new.vercel.app"
+    },
+    {
+      "remote": "home",
+      "dir": "apps/home-protection-portal",
+      "name": "Home Protection Portal",
+      "purpose": "Where a customer sets up a home protection plan — cover, add-ons and signing.",
+      "port": 30006,
+      "vercel": "home-protection-portal",
+      "repo": "https://github.com/BlinkerGit/home-protection-portal",
+      "state": "live",
+      "live": "https://home-portal-new.vercel.app"
+    },
+    {
+      "remote": "platform",
+      "dir": "packages/blinker-platform",
+      "name": "Blinker Platform (shared library)",
+      "purpose": "Not a website. The shared pieces and written decisions that all the apps follow.",
+      "port": null,
+      "vercel": null,
+      "repo": "https://github.com/BlinkerGit/blinker-platform",
+      "state": "library",
+      "live": null
+    },
+    {
+      "remote": null,
+      "dir": "apps/changelog-portal",
+      "name": "Changelog Portal",
+      "purpose": "This site.",
+      "port": 30007,
+      "vercel": "changelog-portal",
+      "repo": null,
+      "state": "local",
+      "live": null
+    }
+  ]
+}

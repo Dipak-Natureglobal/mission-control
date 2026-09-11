@@ -1,0 +1,3430 @@
+{
+  "generatedAt": "2026-09-10T13:09:03.162Z",
+  "apps": [
+    {
+      "key": "customer",
+      "name": "Customer Portal",
+      "total": 18,
+      "first": "2026-05-02",
+      "last": "2026-08-26",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Renumber Home Protection ADR 29 -> 30"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Sync to 2026-08-26-v3018-home-pricing (ADR 29)"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Sync to 2026-08-25-v3017-home-protection (ADR 29)"
+            }
+          ]
+        },
+        {
+          "key": "2026-06",
+          "label": "June 2026",
+          "items": [
+            {
+              "date": "2026-06-01",
+              "day": 1,
+              "text": "Sync v3016 monthly-membership (ADR 28)"
+            }
+          ]
+        },
+        {
+          "key": "2026-05",
+          "label": "May 2026",
+          "items": [
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "Sync to 2026-05-16-v3015 — insurance status `actor` field (ADR 27)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Sync canon to 2026-05-15-v3014-insurance-quote-flow-fu1"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Sync to v.308-plan-catalog (W27 fu1)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync canon through W22-fu5 max_plan_price"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Sync 2026-05-06-org-timezone"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave14-admin-console-init"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave13-household-and-flowpath"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-tag-permissions (personas tag perms + system-tags seed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-protection-billing-canon (org_registry.protection_billing + org-disclaimers.json)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-cross-sell-orchestration"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-ei-real-contract"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync canon to 2026-05-02-insurance-signal-source-and-link-fields"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Sync 2026-05-02-insurance-extracted-shape"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Initial commit: prototype phase"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "home",
+      "name": "Home Protection Portal",
+      "total": 18,
+      "first": "2026-08-25",
+      "last": "2026-08-26",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Renumber Home Protection ADR 29 -> 30"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Monthly-first pricing with real margin across steps 3-5"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Decouple the optional-coverages precheck flag from revalidation"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Pin \"Start the quote here\" to step 0 instead of resuming at Quoted's mapped step"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Correct E.164 phone truncation trap + consume home address prefill"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Share one form store between DEV CONTROLS and the customer wizard"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Dev script port 5178 (was overriding vite.config with mission-control's 5177)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Move dev server to 5178 — 5177 collides with mission-control"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Add favicon"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Agent view + mission-control embed export surface"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Real DocuSeal signing step + completion"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Confirm with add-on-inclusive totals + billing capture"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Optional coverages step with plan/term-aware pricing"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home plan selection, tier cards, term/monthly switch"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home features step (canon-driven add-on prequalifier)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Add home step with eligibility gate + GetRates dispatch"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home wizard form shape + step registry"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Scaffold home-protection-portal (ADR 29 D3)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "insurance",
+      "name": "Insurance Portal",
+      "total": 59,
+      "first": "2026-05-02",
+      "last": "2026-08-26",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Renumber Home Protection ADR 29 -> 30"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Sync to 2026-08-26-v3018-home-pricing (ADR 29)"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Sync to 2026-08-25-v3017-home-protection (ADR 29)"
+            }
+          ]
+        },
+        {
+          "key": "2026-06",
+          "label": "June 2026",
+          "items": [
+            {
+              "date": "2026-06-01",
+              "day": 1,
+              "text": "Sync v3016 monthly-membership (ADR 28)"
+            }
+          ]
+        },
+        {
+          "key": "2026-05",
+          "label": "May 2026",
+          "items": [
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "Sync to 2026-05-16-v3015 — insurance status `actor` field (ADR 27)"
+            },
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "V3.0.15 — insurance contact-details gate: address + dedup/household + read-only-on-link (ADR 27)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Sync canon to 2026-05-15-v3014-insurance-quote-flow-fu1"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu4 quote-only estimated savings in QuoteDetail popover"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu3 per-cadence premium slider bounds in CurrentInsuranceGate"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36 v3.0.14 insurance quote-flow — flow-path default + current-insurance step"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu2 savingsCardSlot prop — mc injects Insurance-at-a-glance into left column"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu post-send 2-col layout (ConsumerLink | Notes) per v3.0.13 mockup"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33 v3.0.13 hideLeadStatusTimeline prop for mc embed (D5)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Sync from blinker-platform v3.0.11 + v3.0.12"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Mirror 31b-fu changes into InsuranceDevControls.jsx (Wave 31b-fu2)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Break simulator chain + discrete dev buttons + quote savings toggle (Wave 31b-fu)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31a-fu3 pin stepTotal + forward drive fields + MarketCheck to mc left rail"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31a-fu2 default mileage to MILEAGE_INITIAL_DEFAULT to prevent null.toLocaleString() crash in refi's ScreenVehicleDrive"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31a-fu vehicle_drive between vehicle_add and origination form"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Vehicle_drive step between capture and quote (Wave 31 / v3.0.11 Task 1)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync canon through W22-fu5 max_plan_price"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Add status-step-map for insurance wizard resume points (Wave 18-fu4)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Notes log-mode + EI payload sources from SDK (Wave 16 F2-fu13-insurance)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Fire onVehicleCommitted when pre-step vehicle is collected (Wave 16 F2-fu12-insurance)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Pre-step gate fires when vehicle has no VIN; prefill YMMT (Wave 16 F2-fu10)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "TZ-aware times + day separators + per-event detail (Wave 16 F2-fu5)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Sync 2026-05-06-org-timezone"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Drop inline Note textarea — NotesPanel owns notes (Wave 16 F2-fu4)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Mount NotesPanel pre-send in two-column shell (Wave 16 F2-fu3)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "VehicleAdd pre-step + drop inline VIN block (Wave 16 F2-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Cleaner Confirm-contact shape + inline vehicle collection (Wave 16 F8 + F2)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "ShowOriginationForm prop suppresses LeadOriginationForm (Wave 16 F6)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Retire src/shared chrome + lib/posthog (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform components/telemetry (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave14-admin-console-init"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Refresh package-lock for Wave 15c (add blinker-platform, drop refi-portal)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform/components (Wave 15c)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Slim AgentSimulators now that production picker covers status forcing (Wave 14-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Add View API Responses modal to AgentView (Wave 14-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Add force-status picker + availableStatuses prop to AgentView (Wave 14-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Add mode prop to AgentView (lean mode for cross-sell embeds, Wave 13-fu-2)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave13-household-and-flowpath"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Post-send AgentView layout (timeline + link LEFT, notes/tags RIGHT)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Hide LEAD STATUS timeline until consumer link is sent"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Require DOB on LeadOriginationForm + thread into EI applicant payload"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Expose InsuranceDevControls (chrome-less, embed-friendly) for mission-control consolidation"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Thread mission-control contact + vehicle into LeadOriginationForm prefill (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add minimal eslint.config.js mirroring refi-portal's flat config"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add shared NotesPanel + TagPicker to insurance-portal agent right pane"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add refi-portal as file dep for shared NotesPanel + TagPicker"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-tag-permissions (personas tag perms + system-tags seed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-protection-billing-canon (org_registry.protection_billing + org-disclaimers.json)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Expose AgentView via src/views/agent/index.js with persona props"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-cross-sell-orchestration"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Hide error.verification on quote_only timeline; relax policy.bound gating to [QUOTE_COMPLETED, QUOTE_VIEWED]; canon-field rename comments"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-ei-real-contract; add EI partner docs"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync canon to 2026-05-02-insurance-signal-source-and-link-fields"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Sync 2026-05-02-insurance-extracted-shape"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Initial commit: prototype phase"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "mission",
+      "name": "Mission Control",
+      "total": 168,
+      "first": "2026-05-02",
+      "last": "2026-08-26",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Renumber Home Protection ADR 29 -> 30"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Home protection timeline re-reads activities after write-through commits"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Revert \"fix(copilot): remount-proof home protection step_change write-through\""
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Remount-proof home protection step_change write-through"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Home-protection add-on markup, add-on discount cap, and by-coverage-term payment options"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Thread opportunity._prefill into the home-protection form seed"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Carry contact address into home step (ADR 29 R8 follow-up)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Add Home protection to the Start opportunity dialog (ADR 29 R8)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Add Home protection as a 5th type (ADR 29 R8)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "C5 — admin surfaces for home protection (ADR 29, Wave 39)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "C3 — Homes section, AddHomeModal, org-gated start (ADR 29, Wave 39)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "C2 — thread home_protection through registries + labels (ADR 29, Wave 39)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "C1/C3/C4 — thread home_protection through CoPilotPane (ADR 29, Wave 39)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Sync to 2026-08-25-v3017-home-protection — home entity, statuses, billing (ADR 29)"
+            }
+          ]
+        },
+        {
+          "key": "2026-06",
+          "label": "June 2026",
+          "items": [
+            {
+              "date": "2026-06-01",
+              "day": 1,
+              "text": "Monthly-membership admin config (ADR 28)"
+            }
+          ]
+        },
+        {
+          "key": "2026-05",
+          "label": "May 2026",
+          "items": [
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "Sync to 2026-05-16-v3015 — insurance status `actor` field (ADR 27)"
+            },
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "V3.0.15 — CoPilot timeline actor attribution (Agent/Consumer/System) + contact-form dedup re-point (ADR 27)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu8 hotfix — orgId ReferenceError crashed CoPilot for multi-opp contacts"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu7 InsuranceSavingsCard consumes savings adapter for quote-only"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu6 inline current-insurance editor on InsuranceSavingsCard"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu5 persist current_insurance for related-opp savings popovers"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu4 quote-only estimated savings — buildInitial seed + QuoteDetail popover"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36 v3.0.14 insurance quote-flow — SavingsCard copy, timeline header, self-reported savings"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 35 refi progress timeline + step write-through"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 34-fu3 thread orgId to related-opp timelines for org-TZ date separators"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 34 protection progress timeline + step write-through"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu3 persist insurance detail summary for related-opp popovers"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu2 inject InsuranceSavingsCard into AgentView left column via savingsCardSlot"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu resolve insurance posture with machine_id-aware step map"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33 v3.0.13 insurance left-rail timeline + right-pane focus shift (D1-D4)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Sync from blinker-platform v3.0.12 (Wave 32)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31b-fu5 — carry insurance savings into spawned protection opp _prefill"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31b-fu4 — sync insurance workflow.status → opp.status + status_change activities"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31b-fu3 — useSessionData registerAsHost flag so AgentInbox fallback doesn't shadow App.jsx writer"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Insurance card no-savings copy → \"We added a task to monitor for savings.\" (Wave 31b-fu)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31 insurance→protection cross-sell — SavingsCard + Find Coverage spawn + RelatedInsuranceProgress + coverage cross-component (v3.0.11)"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Wave 30 leaderboard — agent compete screen + manager cascade"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "All-my-orgs tags actions + AgentPicker viewport clamp"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Render every source org + use accessible-orgs union for pool"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Thread contacts prop through OpportunityContextPane"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Shared AgentPicker grouped by org + per-org cross-org policy (v3.0.10 Task 1)"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "AgentMetricsGrid accepts session prop so AgentHome stays in sync with QuickActions adds"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Wave 29c team member view — date lens + shared metrics grid + clickable inbox snapshot"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Wave 29b tags namespace mgmt screen + presets reference"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Per-org-instance agent rows with independent expansion"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Default agent groups collapsed + org grouping when multi-org"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Wave 28e assignment screen + preset gating + cross-org cascade UX"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Wave 28d inbox — group-by-agent + bulk-reassign + copilot overlay"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "AllowNull enum + derived filter types"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Wave 28c manager home — KPIs + by-agent strip + team activity feed"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Wave 28b team page — roster + agent profile drill-in"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Wave 28a foundation — org switcher + nav scaffolds + agent SDK consumer"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Include annual_mileage_estimate + condition in PATCHED_FIELDS"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Propagate annual_mileage_estimate + condition to rail vehicle card"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Rail VEHICLE card resolves opportunity vehicle + shows full field set"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Sync to v.308-plan-catalog (W27 fu1)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Add PlanCatalog admin tab (Defaults + Plans sub-tabs) (Wave 27 v3.0.8 Tasks 1+2)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Expand +N more on type cards to reveal hidden status pills (fu6)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Status enum derives from top-level type dropdown + inboxFilter (fu5b)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Status enum depends on selected opp type(s) — Inbox/Contacts/GlobalSearch (fu5)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Scope Organization enum + dependent Owner enum in Inbox/Contacts/GlobalSearch (fu3)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Agent-access lib — accessible orgs + owner→orgs derivation (fu3)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "AdvancedFilter supports dynamicEnumValues/dynamicEnumGroups + auto-prune (fu3)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Advanced filter parity — add opportunity-type + grouped status (fu2)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Reorder columns VSC|Refi|Ins + default sort Last Activity DESC"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "AdvancedFilter supports enumGroups; group status by opp type (mc fu1)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Replace native title= with shared Tooltip across Inbox/Contacts/Home"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Tooltip component — instant-show, fixed-positioned, kbd-accessible (replaces native title=)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Rewind Wave 26a contact-centric pivot — opp-centric rows with Tasks 1A-1D only"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Test_case tooltip sources from opportunities; drop Test case column (Task 2a-F)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Replace Opportunities column with Refi/Ins/VSC triplet (Task 2a-E)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Advanced filter + infinite scroll + Back to Top (Tasks 2a-C, 2a-D)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Replace followups KPI with Lost Opps + agent funnel header (Tasks 3E, 3F)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Move status pills into type cards + date filter lens (Tasks 3C, 3D)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Recent activity infinite scroll + org-timezone timestamps (Tasks 3A, 3B)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Wire TopBar search + advanced filter (Task 2)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Wave 26a Task 1 — contact-centric pivot + adv filter + infinite scroll"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "AdvancedFilter + infinite-scroll utilities for v3.0.7 reuse"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 Task 1 C2b — add /efs-charge proxy for embedded protection-portal"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 Task 3 — rename sidebar 'GHL' header → 'CRM'"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 23 Phase B2 — GHL external nav + Looker embed reports (v3.0.5 Tasks 2+3)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync W22-fu5 max_plan_price + protection_billing markup canon"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync W22 Phase 1 wizard-polish canon (v304)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Unlock embed persona switcher so super_admin can view API responses inline (Wave 22-fu4)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Proxy /se-rating to SCS UAT for embedded AgentView (Wave 22-fu3)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync W21 + W21-fu canon into mission-control"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Enum-array chip multiselect for products_filter (Wave 21)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 v3.0.3 Tasks 1+2 part 2 — Org Overview + functional hierarchical config editor (System/Contacts/Opps[Refi/Ins/Prot]/Payments/Integrations) + RelationshipTypes admin"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 v3.0.3 Tasks 1+2 part 1 — canon sync (coordinator presets+relationships split) + super-admin-storage extension (presets canon swap, relationshipType overrides, v3.0.3 org config defaults)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 v3.0.3 Task 3 — multi-org user assignment in super-admin UserDirectory"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19-fu1 — relocate Task 4 (off ContactProfile, AgentHome pills clickable) + super dashboard tiles clickable"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Task 5 — Householding (mc ContactProfile household UI)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Task 6 — Super Admin shell (Dashboard + nav wiring + UserDirectory + OrgRegistry + persona presets)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Tasks 3+4 — ContactProfile tag CRUD + opportunity status pills"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Seed refi + insurance wizard state from opportunity.status (Wave 18-fu5)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Seed protection wizard step from opportunity.status (Wave 18-fu3)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wire cross-surface Open-in-CoPilot from Contacts tab → Inbox deep-link (Wave 18-fu)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "_test_case tooltip on inbox + contacts + profile chip (Wave 18)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "AgentContacts surface + contacts nav route + test_mode plumbing (Wave 18)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Swap session-data.js to consume blinker-platform/api contacts + opportunities (Wave 18)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Functional setState + match-logic forensics so wire-back actually matches and no-ops re-fires (Wave 17 P1-fu3b)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Stabilize EmbedSlot shims + no-op short-circuit dedup so wire-back stops looping (Wave 17 P1-fu3a)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Dedup wire-back vehicles by id/VIN/YMMT match — patch in place when matched (Wave 17 P1-fu3)"
+            },
+            {
+              "date": "2026-05-07",
+              "day": 7,
+              "text": "Consume blinker-platform/api activities; retire activities.json fixture (Wave 16 F2-fu13-followup-mc)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Consume blinker-platform/api; retire contact-storage.js + fixtures (Wave 16 F2-fu13-mc)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Thread vehicle wire-back handler to refi + insurance embeds (Wave 16 F2-fu12-mc)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Split form/step cleanup from payload effect + patch existing vehicle on Step 2 (Wave 16 F2-fu11 hotfix)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Receive onVehicleCommitted from protection wizard, append + bind to opp (Wave 16 F2-fu11a)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Sync 2026-05-06-org-timezone"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Remove redundant DOB gate (Wave 16 F2-fu2)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Drop DOB collection — insurance form owns it"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Hydrate picked from seed props on open (Wave 16 F1-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Auto-skip vehicle step for zero-vehicle contacts (Wave 16 F2)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Skip contact step when contact already seeded (Wave 16 F1)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Retire src/shared chrome + lib/posthog (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform components/telemetry/utils (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Refresh package-lock for blinker-platform Wave 15c dep"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Render DOB calendar icon outside input (autofill workaround)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform/components (Wave 15c)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wire availableStatuses from local status-mapping into protection + insurance embeds (Wave 14-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Cross-org views + canon drift + integration catalog (Wave 14)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Org configuration accordions + audit log timeline (Wave 14)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Integrations card grid + per-provider edit drawer + test-mode confirm modal (Wave 14)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Users index + edit drawer with persona presets + badge picker (Wave 14)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Org tree + org detail tabs scaffold + test-mode banner (Wave 14)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 14 nav + dashboard + permissions resolver"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave13-household-and-flowpath"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Respect seededContact in StartOpportunityFlow back-button — skip seeded contact step on back"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Vehicle card in CoPilot left pane + DOB-collection gate before insurance opens"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Thread contact prop into refi AgentView so capture-link gate prefills"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Route Save-contact → Start Opportunity seeded with new contact + skippable vehicle for refi/protection"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Rebuild AddContactModal — validation, per-org dedupe, household-relationship branch, DEV CONTROLS"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Add super-admin status mapping editor (Wave 13c)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Dual-write activity record on note add — close canon contract"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Persist contact notes to localStorage so demo survives reload"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Lift protection form to context — wire ProtectionDevControls Force-complete + Form state for embedded mode (Wave 14 follow-up)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Lift refi form + insurance workflow into context so DevControls form/workflow sections work in embedded mode (Wave 14 follow-up)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Wire ProtectionDevControls + RefiDevControls + InsuranceDevControls into consolidated DevPanel (Wave 14)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Resolve contact.household_members from session-data before threading into embeds"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Consolidate DevPanel — payload mirror via context + per-workflow placeholder sections w/ collapsible auto-expand (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add DEV Payload panel — inbound + live state mirror across all 3 embeds (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Resolve + thread mission-control contact + vehicle into all three embeds (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Thread contact.org_id into RefiEmbed + InsuranceEmbed seeds for per-org tag inventory"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Seed org_id=102 (Apex) on all contacts for per-org tag inventory + future per-org branching"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Seed notes/tags/tagsCreated in InsuranceEmbed for shared NotesPanel"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-tag-permissions (personas tag perms + system-tags seed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Start opportunity launcher with smart contact + vehicle routing"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add contact modal with AddressBlock"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Agent home dashboard with KPI tiles + recent activity"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "+ New opportunity flow with vehicle picker + insurance flowPath wiring"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Per-vehicle Start opportunity dropdown opens new opp in CoPilot"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add vehicle modal mounting refi-portal VehicleAdd"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Lift opportunities + contacts to session-state container for runtime mutation"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-protection-billing-canon (org_registry.protection_billing + org-disclaimers.json)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Remove DOB display from contact header per UX feedback"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Seed refi RefiEmbed form with INITIAL_FORM so wizard step transitions render"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Mount insurance-portal AgentView for insurance opportunities"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Mount refi-portal AgentView based on opportunity type"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Add refi-portal as a file dep"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Full-bleed right pane with back-to-inbox affordance"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Split row-click between ContactProfile and CoPilotPane"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "ContactProfile pane + supporting fixtures"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "CoPilotPane + AgentView composition from protection-portal"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-cross-sell-orchestration"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-ei-real-contract"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync canon to 2026-05-02-insurance-signal-source-and-link-fields"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Sync 2026-05-02-insurance-extracted-shape"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Initial commit: prototype phase"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "protection",
+      "name": "Protection Portal",
+      "total": 107,
+      "first": "2026-05-02",
+      "last": "2026-08-26",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Renumber Home Protection ADR 29 -> 30"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Sync to 2026-08-26-v3018-home-pricing (ADR 29)"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Sync to 2026-08-25-v3017-home-protection (ADR 29)"
+            }
+          ]
+        },
+        {
+          "key": "2026-06",
+          "label": "June 2026",
+          "items": [
+            {
+              "date": "2026-06-01",
+              "day": 1,
+              "text": "Monthly-membership VSC plans in the protection wizard (ADR 28)"
+            }
+          ]
+        },
+        {
+          "key": "2026-05",
+          "label": "May 2026",
+          "items": [
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "Sync to 2026-05-16-v3015 — insurance status `actor` field (ADR 27)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Sync canon to 2026-05-15-v3014-insurance-quote-flow-fu1"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31b-fu6 subscribeWebhooks for synthetic insurance lead"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 32 v3.0.12 RecommendedCoverage redesign — segmented tier picker + canon-driven covered components"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "No-savings ResultChip variant + public index.js (Wave 31)"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Sync Waves 29 + 30 (cross-org policy + sales_goals + tag spread)"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Persist condition + purchase_date onto form.vehicle"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Tpa_code from product, agent lookup line in modal (W27 fu1)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Add \"See what's covered\" PlanCoverageModal w/ DOMPurify sanitization (Wave 27 v3.0.8 Task 1)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Wire resolvePlanPresentation for org-overridable plan title + tagline (Wave 27 v3.0.8 Task 1)"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "SelectedPlan carries id+plan_code; DevPanel surfaces VIN diagnostic"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "RatesChanged refund/manual-review routes to ThankYou, not eSign"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 25 v3.0.7 Phase C — second SE GetRates call, classifier branching, RatesChanged step"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 Task 1 C2 — wire EFS charge into BillingPayment + DevPanel emulation toggle"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 Task 4 — friendly loading banner during SE GetRates fetch"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Capture AssetType from VIN decode + YMMT, pass into GetRates (Wave 23-fu2)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 23-fu1 — super_admin SE error diagnostics block"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 23 Phase C — New/Used UX, term_basis display, SE error UI"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Per-org max_plan_price cost cap (Wave 22-fu5)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Tooltip uses fixed positioning to escape clip ancestors (Wave 22-fu2)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Tooltip escapes overflow-hidden ancestor (Wave 22-fu1)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "V3.0.4 wizard polish — 6 PDF tasks (Wave 22)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync W22 Phase 1 wizard-polish canon (v304)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync W20 + W21 + W21-fu canon into protection-portal"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Lock step once mounted + prominent loading view during getRates"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 21-fu — real UAT GetRates dev mode wiring"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Lift GetRates to blinker-platform/integrations/product_admin (Wave 21)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 BL — YMMT migration to packages/utils in protection"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Task 1 — pass orgVehicleDefaults + use computeAnnualMileageEstimate helper"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "AgentView consumes opportunity prop + syncs local state from prop status (Wave 18-fu6)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wizard resumes at status-derived step + relax captureLink gate (Wave 18-fu2)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Add status-step-map for wizard resume points (Wave 18-fu2)"
+            },
+            {
+              "date": "2026-05-07",
+              "day": 7,
+              "text": "Simulate createLead + consumer_link on submit so post-send timeline lights up (Wave 17 P1-fu2)"
+            },
+            {
+              "date": "2026-05-07",
+              "day": 7,
+              "text": "VIN-collection pre-step when protection vehicle has no VIN (Wave 17 P1-fu)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Notes log-mode + EI payload sources from SDK (Wave 16 F2-fu13-protection)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Observer fires Step 2 fields + drops local dedupe (Wave 16 F2-fu11 hotfix)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Fire onVehicleCommitted when wizard Step 1 commits (Wave 16 F2-fu11b)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Drop \"Note (optional)\" textarea — NotesPanel owns notes (Wave 16 F2-fu9)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Drop visual MarketCheckCard wrapper — refi card handles YMMT (Wave 16 F3)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Sync 2026-05-06-org-timezone"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Suppress embedded LeadOriginationForm via showOriginationForm prop (Wave 16 F6)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Restore deterministic mock GetRates options (Wave 16 F5)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Conditional skip + optional street + zip-only validity (Wave 16 F4)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Retire src/shared chrome + lib/posthog + lib/validators (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform components/telemetry/utils (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave14-admin-console-init"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Refresh package-lock for blinker-platform Wave 15c dep"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Drop refiConstantsBarrelShim plugin (Wave 15c-hygiene)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform/components (Wave 15c)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Pass mode=\"lean\" to insurance-portal AgentView (Wave 13-fu-2)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Add availableStatuses prop to AgentView (Wave 13-fu-1)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave13-household-and-flowpath"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "SavingsCard anchored top-left of Confirm when insurance quote lands"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Cross-sell insurance — flowPath + DOB gate + EI lead origination"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "MarketCheck mock + Step 2 vehicle value card + canonical form slot"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync personaProp → local state on change (mission-control embed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Hide persona <select> entirely when personaLocked (mission-control embed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Move cross-sell force-complete + JsonPeeks from AgentView right pane into ProtectionDevControls (left panel) — lift agent form state to App for standalone wiring"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Expose ProtectionDevControls (chrome-less, embed-friendly) for mission-control consolidation"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Swap refi PrequalForm → RefiSubFlow + add co-applicant prompt for household contacts"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Thread contact into CaptureLinkForm prefill + add onFormChange callback (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Thread mission-control contact + vehicle into AgentView form seed (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Persist agreement_number to form + thread persona prop"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "React.lazy code-split VehicleDrive + GarageLocation to push refi monolith off initial bundle"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Write address into canonical form.contact.* slice (eliminates form-shape drift with BillingPayment)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Delete orphaned CaptureContact + repoint shouldRunGarageLocation gate to canonical contact.address1/state"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Consume shared NotesPanel + TagPicker from refi-portal (drop local copies)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Toggle to seed mock multi-contact household for BillingPayment switcher testing"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "JsonPeek surfaces contact.tags + tagsCreated for tag-picker testing"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Agent contact card with household-member + address selection on BillingPayment"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Tag picker alongside notes for role-gated tagging"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Reusable role-gated tag picker reading canon system-tags + per-org overrides"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-tag-permissions (personas tag perms + system-tags seed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Move garage_location before recommended_coverage + dispatch StoneEagle GetRates from garage state"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "AddressBlock + customer-mode contact form + canon-driven TCPA disclaimer"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Agent payment controls (discount + down-payment + first-payment-date + months-to-pay) reading canon protection_billing block"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Remove CONTACT·CAPTURE step from wizard (contact data flows through Confirm/Billing)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "New step asks where the vehicle is garaged using shared refi-portal AddressBlock"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Swap to shared refi-portal VehicleDrive (purchase-date math + cross-app consistency)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Legacy-pattern confirmation with agreement number + agreement download links"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-protection-billing-canon (org_registry.protection_billing + org-disclaimers.json)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Make Customize step optional behind 'Customize coverage' secondary CTA on RecommendedCoverage"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Fix new lint issues introduced by Customize redesign"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Tier-aware plan browser with swipe carousel"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Add listMatchingPlans for tier+filter browsing"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Lift PlanCard to shared component for reuse in Customize"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Add minimal eslint.config.js"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "React.lazy code-split CrossSellSubFlow to push refi monolith off initial bundle"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Consume offers from PrequalForm.onComplete payload"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Agent-view: side-pane cross-sell composition; DEV CONTROLS cross-sell toggles + force-complete actions; full orchestration end-to-end"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Customer-view: cross-sell sub-flow with breadcrumb back to coverage; embeds insurance + refi PrequalForm with full result-branching"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Recommended-coverage: add cross-sell CTAs + per-org gating + buying-power UI on plan cards"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Src/lib/protection-pricing.js with both math models — savings (insurance) + affordability (refi products_payment formula port from BlinkerLegacy)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Wire file:../refi-portal — completes the cross-sell orchestrator dep graph"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Complete customer screens + plan selector + VIN-mismatch modal"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Cross-sell: wire insurance SavingsCard onto Confirm step"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Tokenizer lib + hosted-fields React component"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Add AgentView shell for protection-portal"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-cross-sell-orchestration"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync 2026-05-03-ei-real-contract"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Sync canon to 2026-05-02-insurance-signal-source-and-link-fields"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Sync 2026-05-02-insurance-extracted-shape"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Initial commit: prototype phase"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "refinance",
+      "name": "Refinance Portal",
+      "total": 80,
+      "first": "2026-05-01",
+      "last": "2026-08-18",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-18",
+              "day": 18,
+              "text": "Stop blanking contact fields, surface real write errors"
+            },
+            {
+              "date": "2026-08-17",
+              "day": 17,
+              "text": "Send trim_id on the vehicle POST"
+            },
+            {
+              "date": "2026-08-17",
+              "day": 17,
+              "text": "Remittance lock + live YMMT options from blinker"
+            },
+            {
+              "date": "2026-08-15",
+              "day": 15,
+              "text": "Stop blanking the MissionControl YMMT hand-off"
+            },
+            {
+              "date": "2026-08-15",
+              "day": 15,
+              "text": "Keep MissionControl YMMT prefill visible through VIN decode"
+            },
+            {
+              "date": "2026-08-10",
+              "day": 10,
+              "text": "Candidate-trim lookup from blinker vehicle_by_vin"
+            },
+            {
+              "date": "2026-08-10",
+              "day": 10,
+              "text": "Detect agent view via readViewFromUrl for MC return link"
+            }
+          ]
+        },
+        {
+          "key": "2026-07",
+          "label": "July 2026",
+          "items": [
+            {
+              "date": "2026-07-13",
+              "day": 13,
+              "text": "Write back Disqualified status on prequal disqualification"
+            },
+            {
+              "date": "2026-07-06",
+              "day": 6,
+              "text": "Incremental entity create-or-update + backend error surfacing"
+            },
+            {
+              "date": "2026-07-01",
+              "day": 1,
+              "text": "Point dev env at blinker-dev, add no-list deploy script"
+            }
+          ]
+        },
+        {
+          "key": "2026-06",
+          "label": "June 2026",
+          "items": [
+            {
+              "date": "2026-06-29",
+              "day": 29,
+              "text": "Add staging deploy workflow (manual, any branch)"
+            },
+            {
+              "date": "2026-06-29",
+              "day": 29,
+              "text": "Direct-login SSO + per-section write-back bootstrap"
+            },
+            {
+              "date": "2026-06-26",
+              "day": 26,
+              "text": "Per-env MissionControl URLs + S3/CloudFront deploy script"
+            },
+            {
+              "date": "2026-06-25",
+              "day": 25,
+              "text": "Prequal upsert, co-applicant capture, disqual step routing"
+            },
+            {
+              "date": "2026-06-23",
+              "day": 23,
+              "text": "Defer refi API to qualified Stage-2, gates, localized AddressBlock"
+            },
+            {
+              "date": "2026-06-19",
+              "day": 19,
+              "text": "Gate customer/partner views, agent handoff + notes"
+            },
+            {
+              "date": "2026-06-18",
+              "day": 18,
+              "text": "Agent Stage 2 hand-off, LTV gate, and back-button trap"
+            },
+            {
+              "date": "2026-06-01",
+              "day": 1,
+              "text": "Sync v3016 monthly-membership (ADR 28)"
+            }
+          ]
+        },
+        {
+          "key": "2026-05",
+          "label": "May 2026",
+          "items": [
+            {
+              "date": "2026-05-27",
+              "day": 27,
+              "text": "JSX to TSX migration (#1)"
+            },
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "Sync to 2026-05-16-v3015 — insurance status `actor` field (ADR 27)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Sync canon to 2026-05-15-v3014-insurance-quote-flow-fu1"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Sync Waves 29 + 30 (cross-org policy + sales_goals + tag spread)"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Forward nested form.vehicle.* fields through onVehicleCommitted bridge"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Sync to v.308-plan-catalog (W27 fu1)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Refi-wizard: wire heavyweight StageTwoResult — restore offers + insurance teaser + protection teaser fan-out"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Sync canon through W22-fu5 max_plan_price"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 BL — YMMT migration to packages/utils + RelationshipPicker retrofit in refi"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Task 1 — org-config mileage seed + helpers + persist annual_mileage_estimate"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Add status-step-map for refi wizard resume points (Wave 18-fu4)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Notes log-mode + capture-link payload sources from SDK (Wave 16 F2-fu13-refi)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Fire onVehicleCommitted on refi wizard form changes (Wave 16 F2-fu12-refi)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Inject VinAudit-returned values into YMMT pickers when fixture lacks them (Wave 16 F2-fu8)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "YMMT-only valuation fallback (Wave 16 F9-fu)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "VIN required by default + hide YMMT-only manual path under requireVin (Wave 16 F2-fu7)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Drop \"Note (optional)\" textarea — NotesPanel owns notes (Wave 16 F2-fu6)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Sync 2026-05-06-org-timezone"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "RequireVin prop blocks YMMT-only completion (Wave 16 F2)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Restore valuation fetch + dev mock fallback (Wave 16 F9)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Retire src/shared chrome + lib/posthog + utils/validation (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform components/telemetry/utils (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave14-admin-console-init"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Refresh package-lock for blinker-platform Wave 15c dep"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Retire src/components/ + 15c hygiene (Wave 15c)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Consume blinker-platform/components (Wave 15c)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Defensive contact reseed on contactProp.id change (Wave 13-fu-3)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Sync 2026-05-05-wave13-household-and-flowpath"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Inline getSequence implementation in src/lib/refi.js — drop monolith re-export to unblock cross-app tree-shaking"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Re-export getSequence on src/lib/refi.js for cross-app wizardNav use"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Expose RefiDevControls (chrome-less, embed-friendly) for mission-control consolidation"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add RefiSubFlow — step-by-step wizard with applicant + co-app prefill for cross-sell hosts"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Thread contact into CaptureLinkForm prefill (Phase 2)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Read tagsOrgId from form.org_id (was hardcoded undefined)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Add nextLabel prop for cross-app footer label override"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "WritePatch merges into existing parent object on nested fieldNames writes"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Consume shared NotesPanel from src/components (drop local copy)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Expose NotesPanel + TagPicker for cross-app embed"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Shared NotesPanel component with optional TagPicker section (lifted for cross-workflow reuse)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Shared TagPicker component (lifted from protection-portal for cross-workflow reuse)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-tag-permissions (personas tag perms + system-tags seed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Extract AddressBlock component for cross-app embed"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Expose VehicleDrive for cross-app embed (shared mileage view)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Capture purchase_date for Used vehicles + recompute annual-miles from ownership duration"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Sync to 2026-05-04-protection-billing-canon (org_registry.protection_billing + org-disclaimers.json)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Expose VehicleAdd for cross-app embed (mission-control contact-level vehicle add)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Wire 'Read and agree to disclosure' click → modal → agreement gate"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Include offers list in PrequalForm.onComplete payload"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Remove duplicate YMMT_DATA / YMMT_MAKES declarations"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Complete 4 remaining closers in src/constants/index.js"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Public-exports: add DisqualifiedCard + PendingCard for full PrequalForm result-branching symmetry (consumed by protection-portal § 1.5d)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Lift form + dev state to App; wire DEV CONTROLS to wizard (prefill apply, jump, force outcomes, reset)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Public-exports: PrequalForm (new slim form) + OffersCard + QualifiedCard (lifted from prototype EmbeddedPost) — JSDoc embed contract"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Agent-view: ship AgentView shell — CaptureLinkForm + AgentChrome + SaveAndSendFooter + NotesPanel + ApiResponsesModal + posthog event helper"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Dev-controls: port 14 sections from prototype DevPanel — JSON org-config editor, force-partner/result, prefill presets, jump-to-screen, embedded state, reset"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Extract runDecision() + useRefiPrequal() into src/lib/refi.js (pure function port from monolith line 955)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Customer-view: lift refi screens to src/views/customer/ + RefiWizard composition + DEV CONTROLS scaffold"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Scaffold platform pattern (port 5179, DEV CONTROLS sidebar, ViewSwitcher, shared primitives lifted from protection-portal)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Flatten refi-prototype/ to root — match *-portal/ layout convention"
+            },
+            {
+              "date": "2026-05-01",
+              "day": 1,
+              "text": "Add engineering plan and wiki documentation for Refinance v2"
+            },
+            {
+              "date": "2026-05-01",
+              "day": 1,
+              "text": "Refactor code structure for improved readability and maintainability"
+            },
+            {
+              "date": "2026-05-01",
+              "day": 1,
+              "text": "Initial commit: refinance application v2 prototype"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "platform",
+      "name": "Blinker Platform (shared library)",
+      "total": 182,
+      "first": "2026-05-02",
+      "last": "2026-08-26",
+      "months": [
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Renumber Home Protection ADR 29 -> 30"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Wave 39 day-2 pricing redesign + handoff blockers"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "ProductPrice follows the charged total, not list retail"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "Home pricing — markup, price range, monthly payment, discount cost floor"
+            },
+            {
+              "date": "2026-08-26",
+              "day": 26,
+              "text": "ToNationalPhoneDigits — strip the country code before seeding a phone input"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Record R8 resolution (Home in Start-opportunity dialog) + browser verification"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "29 — record R7 resolution (AutoGuard org 200) and R8 launcher gap"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Add AutoGuard org 200 (AUG2 home rates); resolve ADR 29 R7"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Wave 39 Phase C landed; record launcher gap (R8)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Wave 39 Phase B landed; record dealer_no gap (R7) + canon gaps"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Register home-protection-portal in the canon sync list"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home fixtures + homes API surface; STATUS/PROMPTS for Wave 39"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "DocuSeal signing client + home field mapping (ADR 29 D8)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home GetRates path — SOAP branch, normalizer, getRatesForHome, fixture (ADR 29)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home add-on OptionDesc parser + plan/term resolver (ADR 29)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Dwelling-class classifier for home protection (ADR 29)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home entity, home_protection statuses, home billing config (ADR 29)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home plan catalog, dwelling classes, add-on rules (ADR 29)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "29 — Home Protection Plan (Omega-J Home 2024)"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home Protection Plan implementation plan"
+            },
+            {
+              "date": "2026-08-25",
+              "day": 25,
+              "text": "Home Protection Plan design spec"
+            }
+          ]
+        },
+        {
+          "key": "2026-07",
+          "label": "July 2026",
+          "items": [
+            {
+              "date": "2026-07-30",
+              "day": 30,
+              "text": "Record Legacy ↔ 2.0 data boundary — no two-way sync (ADR 29)"
+            }
+          ]
+        },
+        {
+          "key": "2026-06",
+          "label": "June 2026",
+          "items": [
+            {
+              "date": "2026-06-01",
+              "day": 1,
+              "text": "Monthly-membership VSC plans + New/Used inclusive gate (ADR 28)"
+            }
+          ]
+        },
+        {
+          "key": "2026-05",
+          "label": "May 2026",
+          "items": [
+            {
+              "date": "2026-05-28",
+              "day": 28,
+              "text": "Register songbird-website in sibling-repos table"
+            },
+            {
+              "date": "2026-05-27",
+              "day": 27,
+              "text": "Register blinker-website in sibling-repos table"
+            },
+            {
+              "date": "2026-05-20",
+              "day": 20,
+              "text": "Add six root cause analysis documents"
+            },
+            {
+              "date": "2026-05-16",
+              "day": 16,
+              "text": "Contact-details gate + CoPilot timeline actor attribution (ADR 27)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Refresh architecture + canon listings (ADRs 12-26, insurance-carriers + relationships canon)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu8 hotfix — orgId ReferenceError blanked the CoPilot"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu7 landed — InsuranceSavingsCard consumes savings adapter"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu6 landed — inline current-insurance editor"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu5 landed + fu6 plan — inline current-insurance editor"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu5 plan — persist current_insurance for related-opp savings"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu4 landed — quote-only estimated savings"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu4 Phase A — quote-only estimated savings"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu3 — per-cadence premium slider landed"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu3 — per-cadence premium slider bounds"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36 v3.0.14 complete — landed + follow-ups"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu2 — seed flowPath on insurance opps"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36-fu1 — dedup insurance-carriers (xlsx already had form-option rows)"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 36 v3.0.14 plan — insurance quote-flow refinements"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 35 complete — refi progress timeline + fixture seed"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 35-fu1 seed refi step_change history"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 35 plan — refi progress timeline"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 34-fu1 + fu3 landed; fu2 deferred to Phase 2"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 34-fu1 seed protection step_change history"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 34 Phase B landed — protection progress timeline"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 34 plan — protection progress timeline + insurance summary fixture seed"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu3 — persist insurance detail summary for related-opp popovers"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33-fu2 — SavingsCard into AgentView left-column slot"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33 v3.0.13 Phase B landed + 33-fu smoke fixes"
+            },
+            {
+              "date": "2026-05-15",
+              "day": 15,
+              "text": "Wave 33 v3.0.13 plan — insurance CoPilot post-send layout swap"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 32 v3.0.12 plan — RecommendedCoverage redesign"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Opportunities.create() wrapper for cross-sell spawn (Wave 31)"
+            },
+            {
+              "date": "2026-05-14",
+              "day": 14,
+              "text": "Wave 31 v3.0.11 plan — insurance → protection cross-sell"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Opp_vsc_006 carries vehicle_id + trim-included label"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Leaderboard SDK (rankings, goals, achievements, trend snapshots)"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Surface org_id on tag rows for same-org merge gate"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Tags.list({ org_ids }) union + fixture spread"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Wave 29 v3.0.10 cross-org policy + tags namespace + team member polish"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Tags SDK module + localStorage overlay"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Contacts.crossOrgCopy + crossOrgMove policy-aware"
+            },
+            {
+              "date": "2026-05-13",
+              "day": 13,
+              "text": "Agents.computeWorkload accepts extended lens vocabulary"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Wave 28 Manager MVP — 28a-28e landed autonomous run"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Opportunities.list org_id filter + contacts crossOrgMove helper"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Assignment-scoring + opportunities.list owner/unassigned filters"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Add coaching-notes methods to agents module"
+            },
+            {
+              "date": "2026-05-12",
+              "day": 12,
+              "text": "Add agents module + workload derivation"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Wave 27 v3.0.8 plan catalog + DocuSeal templates"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Wave 26a v.3.0.7 — Mission Control polish + 6 fu rounds, pushed"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Expand contacts/opps/notes/activities for infinite-scroll smoke (Wave 26a fu4)"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Refi stage2_result fan-out restoration"
+            },
+            {
+              "date": "2026-05-11",
+              "day": 11,
+              "text": "Wave 25-fu1 + W25-fu2 — refund routing + classifier id-match fix"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Match products by id OR plan_code, not plan_code only"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 26 prep — audit complete, plan promoted to repo"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 25 v3.0.7 — all phases LANDED, close-out"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 25 v3.0.7 Phase C-bridge — VIN-attached fixture variant loading"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 25 v3.0.7 Phase B1 — classifyRatesChange + 6 SE vin-fixture variants"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 25 v3.0.7 Phase B2 — harden efs.refundCharge with emulate/fixture/proxy paths"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 25 v3.0.7 Phase A — VIN-validate rates comparison ADR + canon vin_validate config"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 v3.0.6 — bump canon _version + close-out STATUS"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 Task 1 C1 — new packages/integrations/payment with EFS provider + emulation modes"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Wave 24 Task 5 — drop term.miles=999999 products from normalizer"
+            },
+            {
+              "date": "2026-05-10",
+              "day": 10,
+              "text": "Document term_semantics RegulatedRuleId guess + add authoritative-mapping backlog"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 23-fu2 — AssetType resolution + YMMT data refresh from SEFI 2026-04-17 reference (drops hardcoded 'T')"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Add backlog — consumer-actionable errors + super_admin inline diagnostics (Wave 23-fu1 prep)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 23 Phase B1 — N/U parallel branch + term_basis + classifySeError"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 23 v3.0.5 prep — RewardsCo GHL id, looker embed config (ids, not URLs), vehicle_class_rule, term_semantics scaffold, ADRs 14+15+16 (Wave 23 Phase A)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Cost+org-markup pricing + max_plan_price cap (Wave 22-fu5)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 22 + 4 follow-up fixes landed locally — ready to push (8 commits across 3 repos)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Populate product.add_ons_included from rate-class options (Wave 22-fu1)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 22 BOTH PHASES landed locally — v3.0.4 wizard polish (canon/packages prep + protection-portal agent)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "V3.0.4 wizard-polish prep — addon passthrough + range-slider seeds + monthly tooltip config (Wave 22 Phase 1)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "W21-fu real-OMGA smoke landed + 2 follow-up fixes + monthly-pay VSC backlog"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Proxy mode forces test credentials regardless of org.test_mode"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 21-fu BUILD landed locally (real SE GetRates UAT dev mode)"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 21-fu — real UAT GetRates dev mode in package"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 21 SHA pointer in STATUS.md"
+            },
+            {
+              "date": "2026-05-09",
+              "day": 9,
+              "text": "Wave 21 eRating package lift — canon + ADR + packages/integrations/product_admin"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 LANDED locally (5 agents / v3.0.3 spec + 4 W19 backlog items / 8 commits across 3 repos)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 BL — RelationshipPicker accepts string[] for refi compat"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 20 promotions — persona-presets canon-promoted + relationships split into system_types + custom_types_per_org"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 LANDED locally (5 agents / 6 spec tasks across 3 repos) + lucide-react peer fix"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Task 5 — Householding (RelationshipPicker lift + canon relationships)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 19 Task 1 — vehicle annual-mileage estimate from org config"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 18-fu6 landed (root-cause fix — AgentView consumes opportunity prop; resume-at-step now actually works in embed mode)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 18-fu5 landed (refi + insurance step-from-status resume in CoPilotPane); all 3 workflows now resume"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 18-fu1 mc fix landed (Open-in-CoPilot from Contacts tab); Wave 18-fu2 protection-portal status-to-step investigation in flight"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 18 LANDED locally (5 commits across 2 repos — 2 platform + 3 mc; user smoke pending)"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 18 platform side landed (packages/api contacts + opps + test fixture coverage); mc dispatch in flight"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Contacts + opportunities lift + Wave 18 test fixture coverage"
+            },
+            {
+              "date": "2026-05-08",
+              "day": 8,
+              "text": "Wave 17 P1 stack pushed (VehicleAddOrConfirm lift + cross-sell VIN gate + post-submit fix + wire-back dedup + ref-based handler stability)"
+            },
+            {
+              "date": "2026-05-07",
+              "day": 7,
+              "text": "VehicleAddOrConfirm + vinDecode + ymmt-data lifts (Wave 17 P1)"
+            },
+            {
+              "date": "2026-05-07",
+              "day": 7,
+              "text": "Activities.list cross-contact + lift fixture (Wave 16 F2-fu13-followup)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu13 Phases D + E + F2-fu11-followup formatVehicleLabel lift"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Add formatVehicleLabel (Wave 16 F2-fu11-followup)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu13 (notes/activities pattern + protection pilot)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Notes/activities SDK + NotesPanel log-mode (Wave 16 F2-fu13)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu12 (vehicle wire-back extended to refi + insurance)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu11-hotfix (wizard-advance bug + Step 2 data propagation)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu10 (insurance pre-step VIN gate) + F2-fu11a/b (protection→mc vehicle wire-back)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu9 (protection inline-note removal + persistence-gap surfaced)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu8 (VIN decode YMMT-extras injection in ScreenVehicleAdd)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu7 (refi VIN-req UI) + F9-fu (refi YMMT valuation) + F3 (protection wrapper drop)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu5 (timeline TZ+detail+day-sep) + F2-fu6 (refi note removal) + canon timezone bump"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Add timezone field to org shape (2026-05-06-org-timezone)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F2-fu2 + F2-fu3 + F2-fu4 (mc DOB gate kill + insurance two-column + inline-note removal)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 DOB-strip + F2-fu (mc AddContactModal + insurance VehicleAdd pre-step)"
+            },
+            {
+              "date": "2026-05-06",
+              "day": 6,
+              "text": "Wave 16 F1-fu hot-fix (mc StartOpportunityFlow seed-prop hydration)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 16 smoke-fix dispatch shipped (10 commits across 5 repos, F3+F7 deferred)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "AddressBlock locationBias + zip in input string (Wave 16 F4)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 15c-fu shipped (chrome quartet + telemetry + validators)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Lift validators superset (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Expand surface with registerEvents + getEventCatalog (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Lift FormFields superset (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Lift DevPanel + Section + Segmented chrome (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Lift WizardShell + ScreenHeader + WizardFooter (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Lift JsonPeek (Wave 15c-fu)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 15c shipped (lift trio + 15c-hygiene; smoke pending)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Lift AddressBlock + NotesPanel + TagPicker (Wave 15c)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 15b cross-repo extraction inventory"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 15a scaffolded (packages/ + ADR 11 + CLAUDE.md update)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Permit shared-library code under packages/ (Wave 15a)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "ADR 11 — platform package layout (Wave 15a)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Scaffold packages/ tree + root package.json (Wave 15a)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 14-fu shipped (insurance picker + API responses + mc availableStatuses wiring)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 13 follow-ups complete (4 commits across protection / insurance / refi)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 14 admin console init (6 mc commits + 1 platform canon commit; insurance picker deferred)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Wave 14 admin-console init (integrations + badges canon, personas + org-registry extensions, architecture/10-admin-console.md)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "Add Wave 13 follow-up templates (availableStatuses, lean mode, captureLinkForm reseed)"
+            },
+            {
+              "date": "2026-05-05",
+              "day": 5,
+              "text": "2026-05-05-wave13-household-and-flowpath + STATUS.md Wave 13 roll-up"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Phase 2 hardening pass shipped (4 commits across 2 child repos)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Phase 2 contact-prefill threading shipped (3 child commits — protection 15bfc03 / insurance 234b9c5 / mission-control fd1b275)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Formalize src/components/ as third public surface; log 2026-05-04 cross-app seams (8 confirmed)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Roll up Phase 1 follow-ups pass (10 commits across 4 repos clear Wave 7+12 tracked items)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Roll up Wave 7 follow-up + Wave 11 + Wave 12 (shared NotesPanel + TagPicker across all 3 workflow portals)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Tag permissions + system-tags seed (2026-05-04-tag-permissions)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Wave 7 (protection billing rewrite) shipped; 7 follow-ups tracked"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Roll up Waves 5b + 6 + 8 + 9 (vehicle/address/garage/thank-you/home dashboard)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Roll up Waves 3 + 4+5a (mission-control feature pass + refi VehicleDrive math/public surface)"
+            },
+            {
+              "date": "2026-05-04",
+              "day": 4,
+              "text": "Canon + adr: protection-billing config block + per-org disclaimers (Wave 2)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Log refi-embed Continue→blank fix + tracked refi-portal defensive-defaults gap"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Roll up post-1.5e feature pass + section header refresh"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Log mission-control → refi/insurance AgentView seams"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Fix refi-portal commits-ahead count (7 → 9)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Status + ADR: § 1.5e mostly shipped (5 of 6 gaps); cross-sell embed conventions"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "§ 1.5d ✅ + d2b9f7f cards lift; six 1.5e spec gaps captured; refi-portal/src/constants/index.js half-fix in-flight item flagged"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "§ 1.5c ✅ refi-portal AgentView + DEV CONTROLS port + public exports — all 5 chunks landed; § 1.5d unblocked"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Enrich § 1.5c — port prototype's rich DEV CONTROLS + extract runDecision() to lib/refi.js"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "§ 1.5b ✅ refi-portal substrate + customer view shipped; spec gaps surfaced for § 1.5c"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Add refi-portal to canon sync app list"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Refi-prototype renamed to refi-portal — update path references"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "2026-05-03-cross-sell-orchestration — protection-portal as orchestrator; per-org cross_sell config; promote note + activity (rolled with promote-note-activity bump)"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Insurance-portal Phase 1 ✅ via cross-sell wiring; freshen § contact profile prompt"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Insurance-portal cleanup pass — three small fixes closed"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "2026-05-03-ei-consumer-link-and-microsite-shape — collapse capture/quote link fields to consumer_link + lead_flow_path; cents suffix on money fields; add _insurance_microsite_url_shape"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "2026-05-03-ei-real-contract — reconcile to real Embedded Insurance API per partner docs"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "2026-05-02-insurance-quote-flow-cleanup — split error.verification/error.quote; quote.viewed → consumer_action; add policy.requested; tighten policy.bound"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Protection-portal Phase 1 ✅; freshen mission-control § co-pilot pane prompt"
+            },
+            {
+              "date": "2026-05-03",
+              "day": 3,
+              "text": "Bump to 2026-05-02-insurance-signal-source-and-link-fields"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "2026-05-02-insurance-extracted-shape — add _insurance_extracted_shape OCR block; document Started crm_stage:null"
+            },
+            {
+              "date": "2026-05-02",
+              "day": 2,
+              "text": "Initial commit: prototype phase"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "__local",
+      "name": "This project itself",
+      "total": 11,
+      "first": "2026-08-12",
+      "last": "2026-09-10",
+      "months": [
+        {
+          "key": "2026-09",
+          "label": "September 2026",
+          "items": [
+            {
+              "date": "2026-09-10",
+              "day": 10,
+              "text": "Remove AuthGate wrapper from main rendering"
+            }
+          ]
+        },
+        {
+          "key": "2026-08",
+          "label": "August 2026",
+          "items": [
+            {
+              "date": "2026-08-28",
+              "day": 28,
+              "text": "Remove known state section regarding linting issues from README"
+            },
+            {
+              "date": "2026-08-28",
+              "day": 28,
+              "text": "Sync README with real repo state; make sync:check read-only"
+            },
+            {
+              "date": "2026-08-28",
+              "day": 28,
+              "text": "Update vendored portals to upstream main; vendor home-protection-portal"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Add installCommand and build environment to vercel.json for consistency"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Update installCommand in vercel.json for consistent package installation"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Add installCommand to vercel.json for consistent package installation"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Reorganize DEFAULT_ORG_CONFIG to avoid import cycle and improve clarity"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Pin apps to the 30001-30005 platform port map"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Guard ANSI colors behind TTY and record upstream SHAs"
+            },
+            {
+              "date": "2026-08-12",
+              "day": 12,
+              "text": "Vendor five Blinker portals into a pnpm/Turborepo monorepo"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
